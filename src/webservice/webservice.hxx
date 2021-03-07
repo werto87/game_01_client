@@ -3,14 +3,7 @@
 #include "src/util/util.hxx"
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
-
-namespace boost
-{
-namespace asio
-{
-class io_context;
-}
-}
+#include <deque>
 class Webservice
 {
 public:
@@ -22,10 +15,13 @@ public:
 
   boost::asio::awaitable<void> read ();
 
+  boost::asio::awaitable<void> writeToServer ();
+
+  std::shared_ptr<std::deque<std::string> > msgToSend = std::make_shared<std::deque<std::string> > ();
+
 private:
   boost::asio::awaitable<std::string> my_read ();
 
   boost::beast::websocket::stream<boost::beast::tcp_stream> ws;
-  std::vector<std::string> msgToSend{};
 };
 #endif /* C5B152C0_B968_4BBC_B1F9_5823AA8FAD87 */

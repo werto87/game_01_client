@@ -3,31 +3,14 @@
 
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
-#ifdef CORRADE_TARGET_ANDROID
-#include <Magnum/Platform/AndroidApplication.h>
-#elif defined(CORRADE_TARGET_EMSCRIPTEN)
-#include <Magnum/Platform/EmscriptenApplication.h>
-#else
-#include <Magnum/Platform/Sdl2Application.h>
-#endif
-
-#ifdef CORRADE_TARGET_ANDROID
-#include <Magnum/Platform/AndroidApplication.h>
-#elif defined(CORRADE_TARGET_EMSCRIPTEN)
-#include <Magnum/Platform/EmscriptenApplication.h>
-#else
-#include <Magnum/Platform/Sdl2Application.h>
-#endif
-
-namespace Magnum
-{
-namespace Examples
-{
-class ImGuiExample : public Platform::Application
+#include <deque>
+#include <memory>
+#include <string>
+class ImGuiExample : public Magnum::Platform::Application
 {
 
 public:
-  explicit ImGuiExample (const Arguments &arguments);
+  ImGuiExample (const Arguments &arguments, std::shared_ptr<std::deque<std::string> > msgToSend);
 
   void drawEvent () override;
 
@@ -42,15 +25,13 @@ public:
   void mouseScrollEvent (MouseScrollEvent &event) override;
   void textInputEvent (TextInputEvent &event) override;
 
-  ImGuiIntegration::Context _imgui{ NoCreate };
+  Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
 
 private:
   bool _showDemoWindow = true;
   float _fontSize = 0.5f;
   std::string text{};
+  std::shared_ptr<std::deque<std::string> > _msgToSend{};
 };
-
-}
-}
 
 #endif /* A76A25AE_A804_47C0_8549_6F15C0EB7035 */

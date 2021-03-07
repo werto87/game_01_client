@@ -11,23 +11,21 @@
 #include <Magnum/Shaders/Phong.h>
 #include <Magnum/Trade/MeshData.h>
 #include <imgui.h>
+#include <iostream>
+#include <memory>
 #include <misc/cpp/imgui_stdlib.h>
+using namespace Magnum;
 
-namespace Magnum
-{
-namespace Examples
-{
-
-Magnum::Examples::ImGuiExample::ImGuiExample (const Arguments &arguments) : Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }, Vector2{ 1, 1 }) } // hack to supress blurr because of dpi scaling
+ImGuiExample::ImGuiExample (const Arguments &arguments, std::shared_ptr<std::deque<std::string> > msgToSend) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }, Vector2{ 1, 1 }) }, _msgToSend{ msgToSend }
 {
   ImGui::CreateContext ();
   ImGui::GetIO ().Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50.0f * _fontSize);
-  _imgui = ImGuiIntegration::Context (*ImGui::GetCurrentContext (), windowSize ());
+  _imgui = Magnum::ImGuiIntegration::Context (*ImGui::GetCurrentContext (), windowSize ());
   /* Set up proper blending to be used by ImGui. There's a great chance
      you'll need this exact behavior for the rest of your scene. If not, set
      this only for the drawFrame() call. */
-  GL::Renderer::setBlendEquation (GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
-  GL::Renderer::setBlendFunction (GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+  Magnum::GL::Renderer::setBlendEquation (GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
+  Magnum::GL::Renderer::setBlendFunction (GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
 #if !defined(MAGNUM_TARGET_WEBGL) && !defined(CORRADE_TARGET_ANDROID)
   /* Have some sane speed, please */
@@ -36,7 +34,7 @@ Magnum::Examples::ImGuiExample::ImGuiExample (const Arguments &arguments) : Plat
 }
 
 void
-Magnum::Examples::ImGuiExample::drawEvent ()
+ImGuiExample::drawEvent ()
 {
   GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
   _imgui.newFrame ();
@@ -46,9 +44,12 @@ Magnum::Examples::ImGuiExample::drawEvent ()
     stopTextInput ();
   ImGui::Begin ("Hello");
   ImGui::SliderFloat ("Scale Font", &_fontSize, 0.1f, 1.0f);
-  ImGui::InputText ("test", &text);
-
   auto shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
+  ImGui::InputText ("test", &text);
+  if (ImGui::IsItemDeactivatedAfterEdit ())
+    {
+      _msgToSend->push_back (text);
+    }
   if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
   ImGui::End ();
   if (_showDemoWindow)
@@ -82,7 +83,7 @@ Magnum::Examples::ImGuiExample::drawEvent ()
 }
 
 void
-Magnum::Examples::ImGuiExample::viewportEvent (ViewportEvent &event)
+ImGuiExample::viewportEvent (ViewportEvent &event)
 {
   GL::defaultFramebuffer.setViewport ({ {}, event.framebufferSize () });
 
@@ -90,37 +91,37 @@ Magnum::Examples::ImGuiExample::viewportEvent (ViewportEvent &event)
 }
 
 void
-Magnum::Examples::ImGuiExample::keyPressEvent (KeyEvent &event)
+ImGuiExample::keyPressEvent (KeyEvent &event)
 {
   if (_imgui.handleKeyPressEvent (event)) return;
 }
 
 void
-Magnum::Examples::ImGuiExample::keyReleaseEvent (KeyEvent &event)
+ImGuiExample::keyReleaseEvent (KeyEvent &event)
 {
   if (_imgui.handleKeyReleaseEvent (event)) return;
 }
 
 void
-Magnum::Examples::ImGuiExample::mousePressEvent (MouseEvent &event)
+ImGuiExample::mousePressEvent (MouseEvent &event)
 {
   if (_imgui.handleMousePressEvent (event)) return;
 }
 
 void
-Magnum::Examples::ImGuiExample::mouseReleaseEvent (MouseEvent &event)
+ImGuiExample::mouseReleaseEvent (MouseEvent &event)
 {
   if (_imgui.handleMouseReleaseEvent (event)) return;
 }
 
 void
-Magnum::Examples::ImGuiExample::mouseMoveEvent (MouseMoveEvent &event)
+ImGuiExample::mouseMoveEvent (MouseMoveEvent &event)
 {
   if (_imgui.handleMouseMoveEvent (event)) return;
 }
 
 void
-Magnum::Examples::ImGuiExample::mouseScrollEvent (MouseScrollEvent &event)
+ImGuiExample::mouseScrollEvent (MouseScrollEvent &event)
 {
   if (_imgui.handleMouseScrollEvent (event))
     {
@@ -131,9 +132,7 @@ Magnum::Examples::ImGuiExample::mouseScrollEvent (MouseScrollEvent &event)
 }
 
 void
-Magnum::Examples::ImGuiExample::textInputEvent (TextInputEvent &event)
+ImGuiExample::textInputEvent (TextInputEvent &event)
 {
   if (_imgui.handleTextInputEvent (event)) return;
-}
-}
 }

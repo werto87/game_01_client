@@ -2,13 +2,6 @@
 #include "src/logic/logic.hxx"
 #include "src/util/util.hxx"
 
-namespace boost
-{
-namespace asio
-{
-class io_context;
-}
-}
 using boost::asio::awaitable;
 using boost::asio::co_spawn;
 using boost::asio::detached;
@@ -78,7 +71,7 @@ Webservice::read ()
         {
           auto readResult = co_await my_read ();
           auto result = handleMessage (readResult);
-          msgToSend.insert (msgToSend.end (), make_move_iterator (result.begin ()), make_move_iterator (result.end ()));
+          msgToSend->insert (msgToSend->end (), make_move_iterator (result.begin ()), make_move_iterator (result.end ()));
         }
     }
   catch (std::exception &e)
@@ -96,4 +89,31 @@ Webservice::my_read ()
   auto msg = boost::beast::buffers_to_string (buffer.data ());
   std::cout << "number of letters '" << msg.size () << "' msg: '" << msg << "'" << std::endl;
   co_return msg;
+}
+
+awaitable<void>
+Webservice::writeToServer ()
+{
+  using namespace boost::beast;
+  using namespace boost::asio;
+  try
+    {
+      for (;;)
+        {
+          auto timer = steady_timer (co_await this_coro::executor);
+          using namespace std::chrono_literals;
+          timer.expires_after (1s);
+          co_await timer.async_wait (use_awaitable);
+          while (not msgToSend->empty ())
+            {
+              auto msg = std::move (msgToSend->front ());
+              msgToSend->pop_front ();
+              co_await ws.async_write (buffer (msg), use_awaitable);
+            }
+        }
+    }
+  catch (std::exception &e)
+    {
+      std::printf ("echo Exception:  %s\n", e.what ());
+    }
 }
