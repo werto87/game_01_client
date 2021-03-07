@@ -10,6 +10,14 @@
 #include <Magnum/Primitives/Cube.h>
 #include <Magnum/Shaders/Phong.h>
 #include <Magnum/Trade/MeshData.h>
+#include <imgui.h>
+#include <misc/cpp/imgui_stdlib.h>
+
+namespace Magnum
+{
+namespace Examples
+{
+
 Magnum::Examples::ImGuiExample::ImGuiExample (const Arguments &arguments) : Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }, Vector2{ 1, 1 }) } // hack to supress blurr because of dpi scaling
 {
   ImGui::CreateContext ();
@@ -38,6 +46,8 @@ Magnum::Examples::ImGuiExample::drawEvent ()
     stopTextInput ();
   ImGui::Begin ("Hello");
   ImGui::SliderFloat ("Scale Font", &_fontSize, 0.1f, 1.0f);
+  ImGui::InputText ("test", &text);
+
   auto shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
   if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
   ImGui::End ();
@@ -124,4 +134,6 @@ void
 Magnum::Examples::ImGuiExample::textInputEvent (TextInputEvent &event)
 {
   if (_imgui.handleTextInputEvent (event)) return;
+}
+}
 }
