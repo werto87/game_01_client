@@ -63,15 +63,14 @@ public:
 
 private:
   bool _showDemoWindow = true;
-  bool _showAnotherWindow = false;
   Color4 _clearColor = 0x72909aff_rgbaf;
-  Float _floatValue = 0.5f;
+  Float _fontSize = 0.5f;
 };
 
-ImGuiExample::ImGuiExample (const Arguments &arguments) : Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable) }
+ImGuiExample::ImGuiExample (const Arguments &arguments) : Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }, Vector2{ 1, 1 }) } // hack to supress blurr because of dpi scaling
 {
   ImGui::CreateContext ();
-  ImGui::GetIO ().Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50.0f * _floatValue);
+  ImGui::GetIO ().Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50.0f * _fontSize);
   _imgui = ImGuiIntegration::Context (*ImGui::GetCurrentContext (), windowSize ());
   /* Set up proper blending to be used by ImGui. There's a great chance
      you'll need this exact behavior for the rest of your scene. If not, set
@@ -88,54 +87,44 @@ ImGuiExample::ImGuiExample (const Arguments &arguments) : Platform::Application{
 void
 ImGuiExample::drawEvent ()
 {
-
   GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
-
   _imgui.newFrame ();
-
   /* Enable text input, if needed */
   if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
-
-  ImGui::Begin ("Another Window", &_showAnotherWindow);
-  ImGui::SliderFloat ("Scale Font", &_floatValue, 0.1f, 1.0f);
+  ImGui::Begin ("Hello");
+  ImGui::SliderFloat ("Scale Font", &_fontSize, 0.1f, 1.0f);
   auto shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
   // if (ImGui::ColorEdit3 ("Clear Color", _clearColor.data ())) GL::Renderer::setClearColor (_clearColor);
   if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
   ImGui::End ();
-
   if (_showDemoWindow)
     {
       ImGui::SetNextWindowPos (ImVec2 (650, 20), ImGuiCond_FirstUseEver);
       ImGui::ShowDemoWindow ();
     }
-
   /* Update application cursor */
   _imgui.updateApplicationCursor (*this);
-
   /* Set appropriate states. If you only draw ImGui, it is sufficient to
      just enable blending and scissor test in the constructor. */
   GL::Renderer::enable (GL::Renderer::Feature::Blending);
   GL::Renderer::enable (GL::Renderer::Feature::ScissorTest);
   GL::Renderer::disable (GL::Renderer::Feature::FaceCulling);
   GL::Renderer::disable (GL::Renderer::Feature::DepthTest);
-
   _imgui.drawFrame ();
-
   /* Reset state. Only needed if you want to draw something else with
      different state after. */
   GL::Renderer::enable (GL::Renderer::Feature::DepthTest);
   GL::Renderer::enable (GL::Renderer::Feature::FaceCulling);
   GL::Renderer::disable (GL::Renderer::Feature::ScissorTest);
   GL::Renderer::disable (GL::Renderer::Feature::Blending);
-
   swapBuffers ();
   redraw ();
   if (shouldChangeFontSize)
     {
       ImGui::GetIO ().Fonts->Clear ();
-      ImGui::GetIO ().Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50.0f * _floatValue);
+      ImGui::GetIO ().Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50.0f * _fontSize);
       _imgui.relayout ({ static_cast<float> (windowSize ().x ()), static_cast<float> (windowSize ().y ()) }, windowSize (), framebufferSize ());
     }
 }
@@ -207,8 +196,9 @@ read (boost::asio::io_context &io_context, Webservice &webservice)
 }
 
 boost::asio::awaitable<void>
-ui (boost::asio::io_context &io_context, Magnum::Examples::ImGuiExample &app)
+ui (Magnum::Examples::ImGuiExample &app)
 {
+  app.redraw ();
   for (;;)
     {
       app.mainLoopIteration ();
@@ -230,7 +220,7 @@ main (int argc, char **argv)
       signals.async_wait ([&] (auto, auto) { io_context.stop (); });
       auto webservice = Webservice{ io_context };
       boost::asio::co_spawn (io_context, boost::bind (read, std::ref (io_context), std::ref (webservice)), boost::asio::detached);
-      boost::asio::co_spawn (io_context, boost::bind (ui, std::ref (io_context), std::ref (app)), boost::asio::detached);
+      boost::asio::co_spawn (io_context, boost::bind (ui, std::ref (app)), boost::asio::detached);
       io_context.run ();
     }
   catch (std::exception &e)
