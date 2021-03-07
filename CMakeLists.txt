@@ -30,8 +30,8 @@ target_compile_features(${PROJECT_OPTIONS} INTERFACE cxx_std_20)
 # )
 
 
-# include(cmake/Sanitizers.cmake)
-# enable_sanitizers(${PROJECT_OPTIONS})
+#include(cmake/Sanitizers.cmake)
+#enable_sanitizers(${PROJECT_OPTIONS})
 
 # allow for static analysis options
 #include(cmake/StaticAnalyzers.cmake) 
@@ -49,7 +49,8 @@ add_subdirectory(src)
 
 
 ####### link
-target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+)
 target_include_directories(${TARGET_NAME} PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -59,10 +60,9 @@ target_include_directories(${TARGET_NAME} PRIVATE
 target_link_libraries(${TARGET_NAME} PRIVATE
 ${PROJECT_WARNINGS}
 ${PROJECT_OPTIONS}
-CONAN_PKG::imgui-sfml
+CONAN_PKG::magnum_integration
 CONAN_PKG::confu_soci
 CONAN_PKG::confu_boost
-CONAN_PKG::boost
 )
 
 ####### create executable
@@ -92,3 +92,4 @@ endif()
 # foreach (_variableName ${_variableNames})
 #    message(STATUS "${_variableName}=${${_variableName}}")
 # endforeach()
+
