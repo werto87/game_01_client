@@ -14,6 +14,9 @@ namespace database
 void
 createEmptyDatabase ()
 {
+  // TODO this does not support multiple clients
+  // TODO database from client 1 gets overriden by clients 2 database
+  // TODO maybe use some rnd generator for database name suffix
   std::filesystem::create_directory (std::filesystem::path{ pathToTestDatabase }.parent_path ());
   std::filesystem::copy_file (pathToTemplateDatabase, pathToTestDatabase, std::filesystem::copy_options::overwrite_existing);
 }
