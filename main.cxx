@@ -1,7 +1,7 @@
+#include "src/database/database.hxx"
 #include "src/ui/ui.hxx"
 #include "src/webservice/webservice.hxx"
 #include <boost/bind/bind.hpp>
-
 boost::asio::awaitable<void>
 read (boost::asio::io_context &io_context, Webservice &webservice)
 {
@@ -31,6 +31,8 @@ main (int argc, char **argv)
 {
   try
     {
+      database::createEmptyDatabase ();
+      database::createTables ();
       boost::asio::io_context io_context (1);
       auto webservice = Webservice{ io_context };
       ImGuiExample app{ { argc, argv }, webservice.msgToSend };

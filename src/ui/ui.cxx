@@ -1,4 +1,5 @@
 #include "src/ui/ui.hxx"
+#include "src/database/database.hxx"
 #include <Magnum/GL/Buffer.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Mesh.h>
@@ -42,7 +43,13 @@ ImGuiExample::drawEvent ()
   if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
-  ImGui::Begin ("Hello");
+  auto groupName = std::string{ "hello" };
+  soci::session sql (soci::sqlite3, pathToTestDatabase);
+  if (auto account = confu_soci::findStruct<database::Account> (sql, "firstName", "joe"))
+    {
+      groupName = account->firstName + " " + account->lastName;
+    }
+  ImGui::Begin (groupName.c_str ());
   ImGui::SliderFloat ("Scale Font", &_fontSize, 0.1f, 1.0f);
   auto shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
   ImGui::InputText ("test", &text);
