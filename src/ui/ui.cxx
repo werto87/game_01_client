@@ -45,9 +45,9 @@ ImGuiExample::drawEvent ()
     stopTextInput ();
   auto groupName = std::string{ "hello" };
   soci::session sql (soci::sqlite3, pathToTestDatabase);
-  if (auto account = confu_soci::findStruct<database::Account> (sql, "firstName", "joe"))
+  if (auto account = confu_soci::findStruct<database::Account> (sql, "accountName", "werto123"))
     {
-      groupName = account->firstName + " " + account->lastName;
+      groupName = account->accountName + " " + account->password;
     }
   ImGui::Begin (groupName.c_str ());
   ImGui::SliderFloat ("Scale Font", &_fontSize, 0.1f, 1.0f);
