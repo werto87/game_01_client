@@ -29,6 +29,11 @@ ui (ImGuiExample &app)
 int
 main (int argc, char **argv)
 {
+#ifdef DEBUG
+  std::cout << "DEBUG" << std::endl;
+#else
+  std::cout << "NO DEBUG" << std::endl;
+#endif
   try
     {
       database::createEmptyDatabase ();

@@ -3,7 +3,7 @@
 
 #include "confu_boost/confuBoost.hxx"
 #include "confu_soci/convenienceFunctionForSoci.hxx"
-#include "src/database/constant.hxx"
+#include "src/database/global.hxx"
 #include <boost/optional.hpp>
 #include <filesystem>
 

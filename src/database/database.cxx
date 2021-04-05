@@ -1,5 +1,4 @@
 #include "src/database/database.hxx"
-#include "src/database/constant.hxx"
 #include <boost/lexical_cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -20,12 +19,10 @@ namespace database
 void
 createEmptyDatabase ()
 {
-  // TODO this does not support multiple clients
-  // TODO database from client 1 gets overriden by clients 2 database
-  // TODO maybe use some rnd generator for database name suffix
-
-  // some how the name is lost and its allways 0
   filePostfix = 0;
+#ifdef DEBUG
+  // in debug mode its allowed to start multiple instances
+  // NOTE every instance is started with a fresh database
   while (std::filesystem::exists (std::filesystem::path{ pathToDatabaseFolder }.append (databaseName + std::to_string (filePostfix))))
     {
       if (filePostfix == std::numeric_limits<u_int32_t>::max ())
@@ -36,9 +33,10 @@ createEmptyDatabase ()
         }
       filePostfix++;
     }
-  std::cout << "filePostfix: " << filePostfix << std::endl;
+#endif
   std::filesystem::create_directory (pathToDatabaseFolder);
   pathToDatabase = std::filesystem::path{ pathToDatabaseFolder }.append (databaseName + std::to_string (filePostfix));
+  std::cout << pathToDatabase << std::endl;
   std::filesystem::copy_file (pathToTemplateDatabase, pathToDatabase, std::filesystem::copy_options::overwrite_existing);
 }
 
