@@ -44,7 +44,7 @@ ImGuiExample::drawEvent ()
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
   auto groupName = std::string{ "hello" };
-  soci::session sql (soci::sqlite3, pathToTestDatabase);
+  soci::session sql (soci::sqlite3, pathToDatabase);
   if (auto account = confu_soci::findStruct<database::Account> (sql, "accountName", "werto123"))
     {
       groupName = account->accountName + " " + account->password;

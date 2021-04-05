@@ -33,7 +33,7 @@ handleMessage (std::string const &msg)
           auto account = database::Account{};
           ia >> account;
           std::cout << confu_soci::structAsString (account) << std::endl;
-          soci::session sql (soci::sqlite3, pathToTestDatabase);
+          soci::session sql (soci::sqlite3, pathToDatabase);
           confu_soci::upsertStruct (sql, account, true);
         }
     }

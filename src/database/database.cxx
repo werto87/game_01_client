@@ -7,6 +7,12 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <confu_soci/convenienceFunctionForSoci.hxx>
 #include <filesystem>
+#include <string>
+#include <sys/types.h>
+#include <system_error>
+
+std::string pathToDatabase;
+u_int32_t filePostfix;
 
 namespace database
 {
@@ -17,14 +23,29 @@ createEmptyDatabase ()
   // TODO this does not support multiple clients
   // TODO database from client 1 gets overriden by clients 2 database
   // TODO maybe use some rnd generator for database name suffix
-  std::filesystem::create_directory (std::filesystem::path{ pathToTestDatabase }.parent_path ());
-  std::filesystem::copy_file (pathToTemplateDatabase, pathToTestDatabase, std::filesystem::copy_options::overwrite_existing);
+
+  // some how the name is lost and its allways 0
+  filePostfix = 0;
+  while (std::filesystem::exists (std::filesystem::path{ pathToDatabaseFolder }.append (databaseName + std::to_string (filePostfix))))
+    {
+      if (filePostfix == std::numeric_limits<u_int32_t>::max ())
+        {
+          std::cout << "its only allowed to run " + std::to_string (std::numeric_limits<u_int32_t>::max ()) + " clients" << std::endl;
+          std::cout << "please check folder: " << pathToDatabaseFolder << std::endl;
+          throw std::system_error{};
+        }
+      filePostfix++;
+    }
+  std::cout << "filePostfix: " << filePostfix << std::endl;
+  std::filesystem::create_directory (pathToDatabaseFolder);
+  pathToDatabase = std::filesystem::path{ pathToDatabaseFolder }.append (databaseName + std::to_string (filePostfix));
+  std::filesystem::copy_file (pathToTemplateDatabase, pathToDatabase, std::filesystem::copy_options::overwrite_existing);
 }
 
 void
 createTables ()
 {
-  soci::session sql (soci::sqlite3, pathToTestDatabase);
+  soci::session sql (soci::sqlite3, pathToDatabase);
   confu_soci::createTableForStruct<Character> (sql, { { "accountId", "Account", "id" } });
   confu_soci::createTableForStruct<Account> (sql);
   confu_soci::createTableForStruct<BoardElement> (sql, { { "boardId", "Board", "id" } });
@@ -35,14 +56,14 @@ createTables ()
 boost::optional<Account>
 createAccount (std::string const &firstName, std::string const &lastName)
 {
-  soci::session sql (soci::sqlite3, pathToTestDatabase);
+  soci::session sql (soci::sqlite3, pathToDatabase);
   return confu_soci::findStruct<Account> (sql, "id", confu_soci::insertStruct (sql, Account{ .id = {}, .accountName = firstName, .password = lastName }, true, true));
 }
 
 boost::optional<database::Character>
 createCharacter (std::string const &accoundId)
 {
-  soci::session sql (soci::sqlite3, pathToTestDatabase);
+  soci::session sql (soci::sqlite3, pathToDatabase);
   return confu_soci::findStruct<Character> (sql, "id", confu_soci::insertStruct (sql, Character{ .id = {}, .positionX = {}, .positionY = {}, .positionZ = {}, .accountId = accoundId }, true, true));
 }
 
