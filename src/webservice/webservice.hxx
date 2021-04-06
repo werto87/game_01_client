@@ -4,6 +4,7 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <deque>
+#include <sys/types.h>
 class Webservice
 {
 public:

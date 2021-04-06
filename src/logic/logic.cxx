@@ -17,25 +17,33 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
 std::vector<std::string>
 handleMessage (std::string const &msg)
 {
   auto result = std::vector<std::string>{};
   if (boost::algorithm::starts_with (msg, "account|"))
     {
-      std::vector<std::string> splitMesssage{};
-      boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
-      if (splitMesssage.size () >= 2)
-        {
-          auto accountStringStream = std::stringstream{};
-          accountStringStream << splitMesssage.at (1);
-          boost::archive::text_iarchive ia (accountStringStream);
-          auto account = database::Account{};
-          ia >> account;
-          std::cout << confu_soci::structAsString (account) << std::endl;
-          soci::session sql (soci::sqlite3, pathToDatabase);
-          confu_soci::upsertStruct (sql, account, true);
-        }
+      createAccount (msg);
     }
-  return std::vector<std::string>{};
+  return result;
+}
+
+boost::optional<std::string>
+createAccount (std::string const &msg)
+{
+  std::vector<std::string> splitMesssage{};
+  boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
+  if (splitMesssage.size () >= 2)
+    {
+      auto accountStringStream = std::stringstream{};
+      accountStringStream << splitMesssage.at (1);
+      boost::archive::text_iarchive ia (accountStringStream);
+      auto account = database::Account{};
+      ia >> account;
+      std::cout << confu_soci::structAsString (account) << std::endl;
+      soci::session sql (soci::sqlite3, pathToDatabase);
+      confu_soci::upsertStruct (sql, account, true);
+    }
+  return {};
 }
