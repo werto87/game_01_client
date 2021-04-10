@@ -28,9 +28,11 @@ public:
   Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
 
 private:
-  bool _showDemoWindow = true;
+  bool _showDemoWindow = false;
+  bool _signIn = false;
   float _fontSize = 0.5f;
-  std::string text{};
+  std::string password{};
+  std::string username{};
   std::shared_ptr<std::deque<std::string> > _msgToSend{};
 };
 

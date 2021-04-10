@@ -43,22 +43,33 @@ ImGuiExample::drawEvent ()
   if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
+
   auto groupName = std::string{ "hello" };
   soci::session sql (soci::sqlite3, pathToDatabase);
   if (auto account = confu_soci::findStruct<database::Account> (sql, "accountName", "werto123"))
     {
       groupName = account->accountName + " " + account->password;
     }
-  ImGui::Begin (groupName.c_str ());
+  ImGui::SetNextWindowSize (ImVec2 (windowSize ().x (), windowSize ().y ()));
+  auto tempBool = true;
+  ImGui::Begin (groupName.c_str (), &tempBool, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+  ImGui::Text ("Sign in to XYZ");
+  ImGui::Text ("Username");
+  ImGui::InputText ("##username", &username);
+  ImGui::Text ("Password");
+  ImGui::InputText ("##password", &password);
+  if (ImGui::Button ("Sign in")) _signIn ^= true;
   ImGui::SliderFloat ("Scale Font", &_fontSize, 0.1f, 1.0f);
   auto shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
-  ImGui::InputText ("test", &text);
-  if (ImGui::IsItemDeactivatedAfterEdit ())
-    {
-      _msgToSend->push_back (text);
-    }
+  ImGui::Dummy (ImVec2 (0.0f, windowSize ().y () / 2));
+  // ImGui::InputText ("test", &text);
+  // if (ImGui::IsItemDeactivatedAfterEdit ())
+  //   {
+  //     _msgToSend->push_back (text);
+  //   }
   if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
   ImGui::End ();
+
   if (_showDemoWindow)
     {
       ImGui::SetNextWindowPos (ImVec2 (650, 20), ImGuiCond_FirstUseEver);

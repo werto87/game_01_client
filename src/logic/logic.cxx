@@ -29,7 +29,7 @@ handleMessage (std::string const &msg)
   return result;
 }
 
-boost::optional<std::string>
+void
 createAccount (std::string const &msg)
 {
   std::vector<std::string> splitMesssage{};
@@ -45,5 +45,4 @@ createAccount (std::string const &msg)
       soci::session sql (soci::sqlite3, pathToDatabase);
       confu_soci::upsertStruct (sql, account, true);
     }
-  return {};
 }
