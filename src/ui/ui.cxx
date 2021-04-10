@@ -63,9 +63,6 @@ ImGuiExample::drawEvent ()
   ImGui::Dummy (ImVec2 (windowSize ().x () / 4, 0.0f));
   ImGui::SameLine ();
   ImGui::BeginChild ("ChildR", ImVec2 (windowSize ().x () / 2, (6 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-  // ImGui::Dummy (ImVec2 (0.0f, (windowSize ().y () - (7 * (ImGui::GetFontSize () + (ImGui::GetStyle ().ItemSpacing.y * 2)))) / 3));
-  // ImGui::Dummy (ImVec2 ((windowSize ().x () - ImGui::CalcTextSize ("Sign in to XYZ").x - (ImGui::GetStyle ().ItemSpacing.x * 2)) / 2, 0.0f));
-  // ImGui::SameLine ();
   ImGui::Text ("Sign in to XYZ");
   ImGui::Text ("Username");
   ImGui::InputText ("##username", &username);
@@ -80,39 +77,54 @@ ImGuiExample::drawEvent ()
     }
   ImGui::EndChild ();
   ImGui::PopStyleVar ();
-  ImGui::Dummy (ImVec2 ((windowSize ().x () - ImGui::CalcTextSize ("New to XYZ?").x - (ImGui::GetStyle ().ItemSpacing.x * 2)) / 2, 0.0f));
+  ImGui::Dummy (ImVec2 (windowSize ().x () / 4, 0.0f));
   ImGui::SameLine ();
+  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+  ImGui::BeginChild ("ChildR123", ImVec2 (windowSize ().x () / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 20), true, window_flags);
   ImGui::Text ("New to XYZ?");
   ImGui::SameLine ();
-  if (ImGui::Button ("create an account")) ImGui::OpenPopup ("my_select_popup");
-  ImGui::SetNextWindowSize (ImVec2 (windowSize ().x (), windowSize ().y ()));
-  if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+  static auto shouldOpenCreateAnAccount = false;
+  shouldOpenCreateAnAccount = shouldOpenCreateAnAccount || ImGui::Button ("create an account");
+  ImGui::PopStyleVar ();
+  ImGui::EndChild ();
+
+  // create account popup
+  if (shouldOpenCreateAnAccount)
     {
-      ImGui::Dummy (ImVec2 (0.0f, (windowSize ().y () - (6 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-      ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-      ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-      ImGui::Dummy (ImVec2 (windowSize ().x () / 4, 0.0f));
-      ImGui::SameLine ();
-      ImGui::BeginChild ("ChildR", ImVec2 (windowSize ().x () / 2, (6 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-      ImGui::Text ("Create your account");
-      ImGui::Text ("Username");
-      ImGui::InputText ("##account-username", &create_username);
-      ImGui::Text ("Password");
-      ImGui::InputText ("##account-password", &create_password, ImGuiInputTextFlags_Password);
-      if (ImGui::Button ("Back")) ImGui::CloseCurrentPopup ();
-      ImGui::SameLine ();
-      if (ImGui::Button ("Create account"))
+      ImGui::OpenPopup ("my_select_popup");
+      ImGui::SetNextWindowSize (ImVec2 (windowSize ().x (), windowSize ().y ()));
+      if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
         {
-          {
-            if (not create_username.empty () && not create_password.empty ())
+          ImGui::Dummy (ImVec2 (0.0f, (windowSize ().y () - (6 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+          ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+          ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+          ImGui::Dummy (ImVec2 (windowSize ().x () / 4, 0.0f));
+          ImGui::SameLine ();
+          ImGui::BeginChild ("ChildR", ImVec2 (windowSize ().x () / 2, (6 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
+          ImGui::Text ("Create your account");
+          ImGui::Text ("Username");
+          ImGui::InputText ("##account-username", &create_username);
+          ImGui::Text ("Password");
+          ImGui::InputText ("##account-password", &create_password, ImGuiInputTextFlags_Password);
+          if (ImGui::Button ("Back"))
+            {
+              ImGui::CloseCurrentPopup ();
+              shouldOpenCreateAnAccount = false;
+            }
+          ImGui::SameLine ();
+          if (ImGui::Button ("Create account"))
+            {
               {
-                _msgToSend->push_back ("create account|" + create_username + ',' + create_password);
+                if (not create_username.empty () && not create_password.empty ())
+                  {
+                    _msgToSend->push_back ("create account|" + create_username + ',' + create_password);
+                  }
               }
-          }
+            }
+          ImGui::EndChild ();
+          ImGui::PopStyleVar ();
+          ImGui::EndPopup ();
         }
-      ImGui::EndChild ();
-      ImGui::PopStyleVar ();
-      ImGui::EndPopup ();
     }
   ImGui::Dummy (ImVec2 (0.0f, windowSize ().y () / 2));
   ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);
