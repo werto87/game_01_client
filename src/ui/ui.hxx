@@ -29,10 +29,12 @@ public:
 
 private:
   bool _showDemoWindow = false;
-  bool _signIn = false;
-  float _fontSize = 0.5f;
+  bool _showCreateAccount = false;
+  float _fontScale = 0.5f;
   std::string password{};
   std::string username{};
+  std::string create_password{};
+  std::string create_username{};
   std::shared_ptr<std::deque<std::string> > _msgToSend{};
 };
 
