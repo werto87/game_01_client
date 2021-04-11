@@ -42,38 +42,88 @@ ImGuiExample::ImGuiExample (const Arguments &arguments, std::shared_ptr<std::deq
 }
 
 void
-ImGuiExample::drawEvent ()
+ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
 {
-  GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
-  _imgui.newFrame ();
-  /* Enable text input, if needed */
-  if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
-  else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
-    stopTextInput ();
+  auto const windowWidth = static_cast<float> (windowSize ().x ());
+  auto const windowHeight = static_cast<float> (windowSize ().y ());
+  ImGui::OpenPopup ("my_select_popup");
+  ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
+  if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+    {
+      ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+      ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+      ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Create your account").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushFont (font2);
+      ImGui::Text ("Create your account");
+      ImGui::PopFont ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+      ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
+      ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+      ImGui::Dummy (ImVec2 (10.0f, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
+      ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
+      ImGui::PopStyleVar ();
+      ImGui::PushItemWidth (-1.0f);
+      ImGui::Text ("Username");
+      ImGui::InputText ("##account-username", &create_username);
+      ImGui::Text ("Password");
+      ImGui::InputText ("##account-password", &create_password, ImGuiInputTextFlags_Password);
+      if (ImGui::Button ("Back"))
+        {
+          ImGui::CloseCurrentPopup ();
+          shouldOpenCreateAnAccount = false;
+        }
+      ImGui::SameLine ();
+      if (ImGui::Button ("Create account"))
+        {
+          {
+            if (not create_username.empty () && not create_password.empty ())
+              {
+                _msgToSend->push_back ("create account|" + create_username + ',' + create_password);
+              }
+          }
+        }
+      ImGui::PopItemWidth ();
+      ImGui::EndChild ();
+      ImGui::EndChild ();
+      ImGui::PopStyleVar ();
+      ImGui::EndPopup ();
+    }
+}
+
+void
+ImGuiExample::login ()
+{
   auto groupName = std::string{ "aahello" };
   soci::session sql (soci::sqlite3, pathToDatabase);
   if (auto account = confu_soci::findStruct<database::Account> (sql, "accountName", "werto123"))
     {
       groupName = account->accountName + " " + account->password;
     }
-  ImGui::SetCursorPos ({ 1.f, 1.f });
-  ImGui::SetNextWindowSize (ImVec2 (windowSize ().x (), windowSize ().y ()));
-  auto tempBool = true;
-  ImGui::Begin (groupName.c_str (), &tempBool, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-  ImGui::Dummy (ImVec2 (0.0f, (windowSize ().y () - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-  ImGui::Dummy (ImVec2 ((windowSize ().x () - ImGui::CalcTextSize ("Sign in to XYZ").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+  auto const windowWidth = static_cast<float> (windowSize ().x ());
+  auto const windowHeight = static_cast<float> (windowSize ().y ());
+  ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
+  ImGui::Begin (groupName.c_str (), nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+  ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+  ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to XYZ").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
   ImGui::SameLine ();
   ImGui::PushFont (font2);
   ImGui::Text ("Sign in to XYZ");
   ImGui::PopFont ();
-  ImGui::Dummy (ImVec2 (windowSize ().x () / 4, 0.0f));
+  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
   ImGui::SameLine ();
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::BeginChild ("ChildR", ImVec2 (windowSize ().x () / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 25), true, window_flags);
+  ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
   ImGui::PopStyleVar ();
+  ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+  ImGui::Dummy (ImVec2 (10.0f, 0.0f));
   ImGui::SameLine ();
-  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowSize ().x () / 2) - 30, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), false, window_flags);
+  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 30), false, window_flags);
   ImGui::PushItemWidth (-1.0f);
   ImGui::Text ("Username");
   ImGui::InputText ("##username", &username);
@@ -89,11 +139,11 @@ ImGuiExample::drawEvent ()
   ImGui::PopItemWidth ();
   ImGui::EndChild ();
   ImGui::EndChild ();
-  ImGui::Dummy (ImVec2 (windowSize ().x () / 4, 0.0f));
+  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
   ImGui::SameLine ();
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::BeginChild ("ChildR123", ImVec2 (windowSize ().x () / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 20), true, window_flags);
-  ImGui::Dummy (ImVec2 (((windowSize ().x () / 2) - (ImGui::CalcTextSize ("New to XYZ?").x + ImGui::CalcTextSize ("create an account").x + (ImGui::GetStyle ().ItemSpacing.x * 6))) / 2, 0.0f));
+  ImGui::BeginChild ("ChildR123", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 20), true, window_flags);
+  ImGui::Dummy (ImVec2 (((windowWidth / 2) - (ImGui::CalcTextSize ("New to XYZ?").x + ImGui::CalcTextSize ("create an account").x + (ImGui::GetStyle ().ItemSpacing.x * 6))) / 2, 0.0f));
   ImGui::SameLine ();
   ImGui::Text ("New to XYZ?");
   ImGui::SameLine ();
@@ -101,59 +151,25 @@ ImGuiExample::drawEvent ()
   shouldOpenCreateAnAccount = shouldOpenCreateAnAccount || ImGui::SmallButton ("create an account");
   ImGui::PopStyleVar ();
   ImGui::EndChild ();
-
-  // create account popup
   if (shouldOpenCreateAnAccount)
     {
-      ImGui::OpenPopup ("my_select_popup");
-      ImGui::SetNextWindowSize (ImVec2 (windowSize ().x (), windowSize ().y ()));
-      if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-        {
-          ImGui::Dummy (ImVec2 (0.0f, (windowSize ().y () - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-          ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-          ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-          ImGui::Dummy (ImVec2 ((windowSize ().x () - ImGui::CalcTextSize ("Create your account").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-          ImGui::SameLine ();
-          ImGui::PushFont (font2);
-          ImGui::Text ("Create your account");
-          ImGui::PopFont ();
-          ImGui::Dummy (ImVec2 (windowSize ().x () / 4, 0.0f));
-          ImGui::SameLine ();
-          ImGui::BeginChild ("ChildR", ImVec2 (windowSize ().x () / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
-          ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-          ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-          ImGui::SameLine ();
-          ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
-          ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowSize ().x () / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-          ImGui::PopStyleVar ();
-          ImGui::PushItemWidth (-1.0f);
-          ImGui::Text ("Username");
-          ImGui::InputText ("##account-username", &create_username);
-          ImGui::Text ("Password");
-          ImGui::InputText ("##account-password", &create_password, ImGuiInputTextFlags_Password);
-          if (ImGui::Button ("Back"))
-            {
-              ImGui::CloseCurrentPopup ();
-              shouldOpenCreateAnAccount = false;
-            }
-          ImGui::SameLine ();
-          if (ImGui::Button ("Create account"))
-            {
-              {
-                if (not create_username.empty () && not create_password.empty ())
-                  {
-                    _msgToSend->push_back ("create account|" + create_username + ',' + create_password);
-                  }
-              }
-            }
-          ImGui::PopItemWidth ();
-          ImGui::EndChild ();
-          ImGui::EndChild ();
-          ImGui::PopStyleVar ();
-          ImGui::EndPopup ();
-        }
+      createAccountPopup (shouldOpenCreateAnAccount);
     }
-  ImGui::Dummy (ImVec2 (0.0f, windowSize ().y () / 4));
+}
+
+void
+ImGuiExample::drawEvent ()
+{
+  GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
+  _imgui.newFrame ();
+  /* Enable text input, if needed */
+  if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
+  else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
+    stopTextInput ();
+
+  login ();
+
+  ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowSize ().y ()) / 4));
   ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);
   auto shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
   if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;

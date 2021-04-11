@@ -28,6 +28,8 @@ public:
   Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
 
 private:
+  void createAccountPopup (bool &shouldOpenCreateAnAccount);
+  void login ();
   bool _showDemoWindow = false;
   bool _showCreateAccount = false;
   float _fontScale = 0.5f;
