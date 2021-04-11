@@ -31,6 +31,7 @@ private:
   bool _showDemoWindow = false;
   bool _showCreateAccount = false;
   float _fontScale = 0.5f;
+  ImFont *font2{};
   std::string password{};
   std::string username{};
   std::string create_password{};
