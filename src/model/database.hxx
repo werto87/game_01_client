@@ -3,8 +3,6 @@
 
 #include "confu_boost/confuBoost.hxx"
 #include "confu_soci/convenienceFunctionForSoci.hxx"
-#include <boost/optional.hpp>
-#include <filesystem>
 
 BOOST_FUSION_DEFINE_STRUCT ((database), Character, (std::string, id) (long, positionX) (long, positionY) (long, positionZ) (std::string, accountId))
 BOOST_FUSION_DEFINE_STRUCT ((database), Account, (std::string, id) (std::string, accountName) (std::string, password))
