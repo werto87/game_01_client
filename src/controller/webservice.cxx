@@ -13,8 +13,12 @@
 #include <boost/optional/optional_io.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/type_index.hpp>
+#include <exception>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
+
+static std::deque<std::string> msgToSend{};
 
 void
 createAccount (std::string const &msg)
@@ -42,6 +46,40 @@ handleMessage (std::string const &msg)
     }
   else if (boost::algorithm::starts_with (msg, "login result|"))
     {
+    }
+  return result;
+}
+
+void
+sendMessage (std::string const &msg)
+{
+  msgToSend.push_back (msg);
+}
+
+void
+sendMessage (std::vector<std::string> &&msgs)
+{
+  msgToSend.insert (msgToSend.end (), make_move_iterator (msgs.begin ()), make_move_iterator (msgs.end ()));
+}
+
+bool
+messageEmpty ()
+{
+  return msgToSend.empty ();
+}
+
+std::string
+popFront ()
+{
+  auto result = std::string{};
+  if (msgToSend.empty ())
+    {
+      throw std::out_of_range ("cant pop from empty deque");
+    }
+  else
+    {
+      result = std::move (msgToSend.front ());
+      msgToSend.pop_front ();
     }
   return result;
 }

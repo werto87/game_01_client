@@ -40,7 +40,7 @@ main (int argc, char **argv)
       createTables ();
       boost::asio::io_context io_context (1);
       auto webservice = Webservice{ io_context };
-      ImGuiExample app{ { argc, argv }, webservice.msgToSend };
+      ImGuiExample app{ { argc, argv } };
       boost::asio::signal_set signals (io_context, SIGINT, SIGTERM);
       signals.async_wait ([&] (auto, auto) { io_context.stop (); });
       boost::asio::co_spawn (io_context, boost::bind (read, std::ref (io_context), std::ref (webservice)), boost::asio::detached);

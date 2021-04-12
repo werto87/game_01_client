@@ -18,8 +18,6 @@ public:
 
   boost::asio::awaitable<void> writeToServer ();
 
-  std::shared_ptr<std::deque<std::string> > msgToSend = std::make_shared<std::deque<std::string> > ();
-
 private:
   boost::asio::awaitable<std::string> my_read ();
 

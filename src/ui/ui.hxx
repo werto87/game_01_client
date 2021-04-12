@@ -10,7 +10,7 @@ class ImGuiExample : public Magnum::Platform::Application
 {
 
 public:
-  ImGuiExample (const Arguments &arguments, std::shared_ptr<std::deque<std::string> > msgToSend);
+  ImGuiExample (const Arguments &arguments);
 
   void drawEvent () override;
 
@@ -40,7 +40,6 @@ private:
   std::string username{};
   std::string create_password{};
   std::string create_username{};
-  std::shared_ptr<std::deque<std::string> > _msgToSend{};
 };
 
 #endif /* A76A25AE_A804_47C0_8549_6F15C0EB7035 */

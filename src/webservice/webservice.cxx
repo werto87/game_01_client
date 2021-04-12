@@ -69,9 +69,7 @@ Webservice::read ()
     {
       for (;;)
         {
-          auto readResult = co_await my_read ();
-          auto result = handleMessage (readResult);
-          msgToSend->insert (msgToSend->end (), make_move_iterator (result.begin ()), make_move_iterator (result.end ()));
+          sendMessage (handleMessage (co_await my_read ()));
         }
     }
   catch (std::exception &e)
@@ -104,11 +102,10 @@ Webservice::writeToServer ()
           using namespace std::chrono_literals;
           timer.expires_after (1s);
           co_await timer.async_wait (use_awaitable);
-          while (not msgToSend->empty ())
+
+          while (not messageEmpty ())
             {
-              auto msg = std::move (msgToSend->front ());
-              msgToSend->pop_front ();
-              co_await ws.async_write (buffer (msg), use_awaitable);
+              co_await ws.async_write (buffer (popFront ()), use_awaitable);
             }
         }
     }

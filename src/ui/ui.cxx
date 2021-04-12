@@ -1,5 +1,6 @@
 #include "src/ui/ui.hxx"
 #include "src/controller/database.hxx"
+#include "src/controller/webservice.hxx"
 #include <Magnum/GL/Buffer.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Mesh.h>
@@ -19,9 +20,8 @@
 #include <misc/cpp/imgui_stdlib.h>
 using namespace Magnum;
 
-ImGuiExample::ImGuiExample (const Arguments &arguments, std::shared_ptr<std::deque<std::string> > msgToSend) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }, Vector2{ 1, 1 }) }, _msgToSend{ msgToSend }
+ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }, Vector2{ 1, 1 }) }
 {
-
   ImGui::CreateContext ();
   ImGuiIO &io = ImGui::GetIO ();
   static auto iniFile = std::filesystem::path{ PATH_TO_BINARY }.parent_path ().append ("asset").append ("imgui.ini");
@@ -98,7 +98,7 @@ ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
           {
             if (not create_username.empty () && not create_password.empty ())
               {
-                _msgToSend->push_back ("create account|" + create_username + ',' + create_password);
+                sendMessage ("create account|" + create_username + ',' + create_password);
               }
           }
         }
@@ -143,7 +143,7 @@ ImGuiExample::login ()
     {
       if (not username.empty () && not password.empty ())
         {
-          _msgToSend->push_back ("login account|" + username + ',' + password);
+          sendMessage ("login account|" + username + ',' + password);
         }
     }
   ImGui::PopItemWidth ();

@@ -6,4 +6,9 @@
 
 std::vector<std::string> handleMessage (std::string const &msg);
 
+void sendMessage (std::string const &msg);
+void sendMessage (std::vector<std::string> &&msg);
+bool messageEmpty ();
+std::string popFront ();
+
 #endif /* F06EFE63_F044_49C0_9D23_F73303313BC1 */

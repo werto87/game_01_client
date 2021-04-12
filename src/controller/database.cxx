@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include <system_error>
 
-std::string pathToDatabase;
+static std::string pathToDatabase{};
 
 void
 createEmptyDatabase ()
