@@ -42,6 +42,21 @@ ImGuiExample::ImGuiExample (const Arguments &arguments, std::shared_ptr<std::deq
 }
 
 void
+ImGuiExample::debug (bool &shouldChangeFontSize)
+{
+  ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowSize ().y ()) / 4));
+  ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);
+  shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
+  if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
+  ImGui::End ();
+  if (_showDemoWindow)
+    {
+      ImGui::SetNextWindowPos (ImVec2 (650, 20), ImGuiCond_FirstUseEver);
+      ImGui::ShowDemoWindow ();
+    }
+}
+
+void
 ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
 {
   auto const windowWidth = static_cast<float> (windowSize ().x ());
@@ -158,6 +173,17 @@ ImGuiExample::login ()
 }
 
 void
+ImGuiExample::updateFontSize ()
+{
+  ImGuiIO &io = ImGui::GetIO ();
+  io.Fonts->Clear ();
+  auto currentFont = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50 * _fontScale);
+  font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 75 * _fontScale);
+  _imgui.relayout ({ static_cast<float> (windowSize ().x ()), static_cast<float> (windowSize ().y ()) }, windowSize (), framebufferSize ());
+  ImGui::SetCurrentFont (currentFont);
+}
+
+void
 ImGuiExample::drawEvent ()
 {
   GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
@@ -166,19 +192,9 @@ ImGuiExample::drawEvent ()
   if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
-
   login ();
-
-  ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowSize ().y ()) / 4));
-  ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);
-  auto shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
-  if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
-  ImGui::End ();
-  if (_showDemoWindow)
-    {
-      ImGui::SetNextWindowPos (ImVec2 (650, 20), ImGuiCond_FirstUseEver);
-      ImGui::ShowDemoWindow ();
-    }
+  auto shouldUpdateFontSize = false;
+  debug (shouldUpdateFontSize);
   /* Update application cursor */
   _imgui.updateApplicationCursor (*this);
   /* Set appropriate states. If you only draw ImGui, it is sufficient to
@@ -196,15 +212,7 @@ ImGuiExample::drawEvent ()
   GL::Renderer::disable (GL::Renderer::Feature::Blending);
   swapBuffers ();
   redraw ();
-  if (shouldChangeFontSize)
-    {
-      ImGuiIO &io = ImGui::GetIO ();
-      io.Fonts->Clear ();
-      auto currentFont = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50 * _fontScale);
-      font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 75 * _fontScale);
-      _imgui.relayout ({ static_cast<float> (windowSize ().x ()), static_cast<float> (windowSize ().y ()) }, windowSize (), framebufferSize ());
-      ImGui::SetCurrentFont (currentFont);
-    }
+  if (shouldUpdateFontSize) updateFontSize ();
 }
 
 void

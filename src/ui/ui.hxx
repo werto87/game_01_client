@@ -30,6 +30,8 @@ public:
 private:
   void createAccountPopup (bool &shouldOpenCreateAnAccount);
   void login ();
+  void debug (bool &shouldChangeFontSize);
+  void updateFontSize ();
   bool _showDemoWindow = false;
   bool _showCreateAccount = false;
   float _fontScale = 0.5f;
