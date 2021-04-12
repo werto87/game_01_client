@@ -48,7 +48,7 @@ ImGuiExample::debug (bool &shouldChangeFontSize)
   ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);
   shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
   if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
-  ImGui::End ();
+
   if (_showDemoWindow)
     {
       ImGui::SetNextWindowPos (ImVec2 (650, 20), ImGuiCond_FirstUseEver);
@@ -98,7 +98,7 @@ ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
           {
             if (not create_username.empty () && not create_password.empty ())
               {
-                sendMessage ("create account|" + create_username + ',' + create_password);
+                WebserviceController::sendMessage ("create account|" + create_username + ',' + create_password);
               }
           }
         }
@@ -113,11 +113,9 @@ ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
 void
 ImGuiExample::login ()
 {
-  auto groupName = std::string{ "aahello" };
   auto const windowWidth = static_cast<float> (windowSize ().x ());
   auto const windowHeight = static_cast<float> (windowSize ().y ());
   ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
-  ImGui::Begin (groupName.c_str (), nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
   ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
   ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to XYZ").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
   ImGui::SameLine ();
@@ -143,7 +141,7 @@ ImGuiExample::login ()
     {
       if (not username.empty () && not password.empty ())
         {
-          sendMessage ("login account|" + username + ',' + password);
+          WebserviceController::sendMessage ("login account|" + username + ',' + password);
         }
     }
   ImGui::PopItemWidth ();
@@ -187,9 +185,20 @@ ImGuiExample::drawEvent ()
   if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
-  login ();
+  auto const windowWidth = static_cast<float> (windowSize ().x ());
+  auto const windowHeight = static_cast<float> (windowSize ().y ());
+  ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
+  ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+  if (not WebserviceController::isLoggedIn ()) login ();
+  else
+    {
+
+      ImGuiStyle &style = ImGui::GetStyle ();
+      style.Colors[ImGuiCol_WindowBg] = { 0, 1, 0, 1 };
+    }
   auto shouldUpdateFontSize = false;
   debug (shouldUpdateFontSize);
+  ImGui::End ();
   /* Update application cursor */
   _imgui.updateApplicationCursor (*this);
   /* Set appropriate states. If you only draw ImGui, it is sufficient to

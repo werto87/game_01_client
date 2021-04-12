@@ -12,8 +12,6 @@ public:
 
   boost::asio::awaitable<void> connect ();
 
-  boost::asio::awaitable<void> sendMsg (std::string msg);
-
   boost::asio::awaitable<void> read ();
 
   boost::asio::awaitable<void> writeToServer ();

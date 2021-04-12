@@ -18,7 +18,8 @@
 #include <sstream>
 #include <stdexcept>
 
-static std::deque<std::string> msgToSend{};
+std::deque<std::string> WebserviceController::msgToSend{};
+Session WebserviceController::session{};
 
 void
 createAccount (std::string const &msg)
@@ -36,8 +37,19 @@ createAccount (std::string const &msg)
     }
 }
 
+void
+WebserviceController::setIsLoggedIn (std::string const &msg)
+{
+  std::vector<std::string> splitMesssage{};
+  boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
+  if (splitMesssage.size () == 2)
+    {
+      session.isLoggedIn = (splitMesssage.at (1) == "true") ? true : false;
+    }
+}
+
 std::vector<std::string>
-handleMessage (std::string const &msg)
+WebserviceController::handleMessage (std::string const &msg)
 {
   auto result = std::vector<std::string>{};
   if (boost::algorithm::starts_with (msg, "account|"))
@@ -46,30 +58,31 @@ handleMessage (std::string const &msg)
     }
   else if (boost::algorithm::starts_with (msg, "login result|"))
     {
+      setIsLoggedIn (msg);
     }
   return result;
 }
 
 void
-sendMessage (std::string const &msg)
+WebserviceController::sendMessage (std::string const &msg)
 {
   msgToSend.push_back (msg);
 }
 
 void
-sendMessage (std::vector<std::string> &&msgs)
+WebserviceController::sendMessage (std::vector<std::string> &&msgs)
 {
   msgToSend.insert (msgToSend.end (), make_move_iterator (msgs.begin ()), make_move_iterator (msgs.end ()));
 }
 
 bool
-messageEmpty ()
+WebserviceController::messageEmpty ()
 {
   return msgToSend.empty ();
 }
 
 std::string
-popFront ()
+WebserviceController::popFront ()
 {
   auto result = std::string{};
   if (msgToSend.empty ())

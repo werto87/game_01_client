@@ -56,12 +56,6 @@ Webservice::connect ()
   co_await ws.async_handshake (host, "/", boost::asio::use_awaitable);
 }
 
-awaitable<void>
-Webservice::sendMsg (std::string msg)
-{
-  co_await ws.async_write (boost::asio::buffer (msg), boost::asio::use_awaitable);
-}
-
 boost::asio::awaitable<void>
 Webservice::read ()
 {
@@ -69,7 +63,7 @@ Webservice::read ()
     {
       for (;;)
         {
-          sendMessage (handleMessage (co_await my_read ()));
+          WebserviceController::sendMessage (WebserviceController::handleMessage (co_await my_read ()));
         }
     }
   catch (std::exception &e)
@@ -103,9 +97,9 @@ Webservice::writeToServer ()
           timer.expires_after (1s);
           co_await timer.async_wait (use_awaitable);
 
-          while (not messageEmpty ())
+          while (not WebserviceController::messageEmpty ())
             {
-              co_await ws.async_write (buffer (popFront ()), use_awaitable);
+              co_await ws.async_write (buffer (WebserviceController::popFront ()), use_awaitable);
             }
         }
     }
