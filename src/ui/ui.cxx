@@ -1,5 +1,5 @@
 #include "src/ui/ui.hxx"
-#include "src/database/database.hxx"
+#include "src/controller/database.hxx"
 #include <Magnum/GL/Buffer.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Mesh.h>
@@ -114,11 +114,6 @@ void
 ImGuiExample::login ()
 {
   auto groupName = std::string{ "aahello" };
-  soci::session sql (soci::sqlite3, pathToDatabase);
-  if (auto account = confu_soci::findStruct<database::Account> (sql, "accountName", "werto123"))
-    {
-      groupName = account->accountName + " " + account->password;
-    }
   auto const windowWidth = static_cast<float> (windowSize ().x ());
   auto const windowHeight = static_cast<float> (windowSize ().y ());
   ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));

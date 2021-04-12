@@ -1,6 +1,6 @@
-#include "src/logic/logic.hxx"
+#include "src/controller/webservice.hxx"
 #include "confu_soci/convenienceFunctionForSoci.hxx"
-#include "src/database/database.hxx"
+#include "src/model/database.hxx"
 #include <algorithm>
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/algorithm/string.hpp>
@@ -15,19 +15,6 @@
 #include <boost/type_index.hpp>
 #include <iostream>
 #include <sstream>
-#include <string>
-#include <vector>
-
-std::vector<std::string>
-handleMessage (std::string const &msg)
-{
-  auto result = std::vector<std::string>{};
-  if (boost::algorithm::starts_with (msg, "account|"))
-    {
-      createAccount (msg);
-    }
-  return result;
-}
 
 void
 createAccount (std::string const &msg)
@@ -42,7 +29,19 @@ createAccount (std::string const &msg)
       auto account = database::Account{};
       ia >> account;
       std::cout << confu_soci::structAsString (account) << std::endl;
-      soci::session sql (soci::sqlite3, pathToDatabase);
-      confu_soci::upsertStruct (sql, account, true);
     }
+}
+
+std::vector<std::string>
+handleMessage (std::string const &msg)
+{
+  auto result = std::vector<std::string>{};
+  if (boost::algorithm::starts_with (msg, "account|"))
+    {
+      createAccount (msg);
+    }
+  else if (boost::algorithm::starts_with (msg, "login result|"))
+    {
+    }
+  return result;
 }

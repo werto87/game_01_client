@@ -1,5 +1,6 @@
  target_sources(${TARGET_NAME} PRIVATE 
  "database.hxx"
  "database.cxx"
- "global.hxx"
+ "webservice.hxx"
+ "webservice.cxx"
  )

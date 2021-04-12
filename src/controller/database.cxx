@@ -1,4 +1,4 @@
-#include "src/database/database.hxx"
+#include "src/model/database.hxx"
 #include <boost/lexical_cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -11,15 +11,14 @@
 #include <system_error>
 
 std::string pathToDatabase;
-u_int32_t filePostfix;
-
-namespace database
-{
 
 void
 createEmptyDatabase ()
 {
-  filePostfix = 0;
+  std::string const pathToTemplateDatabase = std::filesystem::path{ PATH_TO_BINARY }.parent_path ().append ("template_database").append ("empty_test_db");
+  std::string const pathToDatabaseFolder = std::filesystem::path{ PATH_TO_BINARY }.append ("database");
+  std::string const databaseName = "game_db";
+  auto filePostfix = 0u;
 #ifdef DEBUG
   // in debug mode its allowed to start multiple instances
   // NOTE every instance is started with a fresh database
@@ -44,25 +43,16 @@ void
 createTables ()
 {
   soci::session sql (soci::sqlite3, pathToDatabase);
-  confu_soci::createTableForStruct<Character> (sql, { { "accountId", "Account", "id" } });
-  confu_soci::createTableForStruct<Account> (sql);
-  confu_soci::createTableForStruct<BoardElement> (sql, { { "boardId", "Board", "id" } });
-  confu_soci::createTableForStruct<Board> (sql, { { "gameId", "Game", "id" } });
-  confu_soci::createTableForStruct<Game> (sql);
+  confu_soci::createTableForStruct<database::Character> (sql, { { "accountId", "Account", "id" } });
+  confu_soci::createTableForStruct<database::Account> (sql);
+  confu_soci::createTableForStruct<database::BoardElement> (sql, { { "boardId", "Board", "id" } });
+  confu_soci::createTableForStruct<database::Board> (sql, { { "gameId", "Game", "id" } });
+  confu_soci::createTableForStruct<database::Game> (sql);
 }
 
-boost::optional<Account>
-createAccount (std::string const &firstName, std::string const &lastName)
+void
+upsertAccount (database::Account const &account)
 {
   soci::session sql (soci::sqlite3, pathToDatabase);
-  return confu_soci::findStruct<Account> (sql, "id", confu_soci::insertStruct (sql, Account{ .id = {}, .accountName = firstName, .password = lastName }, true, true));
+  confu_soci::upsertStruct (sql, account, true);
 }
-
-boost::optional<database::Character>
-createCharacter (std::string const &accoundId)
-{
-  soci::session sql (soci::sqlite3, pathToDatabase);
-  return confu_soci::findStruct<Character> (sql, "id", confu_soci::insertStruct (sql, Character{ .id = {}, .positionX = {}, .positionY = {}, .positionZ = {}, .accountId = accoundId }, true, true));
-}
-
-} // namespace database

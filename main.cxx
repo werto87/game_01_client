@@ -1,4 +1,4 @@
-#include "src/database/database.hxx"
+#include "src/controller/database.hxx"
 #include "src/ui/ui.hxx"
 #include "src/webservice/webservice.hxx"
 #include <boost/bind/bind.hpp>
@@ -36,8 +36,8 @@ main (int argc, char **argv)
 #endif
   try
     {
-      database::createEmptyDatabase ();
-      database::createTables ();
+      createEmptyDatabase ();
+      createTables ();
       boost::asio::io_context io_context (1);
       auto webservice = Webservice{ io_context };
       ImGuiExample app{ { argc, argv }, webservice.msgToSend };
