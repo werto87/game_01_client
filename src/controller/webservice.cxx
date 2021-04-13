@@ -44,7 +44,12 @@ WebserviceController::setIsLoggedIn (std::string const &msg)
   boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
   if (splitMesssage.size () == 2)
     {
-      session.isLoggedIn = (splitMesssage.at (1) == "true") ? true : false;
+      boost::algorithm::split (splitMesssage, splitMesssage.at (1), boost::is_any_of (","));
+      if (splitMesssage.size () == 2)
+        {
+          session.isLoggedIn = (splitMesssage.at (0) == "true") ? true : false;
+          session.loggInMessageFromServer = splitMesssage.at (1);
+        }
     }
 }
 

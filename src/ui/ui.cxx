@@ -177,6 +177,47 @@ ImGuiExample::updateFontSize ()
 }
 
 void
+ImGuiExample::loginErrorPopup ()
+{
+  auto const windowWidth = static_cast<float> (windowSize ().x ());
+  auto const windowHeight = static_cast<float> (windowSize ().y ());
+  ImGui::OpenPopup ("my_select_popup");
+  ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
+  if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+    {
+      ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+      ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+      ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Login error").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushFont (font2);
+      ImGui::Text ("Login error");
+      ImGui::PopFont ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+      ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
+      ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+      ImGui::Dummy (ImVec2 (10.0f, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
+      ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
+      ImGui::PopStyleVar ();
+      ImGui::Text ("%s", WebserviceController::logInMessageFromServer ().c_str ());
+      ImGui::EndChild ();
+      ImGui::EndChild ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+      if (ImGui::Button ("Back"))
+        {
+          WebserviceController::resetSession ();
+          ImGui::CloseCurrentPopup ();
+        }
+      ImGui::PopStyleVar ();
+      ImGui::EndPopup ();
+    }
+}
+
+void
 ImGuiExample::drawEvent ()
 {
   GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
@@ -189,12 +230,18 @@ ImGuiExample::drawEvent ()
   auto const windowHeight = static_cast<float> (windowSize ().y ());
   ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
   ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-  if (not WebserviceController::isLoggedIn ()) login ();
+  if (not WebserviceController::hasLoginState ()) login ();
   else
     {
-
-      ImGuiStyle &style = ImGui::GetStyle ();
-      style.Colors[ImGuiCol_WindowBg] = { 0, 1, 0, 1 };
+      if (WebserviceController::isLoggedIn ())
+        {
+          ImGuiStyle &style = ImGui::GetStyle ();
+          style.Colors[ImGuiCol_WindowBg] = { 0, 1, 0, 1 };
+        }
+      else
+        {
+          loginErrorPopup ();
+        }
     }
   auto shouldUpdateFontSize = false;
   debug (shouldUpdateFontSize);

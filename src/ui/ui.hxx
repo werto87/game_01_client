@@ -30,6 +30,7 @@ public:
 private:
   void createAccountPopup (bool &shouldOpenCreateAnAccount);
   void login ();
+  void loginErrorPopup ();
   void debug (bool &shouldChangeFontSize);
   void updateFontSize ();
   bool _showDemoWindow = false;

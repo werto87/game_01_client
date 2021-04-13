@@ -14,9 +14,25 @@ public:
   static bool messageEmpty ();
   static std::string popFront ();
   static bool
+  hasLoginState ()
+  {
+    return session.isLoggedIn.has_value ();
+  }
+  static bool
   isLoggedIn ()
   {
-    return session.isLoggedIn;
+    return session.isLoggedIn.value ();
+  }
+  static void
+  resetSession ()
+  {
+    session = Session{};
+  }
+
+  static std::string
+  logInMessageFromServer ()
+  {
+    return session.loggInMessageFromServer.value ();
   }
 
 private:
