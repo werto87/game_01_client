@@ -222,7 +222,7 @@ ImGuiExample::drawEvent ()
 {
   GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
   _imgui.newFrame ();
-  /* Enable text input, if needed */
+  /* Enable text input, if needed  */
   if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
