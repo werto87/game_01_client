@@ -9,4 +9,4 @@ struct Session
   boost::optional<std::string> loggInMessageFromServer{};
 };
 
-#endif /* A4CD9228_FA91_4A0A_B5FE_62BD8AF67601 */
+#endif /* A4CD9228_FA91_4A0A_B5FE_62BD8AF67601  */
