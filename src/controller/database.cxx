@@ -36,7 +36,7 @@ createEmptyDatabase ()
   std::filesystem::create_directory (pathToDatabaseFolder);
   pathToDatabase = std::filesystem::path{ pathToDatabaseFolder }.append (databaseName + std::to_string (filePostfix));
   std::cout << pathToDatabase << std::endl;
-  std::filesystem::copy_file (pathToTemplateDatabase, pathToDatabase, std::filesystem::copy_options::overwrite_existing);
+  std::filesystem::copy_file (pathToTemplateDatabase, pathToDatabase, std::filesystem::copy_options::skip_existing);
 }
 
 void
