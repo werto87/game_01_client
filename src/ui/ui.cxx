@@ -63,7 +63,7 @@ ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
   auto const windowHeight = static_cast<float> (windowSize ().y ());
   ImGui::OpenPopup ("my_select_popup");
   ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
-  if (ImGui::BeginPopup ("my_select_popup ", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+  if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
     {
       ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
       ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
