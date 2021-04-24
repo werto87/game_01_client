@@ -53,6 +53,36 @@ WebserviceController::setIsLoggedIn (std::string const &msg)
     }
 }
 
+void
+WebserviceController::channelJoined (std::string const &msg)
+{
+  std::vector<std::string> splitMesssage{};
+  boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
+  if (splitMesssage.size () == 2)
+    {
+      session.channelMessages.insert_or_assign (splitMesssage.at (1), std::vector<std::string>{});
+    }
+}
+
+void
+WebserviceController::broadcastedMessageForChannel (std::string const &msg)
+{
+  std::vector<std::string> splitMesssage{};
+  boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
+  if (splitMesssage.size () == 2)
+    {
+      boost::algorithm::split (splitMesssage, splitMesssage.at (1), boost::is_any_of (","));
+      if (splitMesssage.size () == 2)
+        {
+          auto messagesItr = session.channelMessages.find (splitMesssage.at (0));
+          if (messagesItr != session.channelMessages.end ())
+            {
+              messagesItr->second.push_back (splitMesssage.at (1));
+            }
+        }
+    }
+}
+
 std::vector<std::string>
 WebserviceController::handleMessage (std::string const &msg)
 {
@@ -65,6 +95,15 @@ WebserviceController::handleMessage (std::string const &msg)
     {
       setIsLoggedIn (msg);
     }
+  else if (boost::algorithm::starts_with (msg, "join channel|"))
+    {
+      channelJoined (msg);
+    }
+  else if (boost::algorithm::starts_with (msg, "broadcasted message for channel|"))
+    {
+      broadcastedMessageForChannel (msg);
+    }
+
   return result;
 }
 

@@ -12,6 +12,7 @@
 #include <Magnum/Primitives/Cube.h>
 #include <Magnum/Shaders/Phong.h>
 #include <Magnum/Trade/MeshData.h>
+#include <algorithm>
 #include <filesystem>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -45,6 +46,15 @@ void
 ImGuiExample::debug (bool &shouldChangeFontSize)
 {
   ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowSize ().y ()) / 4));
+  ImGui::Text ("Message to Send");
+  ImGui::InputText ("##sendMessage", &sendMessage);
+  if (ImGui::Button ("Send", ImVec2 (-1, 0)))
+    {
+      if (not sendMessage.empty ())
+        {
+          WebserviceController::sendMessage (sendMessage);
+        }
+    }
   ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);
   shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
   if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
@@ -218,10 +228,43 @@ ImGuiExample::loginErrorPopup ()
 }
 
 void
+ImGuiExample::lobby ()
+{
+  ImGuiStyle &style = ImGui::GetStyle ();
+  style.Colors[ImGuiCol_WindowBg] = { 0.5, 0.5, 0.5, 1 };
+  auto channelNames = WebserviceController::channelNames ();
+  if (ImGui::BeginCombo ("combo 1", "combo_label"))
+    {
+      if ((not selectedChannelName && not channelNames.empty ()) || (selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, selectedChannelName) == channelNames.end ()))
+        {
+          selectedChannelName = channelNames.front ();
+        }
+      for (auto &&channelName : channelNames)
+        {
+          const bool is_selected = (selectedChannelName == channelName);
+          if (ImGui::Selectable (channelName.data (), is_selected)) selectedChannelName = channelName;
+          if (is_selected) ImGui::SetItemDefaultFocus ();
+        }
+      ImGui::EndCombo ();
+    }
+  ImGui::BeginChild ("scrolling", ImVec2 (0, 500), false, ImGuiWindowFlags_HorizontalScrollbar);
+  if (selectedChannelName && std::ranges::find (channelNames, selectedChannelName) != channelNames.end ())
+    {
+      for (auto text : WebserviceController::messagesForChannel (selectedChannelName.value ()))
+        {
+          ImGui::TextUnformatted (text.data (), text.data () + text.size ());
+        }
+      if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
+    }
+  ImGui::EndChild ();
+}
+
+void
 ImGuiExample::drawEvent ()
 {
   GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
   _imgui.newFrame ();
+
   /* Enable text input, if needed  */
   if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
@@ -235,16 +278,17 @@ ImGuiExample::drawEvent ()
     {
       if (WebserviceController::isLoggedIn ())
         {
-          ImGuiStyle &style = ImGui::GetStyle ();
-          style.Colors[ImGuiCol_WindowBg] = { 0, 1, 0, 1 };
+          lobby ();
         }
       else
         {
           loginErrorPopup ();
         }
     }
+
   auto shouldUpdateFontSize = false;
   debug (shouldUpdateFontSize);
+
   ImGui::End ();
   /* Update application cursor */
   _imgui.updateApplicationCursor (*this);

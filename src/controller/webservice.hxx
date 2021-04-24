@@ -2,7 +2,9 @@
 #define F06EFE63_F044_49C0_9D23_F73303313BC1
 
 #include "src/model/session.hxx"
+#include <cstddef>
 #include <deque>
+#include <pipes/pipes.hpp>
 #include <string>
 #include <vector>
 class WebserviceController
@@ -35,8 +37,30 @@ public:
     return session.loggInMessageFromServer.value ();
   }
 
+  static size_t
+  channelCount ()
+  {
+    return session.channelMessages.size ();
+  }
+
+  static std::vector<std::string>
+  channelNames ()
+  {
+    auto result = std::vector<std::string>{};
+    session.channelMessages >>= pipes::transform ([] (auto const &channelAndMessages) { return std::get<0> (channelAndMessages); }) >>= pipes::push_back (result);
+    return result;
+  }
+
+  static std::vector<std::string> const &
+  messagesForChannel (std::string const &channel)
+  {
+    return session.channelMessages.at (channel);
+  }
+
 private:
   static void setIsLoggedIn (std::string const &msg);
+  static void channelJoined (std::string const &msg);
+  static void broadcastedMessageForChannel (std::string const &msg);
   static std::deque<std::string> msgToSend;
   static Session session;
 };

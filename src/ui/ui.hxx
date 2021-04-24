@@ -3,6 +3,8 @@
 
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
+#include <boost/optional.hpp>
+#include <cstddef>
 #include <deque>
 #include <memory>
 #include <string>
@@ -31,6 +33,7 @@ private:
   void createAccountPopup (bool &shouldOpenCreateAnAccount);
   void login ();
   void loginErrorPopup ();
+  void lobby ();
   void debug (bool &shouldChangeFontSize);
   void updateFontSize ();
   bool _showDemoWindow = false;
@@ -38,9 +41,11 @@ private:
   float _fontScale = 0.5f;
   ImFont *font2{};
   std::string password{};
+  std::string sendMessage{};
   std::string username{};
   std::string create_password{};
   std::string create_username{};
+  boost::optional<std::string> selectedChannelName{};
 };
 
 #endif /* A76A25AE_A804_47C0_8549_6F15C0EB7035 */

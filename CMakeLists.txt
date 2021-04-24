@@ -63,6 +63,8 @@ ${PROJECT_OPTIONS}
 CONAN_PKG::magnum_integration
 CONAN_PKG::confu_soci
 CONAN_PKG::confu_boost
+CONAN_PKG::range-v3
+CONAN_PKG::pipes
 )
 
 ####### create executable
