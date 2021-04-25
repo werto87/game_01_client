@@ -4,6 +4,7 @@
 #include "src/model/session.hxx"
 #include <cstddef>
 #include <deque>
+#include <game_01_shared_class/serialization.hxx>
 #include <pipes/pipes.hpp>
 #include <string>
 #include <vector>

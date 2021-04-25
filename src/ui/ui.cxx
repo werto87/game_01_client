@@ -151,6 +151,8 @@ ImGuiExample::login ()
     {
       if (not username.empty () && not password.empty ())
         {
+          // TODO seperator should not be ',' it should be something less used something which has no reason to be in text
+          // TODO disable the new seperator from text input for users
           WebserviceController::sendMessage ("login account|" + username + ',' + password);
         }
     }
