@@ -14,6 +14,7 @@
 #include <Magnum/Trade/MeshData.h>
 #include <algorithm>
 #include <filesystem>
+#include <game_01_shared_class/serialization.hxx>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <iostream>
@@ -235,7 +236,7 @@ ImGuiExample::lobby ()
   ImGuiStyle &style = ImGui::GetStyle ();
   style.Colors[ImGuiCol_WindowBg] = { 0.5, 0.5, 0.5, 1 };
   auto channelNames = WebserviceController::channelNames ();
-  if (ImGui::BeginCombo ("combo 1", "combo_label"))
+  if (ImGui::BeginCombo ("combo 1", selectedChannelName ? selectedChannelName.value ().data () : "Select Channel"))
     {
       if ((not selectedChannelName && not channelNames.empty ()) || (selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, selectedChannelName) == channelNames.end ()))
         {
@@ -259,6 +260,15 @@ ImGuiExample::lobby ()
       if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
     }
   ImGui::EndChild ();
+  ImGui::Text ("Join Channel");
+  ImGui::InputText ("##JoinChannel", &channelToJoin);
+  if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
+    {
+      if (not channelToJoin.empty ())
+        {
+          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = channelToJoin });
+        }
+    }
 }
 
 void

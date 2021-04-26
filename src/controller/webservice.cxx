@@ -13,7 +13,9 @@
 #include <boost/optional/optional_io.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/type_index.hpp>
+#include <confu_boost/confuBoost.hxx>
 #include <exception>
+#include <game_01_shared_class/serialization.hxx>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -60,7 +62,8 @@ WebserviceController::channelJoined (std::string const &msg)
   boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
   if (splitMesssage.size () == 2)
     {
-      session.channelMessages.insert_or_assign (splitMesssage.at (1), std::vector<std::string>{});
+      auto channel = confu_boost::toObject<shared_class::JoinChannel> (splitMesssage.at (1)).channel;
+      session.channelMessages.insert_or_assign (channel, std::vector<std::string>{});
     }
 }
 
@@ -95,7 +98,7 @@ WebserviceController::handleMessage (std::string const &msg)
     {
       setIsLoggedIn (msg);
     }
-  else if (boost::algorithm::starts_with (msg, "join channel|"))
+  else if (boost::algorithm::starts_with (msg, "JoinChannel|"))
     {
       channelJoined (msg);
     }

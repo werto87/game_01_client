@@ -46,6 +46,7 @@ private:
   std::string create_password{};
   std::string create_username{};
   boost::optional<std::string> selectedChannelName{};
+  std::string channelToJoin{};
 };
 
 #endif /* A76A25AE_A804_47C0_8549_6F15C0EB7035 */

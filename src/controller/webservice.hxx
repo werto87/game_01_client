@@ -2,6 +2,7 @@
 #define F06EFE63_F044_49C0_9D23_F73303313BC1
 
 #include "src/model/session.hxx"
+#include <confu_soci/convenienceFunctionForSoci.hxx>
 #include <cstddef>
 #include <deque>
 #include <game_01_shared_class/serialization.hxx>
@@ -56,6 +57,13 @@ public:
   messagesForChannel (std::string const &channel)
   {
     return session.channelMessages.at (channel);
+  }
+
+  template <typename TypeToSend>
+  static void
+  sendObject (TypeToSend const &typeToSend)
+  {
+    msgToSend.push_back (confu_soci::typeNameWithOutNamespace (typeToSend) + '|' + confu_boost::toString (typeToSend));
   }
 
 private:
