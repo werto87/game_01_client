@@ -35,6 +35,7 @@ private:
   void loginErrorPopup ();
   void lobby ();
   void debug (bool &shouldChangeFontSize);
+  void createAccountErrorPopup ();
   void updateFontSize ();
   bool _showDemoWindow = false;
   bool _showCreateAccount = false;
@@ -47,6 +48,7 @@ private:
   std::string create_username{};
   boost::optional<std::string> selectedChannelName{};
   std::string channelToJoin{};
+  std::string messageToSendToChannel{};
 };
 
 #endif /* A76A25AE_A804_47C0_8549_6F15C0EB7035 */

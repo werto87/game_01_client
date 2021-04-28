@@ -39,6 +39,18 @@ public:
     return session.loggInMessageFromServer.value ();
   }
 
+  static bool
+  isCreateAccountError ()
+  {
+    return session.createAccountErrorMessage.has_value ();
+  }
+
+  static std::string
+  createAccountError ()
+  {
+    return session.createAccountErrorMessage.value ();
+  }
+
   static size_t
   channelCount ()
   {
@@ -68,15 +80,15 @@ public:
 
 private:
   // BEGIN: handle messages from network---------------------------------------------
-  static void createAccountSuccess (std::string const &msg);
-  static void createAccountError (std::string const &msg);
-  static void loginAccountSuccess (std::string const &msg);
-  static void loginAccountError (std::string const &msg);
-  static void joinChannelSuccess (std::string const &msg);
-  static void joinChannelError (std::string const &msg);
-  static void broadCastMessage (std::string const &msg);
-  static void broadCastMessageSuccess (std::string const &msg);
-  static void broadCastMessageError (std::string const &msg);
+  static void createAccountSuccess (std::string const &objectAsString);
+  static void createAccountError (std::string const &objectAsString);
+  static void loginAccountSuccess (std::string const &objectAsString);
+  static void loginAccountError (std::string const &objectAsString);
+  static void joinChannelSuccess (std::string const &objectAsString);
+  static void joinChannelError (std::string const &objectAsString);
+  static void message (std::string const &objectAsString);
+  static void broadCastMessageSuccess (std::string const &objectAsString);
+  static void broadCastMessageError (std::string const &objectAsString);
   // END: handle messages from network-----------------------------------------------
 
   static std::deque<std::string> msgToSend;

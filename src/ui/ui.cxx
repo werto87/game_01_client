@@ -172,7 +172,14 @@ ImGuiExample::login ()
   ImGui::EndChild ();
   if (shouldOpenCreateAnAccount)
     {
-      createAccountPopup (shouldOpenCreateAnAccount);
+      if (WebserviceController::isCreateAccountError ())
+        {
+          createAccountErrorPopup ();
+        }
+      else
+        {
+          createAccountPopup (shouldOpenCreateAnAccount);
+        }
     }
 }
 
@@ -229,6 +236,47 @@ ImGuiExample::loginErrorPopup ()
 }
 
 void
+ImGuiExample::createAccountErrorPopup ()
+{
+  auto const windowWidth = static_cast<float> (windowSize ().x ());
+  auto const windowHeight = static_cast<float> (windowSize ().y ());
+  ImGui::OpenPopup ("createAccountErrorPopup");
+  ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
+  if (ImGui::BeginPopup ("createAccountErrorPopup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+    {
+      ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+      ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+      ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Create Account Error").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushFont (font2);
+      ImGui::Text ("Create Account Error");
+      ImGui::PopFont ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+      ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
+      ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+      ImGui::Dummy (ImVec2 (10.0f, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
+      ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
+      ImGui::PopStyleVar ();
+      ImGui::Text ("%s", WebserviceController::createAccountError ().c_str ());
+      ImGui::EndChild ();
+      ImGui::EndChild ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+      if (ImGui::Button ("Back"))
+        {
+          WebserviceController::resetSession ();
+          ImGui::CloseCurrentPopup ();
+        }
+      ImGui::PopStyleVar ();
+      ImGui::EndPopup ();
+    }
+}
+
+void
 ImGuiExample::lobby ()
 {
   ImGuiStyle &style = ImGui::GetStyle ();
@@ -265,6 +313,17 @@ ImGuiExample::lobby ()
       if (not channelToJoin.empty ())
         {
           WebserviceController::sendObject (shared_class::JoinChannel{ .channel = channelToJoin });
+          channelToJoin.clear ();
+        }
+    }
+  ImGui::Text ("Send to Channel");
+  ImGui::InputText ("##SendToChannel", &messageToSendToChannel);
+  if (ImGui::Button ("SendToChannel", ImVec2 (-1, 0)))
+    {
+      if (selectedChannelName && not selectedChannelName->empty () && not messageToSendToChannel.empty ())
+        {
+          WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = selectedChannelName.value (), .message = messageToSendToChannel });
+          messageToSendToChannel.clear ();
         }
     }
 }

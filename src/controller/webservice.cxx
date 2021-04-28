@@ -25,88 +25,71 @@ std::deque<std::string> WebserviceController::msgToSend{};
 Session WebserviceController::session{};
 
 void
-WebserviceController::createAccountSuccess (std::string const &msg)
+WebserviceController::createAccountSuccess (std::string const &objectAsString)
 {
-  auto createAccountSuccessObject = confu_boost::toObject<shared_class::CreateAccountSuccess> (msg);
+  auto createAccountSuccessObject = confu_boost::toObject<shared_class::CreateAccountSuccess> (objectAsString);
   upsertAccount (database::Account{ .id = createAccountSuccessObject.accountId, .accountName = createAccountSuccessObject.accountName, .password = {} });
 }
 
 void
-WebserviceController::createAccountError (std::string const &msg)
+WebserviceController::createAccountError (std::string const &objectAsString)
 {
-  auto createAccountErrorObject = confu_boost::toObject<shared_class::CreateAccountError> (msg);
-  std::terminate ();
+  auto createAccountErrorObject = confu_boost::toObject<shared_class::CreateAccountError> (objectAsString);
+  session.createAccountErrorMessage = createAccountErrorObject.error;
 }
 
 void
-WebserviceController::loginAccountSuccess (std::string const &msg)
+WebserviceController::loginAccountSuccess (std::string const &objectAsString)
 {
-  auto loginAccountSuccessObject = confu_boost::toObject<shared_class::LoginAccountSuccess> (msg);
+  auto loginAccountSuccessObject = confu_boost::toObject<shared_class::LoginAccountSuccess> (objectAsString);
   session.isLoggedIn = true;
 }
 
 void
-WebserviceController::loginAccountError (std::string const &msg)
+WebserviceController::loginAccountError (std::string const &objectAsString)
 {
-  auto loginAccountErrorObject = confu_boost::toObject<shared_class::LoginAccountError> (msg);
+  auto loginAccountErrorObject = confu_boost::toObject<shared_class::LoginAccountError> (objectAsString);
   session.isLoggedIn = false;
   session.loggInMessageFromServer = loginAccountErrorObject.error;
 }
 
 void
-WebserviceController::joinChannelSuccess (std::string const &msg)
+WebserviceController::joinChannelSuccess (std::string const &objectAsString)
 {
-  auto joinChannelSuccessObject = confu_boost::toObject<shared_class::JoinChannelSuccess> (msg);
+  auto joinChannelSuccessObject = confu_boost::toObject<shared_class::JoinChannelSuccess> (objectAsString);
+  session.channelMessages.insert_or_assign (joinChannelSuccessObject.channel, std::vector<std::string>{});
+}
+
+void
+WebserviceController::joinChannelError (std::string const &objectAsString)
+{
+  auto joinChannelErrorObject = confu_boost::toObject<shared_class::JoinChannelError> (objectAsString);
   std::terminate ();
-  std::vector<std::string> splitMesssage{};
-  boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
-  if (splitMesssage.size () == 2)
+}
+
+void
+WebserviceController::message (std::string const &objectAsString)
+{
+  auto messageObject = confu_boost::toObject<shared_class::Message> (objectAsString);
+  auto messagesItr = session.channelMessages.find (messageObject.channel);
+  if (messagesItr != session.channelMessages.end ())
     {
-      auto channel = confu_boost::toObject<shared_class::JoinChannel> (splitMesssage.at (1)).channel;
-      session.channelMessages.insert_or_assign (channel, std::vector<std::string>{});
+      messagesItr->second.push_back (messageObject.fromAccount + ": " + messageObject.message);
     }
 }
 
 void
-WebserviceController::joinChannelError (std::string const &msg)
+WebserviceController::broadCastMessageSuccess (std::string const &objectAsString)
 {
-  auto joinChannelErrorObject = confu_boost::toObject<shared_class::JoinChannelError> (msg);
-  std::terminate ();
+  // auto broadCastMessageSuccessObject = confu_boost::toObject<shared_class::BroadCastMessageSuccess> (objectAsString);
+  // std::terminate ();
 }
 
 void
-WebserviceController::broadCastMessage (std::string const &msg)
+WebserviceController::broadCastMessageError (std::string const &objectAsString)
 {
-  auto broadCastMessageObject = confu_boost::toObject<shared_class::BroadCastMessage> (msg);
-  std::terminate ();
-  std::vector<std::string> splitMesssage{};
-  boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
-  if (splitMesssage.size () == 2)
-    {
-      boost::algorithm::split (splitMesssage, splitMesssage.at (1), boost::is_any_of (","));
-      if (splitMesssage.size () == 2)
-        {
-          auto messagesItr = session.channelMessages.find (splitMesssage.at (0));
-          if (messagesItr != session.channelMessages.end ())
-            {
-              messagesItr->second.push_back (splitMesssage.at (1));
-            }
-        }
-    }
-}
-
-void
-WebserviceController::broadCastMessageSuccess (std::string const &msg)
-{
-  auto broadCastMessageSuccessObject = confu_boost::toObject<shared_class::BroadCastMessageSuccess> (msg);
-  std::terminate ();
-}
-
-void
-WebserviceController::broadCastMessageError (std::string const &msg)
-{
-  auto broadCastMessageErrorObject = confu_boost::toObject<shared_class::BroadCastMessageError> (msg);
-  std::terminate ();
+  // auto broadCastMessageErrorObject = confu_boost::toObject<shared_class::BroadCastMessageError> (objectAsString);
+  // std::terminate ();
 }
 
 std::vector<std::string>
@@ -143,9 +126,9 @@ WebserviceController::handleMessage (std::string const &msg)
         {
           joinChannelError (objectAsString);
         }
-      else if (typeToSearch == "BroadCastMessage")
+      else if (typeToSearch == "Message")
         {
-          broadCastMessage (objectAsString);
+          message (objectAsString);
         }
       else if (typeToSearch == "BroadCastMessageSuccess")
         {
@@ -154,6 +137,10 @@ WebserviceController::handleMessage (std::string const &msg)
       else if (typeToSearch == "BroadCastMessageError")
         {
           broadCastMessageError (objectAsString);
+        }
+      else
+        {
+          std::cout << "could not find a match for typeToSearch '" << typeToSearch << "'" << std::endl;
         }
     }
   return result;
