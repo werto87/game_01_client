@@ -109,7 +109,7 @@ ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
           {
             if (not create_username.empty () && not create_password.empty ())
               {
-                WebserviceController::sendMessage ("create account|" + create_username + ',' + create_password);
+                WebserviceController::sendObject (shared_class::CreateAccount{ .accountName = create_username, .password = create_password });
               }
           }
         }
@@ -152,9 +152,7 @@ ImGuiExample::login ()
     {
       if (not username.empty () && not password.empty ())
         {
-          // TODO seperator should not be ',' it should be something less used something which has no reason to be in text
-          // TODO disable the new seperator from text input for users
-          WebserviceController::sendMessage ("login account|" + username + ',' + password);
+          WebserviceController::sendObject (shared_class::LoginAccount{ .accountName = username, .password = password });
         }
     }
   ImGui::PopItemWidth ();

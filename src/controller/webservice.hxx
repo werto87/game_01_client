@@ -67,9 +67,18 @@ public:
   }
 
 private:
-  static void setIsLoggedIn (std::string const &msg);
-  static void channelJoined (std::string const &msg);
-  static void broadcastedMessageForChannel (std::string const &msg);
+  // BEGIN: handle messages from network---------------------------------------------
+  static void createAccountSuccess (std::string const &msg);
+  static void createAccountError (std::string const &msg);
+  static void loginAccountSuccess (std::string const &msg);
+  static void loginAccountError (std::string const &msg);
+  static void joinChannelSuccess (std::string const &msg);
+  static void joinChannelError (std::string const &msg);
+  static void broadCastMessage (std::string const &msg);
+  static void broadCastMessageSuccess (std::string const &msg);
+  static void broadCastMessageError (std::string const &msg);
+  // END: handle messages from network-----------------------------------------------
+
   static std::deque<std::string> msgToSend;
   static Session session;
 };
