@@ -1,6 +1,7 @@
 #ifndef A76A25AE_A804_47C0_8549_6F15C0EB7035
 #define A76A25AE_A804_47C0_8549_6F15C0EB7035
 
+#include "src/ui/uiState.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <boost/optional.hpp>
@@ -30,44 +31,18 @@ public:
 
   Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
 
-  // TODO play around with variant as state machine
-  struct Login
-  {
-    bool shouldOpenCreateAnAccount;
-    std::string username;
-    std::string password;
-  };
-  struct CreateAccount
-  {
-    std::string username;
-    std::string password;
-  };
-  struct Lobby
-  {
-    boost::optional<std::string> selectedChannelName;
-    std::string channelToJoin;
-    std::string messageToSendToChannel;
-  };
-
-  typedef std::variant<Login, CreateAccount, Lobby> GuiState;
-
-  GuiState guiState{};
-
 private:
+  GuiState guiState{};
   GuiState createAccountPopup (CreateAccount &createAccountState);
   GuiState login (Login &loginState);
-  void loginErrorPopup ();
   GuiState lobby (Lobby &lobbyState);
+  void loginErrorPopup ();
   void debug (bool &shouldChangeFontSize);
   void createAccountErrorPopup ();
   void updateFontSize ();
   bool _showDemoWindow = false;
-  bool _showCreateAccount = false;
   float _fontScale = 0.5f;
   ImFont *font2{};
-  Login loginData{};
-  Lobby lobbyData{};
-  CreateAccount createAccountData{};
   std::string sendMessage{};
   bool _shouldOpenCreateAnAccount{};
 };

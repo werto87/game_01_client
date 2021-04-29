@@ -74,7 +74,7 @@ ImGuiExample::debug (bool &shouldChangeFontSize)
     }
 }
 
-ImGuiExample::GuiState
+GuiState
 ImGuiExample::createAccountPopup (CreateAccount &createAccountState)
 {
   if (WebserviceController::hasLoginState ())
@@ -146,7 +146,7 @@ ImGuiExample::createAccountPopup (CreateAccount &createAccountState)
     }
 }
 
-ImGuiExample::GuiState
+GuiState
 ImGuiExample::login (Login &loginState)
 {
   if (WebserviceController::hasLoginState ())
@@ -210,7 +210,6 @@ ImGuiExample::login (Login &loginState)
         }
       else
         {
-          createAccountPopup (createAccountData);
           return CreateAccount{};
         }
     }
@@ -310,7 +309,7 @@ ImGuiExample::createAccountErrorPopup ()
     }
 }
 
-ImGuiExample::GuiState
+GuiState
 ImGuiExample::lobby (Lobby &lobbyState)
 {
   if (not(WebserviceController::hasLoginState () && WebserviceController::isLoggedIn ()))
@@ -375,7 +374,6 @@ ImGuiExample::lobby (Lobby &lobbyState)
   if (ImGui::Button ("Logout", ImVec2 (-1, 0)))
     {
       std::cout << "LOGOUT" << std::endl;
-      // TODO send logout to server
       WebserviceController::sendObject (shared_class::LogoutAccount{});
     }
   return lobbyState;
@@ -415,33 +413,6 @@ ImGuiExample::drawEvent ()
     },
   };
   std::visit (visit, guiState);
-
-  // if (not WebserviceController::hasLoginState ()) login (loginData);
-  // else
-  //   {
-  //     if (WebserviceController::isLoggedIn ())
-  //       {
-  //         if (false)
-  //           {
-  //             if (false)
-  //               {
-  //                 // create game view
-  //               }
-  //             else
-  //               {
-  //                 // join game view
-  //               }
-  //           }
-  //         else
-  //           {
-  //             lobby (lobbyData);
-  //           }
-  //       }
-  //     else
-  //       {
-  //         loginErrorPopup ();
-  //       }
-  //   }
 
   auto shouldUpdateFontSize = false;
   debug (shouldUpdateFontSize);
