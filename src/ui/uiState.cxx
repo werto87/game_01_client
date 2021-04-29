@@ -364,10 +364,11 @@ lobby (Lobby &lobbyState, ImFont &)
           lobbyState.messageToSendToChannel.clear ();
         }
     }
-
+  // TODO create the game lobby and allow joinin a game
   if (ImGui::Button ("Create Game", ImVec2 (-1, 0)))
     {
       std::cout << "CREATE GAME LOBBY" << std::endl;
+      // return
     }
   if (ImGui::Button ("Join Game", ImVec2 (-1, 0)))
     {
@@ -375,7 +376,6 @@ lobby (Lobby &lobbyState, ImFont &)
     }
   if (ImGui::Button ("Logout", ImVec2 (-1, 0)))
     {
-      std::cout << "LOGOUT" << std::endl;
       WebserviceController::sendObject (shared_class::LogoutAccount{});
     }
   return lobbyState;

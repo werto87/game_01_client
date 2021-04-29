@@ -100,6 +100,30 @@ WebserviceController::broadCastMessageError (std::string const &objectAsString)
   // std::terminate ();
 }
 
+void
+WebserviceController::createGameLobbySuccess (std::string const &objectAsString)
+{
+  std::terminate ();
+}
+
+void
+WebserviceController::createGameLobbyError (std::string const &objectAsString)
+{
+  std::terminate ();
+}
+
+void
+WebserviceController::joinGameLobbySuccess (std::string const &objectAsString)
+{
+  std::terminate ();
+}
+
+void
+WebserviceController::joinGameLobbyError (std::string const &objectAsString)
+{
+  std::terminate ();
+}
+
 std::vector<std::string>
 WebserviceController::handleMessage (std::string const &msg)
 {
@@ -149,6 +173,22 @@ WebserviceController::handleMessage (std::string const &msg)
       else if (typeToSearch == "BroadCastMessageError")
         {
           broadCastMessageError (objectAsString);
+        }
+      else if (typeToSearch == "CreateGameLobbySuccess")
+        {
+          createGameLobbySuccess (objectAsString);
+        }
+      else if (typeToSearch == "CreateGameLobbyError")
+        {
+          createGameLobbyError (objectAsString);
+        }
+      else if (typeToSearch == "JoinGameLobbySuccess")
+        {
+          joinGameLobbySuccess (objectAsString);
+        }
+      else if (typeToSearch == "JoinGameLobbyError")
+        {
+          joinGameLobbyError (objectAsString);
         }
       else
         {

@@ -103,6 +103,10 @@ private:
   static void message (std::string const &objectAsString);
   static void broadCastMessageSuccess (std::string const &objectAsString);
   static void broadCastMessageError (std::string const &objectAsString);
+  static void createGameLobbySuccess (std::string const &objectAsString);
+  static void createGameLobbyError (std::string const &objectAsString);
+  static void joinGameLobbySuccess (std::string const &objectAsString);
+  static void joinGameLobbyError (std::string const &objectAsString);
   // END: handle messages from network-----------------------------------------------
 
   static std::deque<std::string> msgToSend;

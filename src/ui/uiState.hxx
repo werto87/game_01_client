@@ -27,13 +27,13 @@ struct CreateAccountSuccess
 struct CreateAccountError
 {
 };
-
 struct Lobby
 {
   boost::optional<std::string> selectedChannelName;
   std::string channelToJoin;
   std::string messageToSendToChannel;
 };
+
 using GuiState = std::variant<Login, LoginError, CreateAccount, CreateAccountSuccess, CreateAccountError, Lobby>;
 
 class UiState
