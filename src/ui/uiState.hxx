@@ -2,37 +2,46 @@
 #define F204E65B_7FD7_4265_ACF7_FB534DB042F2
 
 #include <boost/optional.hpp>
+#include <imgui.h>
 #include <string>
 #include <variant>
 
 struct Login
 {
-  bool shouldOpenCreateAnAccount;
+  bool loginInProgress = false;
   std::string username;
   std::string password;
+};
+struct LoginError
+{
 };
 struct CreateAccount
 {
+  bool createAccountInProgress = false;
   std::string username;
   std::string password;
 };
+struct CreateAccountSuccess
+{
+};
+struct CreateAccountError
+{
+};
+
 struct Lobby
 {
   boost::optional<std::string> selectedChannelName;
   std::string channelToJoin;
   std::string messageToSendToChannel;
 };
-using GuiState = std::variant<Login, CreateAccount, Lobby>;
+using GuiState = std::variant<Login, LoginError, CreateAccount, CreateAccountSuccess, CreateAccountError, Lobby>;
 
-class TestStateMachine
+class UiState
 {
 public:
-  void execute (float windowSizeX, float windowSizeY);
+  void execute (float windowSizeX, float windowSizeY, ImFont &biggerFont);
 
 private:
-  GuiState login (Login &loginState, float windowSizeX, float windowSizeY);
-  GuiState createAccountPopup (CreateAccount &createAccountState, float windowSizeX, float windowSizeY);
-  GuiState lobby (Lobby &lobbyState, float windowSizeX, float windowSizeY);
   GuiState guiState{};
 };
 

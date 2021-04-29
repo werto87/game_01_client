@@ -27,6 +27,19 @@ public:
   {
     return session.isLoggedIn.value ();
   }
+
+  static bool
+  hasAccountCreateSuccessState ()
+  {
+    return session.isAccountCreateSuccess.has_value ();
+  }
+
+  static bool
+  isAccountCreateSuccess ()
+  {
+    return session.isAccountCreateSuccess.value ();
+  }
+
   static void
   resetSession ()
   {

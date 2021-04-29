@@ -7,6 +7,7 @@
 struct Session
 {
   boost::optional<bool> isLoggedIn{};
+  boost::optional<bool> isAccountCreateSuccess{};
   boost::optional<std::string> createAccountErrorMessage{};
   boost::optional<std::string> loggInMessageFromServer{};
   std::map<std::string, std::vector<std::string> > channelMessages{};

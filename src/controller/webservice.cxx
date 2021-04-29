@@ -29,6 +29,7 @@ WebserviceController::createAccountSuccess (std::string const &objectAsString)
 {
   auto createAccountSuccessObject = confu_boost::toObject<shared_class::CreateAccountSuccess> (objectAsString);
   upsertAccount (database::Account{ .id = createAccountSuccessObject.accountId, .accountName = createAccountSuccessObject.accountName, .password = {} });
+  session.isAccountCreateSuccess = true;
 }
 
 void
@@ -36,6 +37,7 @@ WebserviceController::createAccountError (std::string const &objectAsString)
 {
   auto createAccountErrorObject = confu_boost::toObject<shared_class::CreateAccountError> (objectAsString);
   session.createAccountErrorMessage = createAccountErrorObject.error;
+  session.isAccountCreateSuccess = false;
 }
 
 void
