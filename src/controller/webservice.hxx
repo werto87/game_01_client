@@ -84,6 +84,7 @@ private:
   static void createAccountError (std::string const &objectAsString);
   static void loginAccountSuccess (std::string const &objectAsString);
   static void loginAccountError (std::string const &objectAsString);
+  static void logoutAccountSuccess (std::string const &objectAsString);
   static void joinChannelSuccess (std::string const &objectAsString);
   static void joinChannelError (std::string const &objectAsString);
   static void message (std::string const &objectAsString);

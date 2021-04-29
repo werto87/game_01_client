@@ -20,8 +20,15 @@
 #include <iostream>
 #include <memory>
 #include <misc/cpp/imgui_stdlib.h>
-using namespace Magnum;
+#include <variant>
 
+template <class... Ts> struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+template <class... Ts> overloaded (Ts...) -> overloaded<Ts...>;
+
+using namespace Magnum;
 ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }, Vector2{ 1, 1 }) }
 {
   ImGui::CreateContext ();
@@ -67,13 +74,21 @@ ImGuiExample::debug (bool &shouldChangeFontSize)
     }
 }
 
-void
-ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
+ImGuiExample::GuiState
+ImGuiExample::createAccountPopup (CreateAccount &createAccountState)
 {
+  if (WebserviceController::hasLoginState ())
+    {
+      if (WebserviceController::isLoggedIn ())
+        {
+          return Lobby{};
+        }
+    }
   auto const windowWidth = static_cast<float> (windowSize ().x ());
   auto const windowHeight = static_cast<float> (windowSize ().y ());
   ImGui::OpenPopup ("my_select_popup");
   ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
+  auto backButtonPressed = false;
   if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
     {
       ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
@@ -95,21 +110,22 @@ ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
       ImGui::PopStyleVar ();
       ImGui::PushItemWidth (-1.0f);
       ImGui::Text ("Username");
-      ImGui::InputText ("##account-username", &create_username);
+      ImGui::InputText ("##account-username", &createAccountState.username);
       ImGui::Text ("Password");
-      ImGui::InputText ("##account-password", &create_password, ImGuiInputTextFlags_Password);
+      ImGui::InputText ("##account-password", &createAccountState.password, ImGuiInputTextFlags_Password);
+
       if (ImGui::Button ("Back"))
         {
           ImGui::CloseCurrentPopup ();
-          shouldOpenCreateAnAccount = false;
+          backButtonPressed = true;
         }
       ImGui::SameLine ();
       if (ImGui::Button ("Create account"))
         {
           {
-            if (not create_username.empty () && not create_password.empty ())
+            if (not createAccountState.username.empty () && not createAccountState.password.empty ())
               {
-                WebserviceController::sendObject (shared_class::CreateAccount{ .accountName = create_username, .password = create_password });
+                WebserviceController::sendObject (shared_class::CreateAccount{ .accountName = createAccountState.username, .password = createAccountState.password });
               }
           }
         }
@@ -119,11 +135,27 @@ ImGuiExample::createAccountPopup (bool &shouldOpenCreateAnAccount)
       ImGui::PopStyleVar ();
       ImGui::EndPopup ();
     }
+  // TODO try to refactor this there should be a better way to do this
+  if (backButtonPressed)
+    {
+      return Login{};
+    }
+  else
+    {
+      return createAccountState;
+    }
 }
 
-void
-ImGuiExample::login ()
+ImGuiExample::GuiState
+ImGuiExample::login (Login &loginState)
 {
+  if (WebserviceController::hasLoginState ())
+    {
+      if (WebserviceController::isLoggedIn ())
+        {
+          return Lobby{};
+        }
+    }
   auto const windowWidth = static_cast<float> (windowSize ().x ());
   auto const windowHeight = static_cast<float> (windowSize ().y ());
   ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
@@ -145,14 +177,15 @@ ImGuiExample::login ()
   ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 30), false, window_flags);
   ImGui::PushItemWidth (-1.0f);
   ImGui::Text ("Username");
-  ImGui::InputText ("##username", &username);
+  ImGui::InputText ("##username", &loginState.username);
   ImGui::Text ("Password");
-  ImGui::InputText ("##password", &password, ImGuiInputTextFlags_Password);
+  ImGui::InputText ("##password", &loginState.password, ImGuiInputTextFlags_Password);
   if (ImGui::Button ("Sign in", ImVec2 (-1, 0)))
     {
-      if (not username.empty () && not password.empty ())
+      std::cout << "Sign in" << std::endl;
+      if (not loginState.username.empty () && not loginState.password.empty ())
         {
-          WebserviceController::sendObject (shared_class::LoginAccount{ .accountName = username, .password = password });
+          WebserviceController::sendObject (shared_class::LoginAccount{ .accountName = loginState.username, .password = loginState.password });
         }
     }
   ImGui::PopItemWidth ();
@@ -166,11 +199,10 @@ ImGuiExample::login ()
   ImGui::SameLine ();
   ImGui::Text ("New to XYZ?");
   ImGui::SameLine ();
-  static auto shouldOpenCreateAnAccount = false;
-  shouldOpenCreateAnAccount = shouldOpenCreateAnAccount || ImGui::SmallButton ("create an account");
+  loginState.shouldOpenCreateAnAccount = loginState.shouldOpenCreateAnAccount || ImGui::SmallButton ("create an account");
   ImGui::PopStyleVar ();
   ImGui::EndChild ();
-  if (shouldOpenCreateAnAccount)
+  if (loginState.shouldOpenCreateAnAccount)
     {
       if (WebserviceController::isCreateAccountError ())
         {
@@ -178,9 +210,11 @@ ImGuiExample::login ()
         }
       else
         {
-          createAccountPopup (shouldOpenCreateAnAccount);
+          createAccountPopup (createAccountData);
+          return CreateAccount{};
         }
     }
+  return loginState;
 }
 
 void
@@ -276,30 +310,33 @@ ImGuiExample::createAccountErrorPopup ()
     }
 }
 
-void
-ImGuiExample::lobby ()
+ImGuiExample::GuiState
+ImGuiExample::lobby (Lobby &lobbyState)
 {
-  ImGuiStyle &style = ImGui::GetStyle ();
-  style.Colors[ImGuiCol_WindowBg] = { 0.5, 0.5, 0.5, 1 };
-  auto channelNames = WebserviceController::channelNames ();
-  if (ImGui::BeginCombo ("combo 1", selectedChannelName ? selectedChannelName.value ().data () : "Select Channel"))
+  if (not(WebserviceController::hasLoginState () && WebserviceController::isLoggedIn ()))
     {
-      if ((not selectedChannelName && not channelNames.empty ()) || (selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, selectedChannelName) == channelNames.end ()))
+      return Login{};
+    }
+  ImGuiStyle &style = ImGui::GetStyle ();
+  auto channelNames = WebserviceController::channelNames ();
+  if (ImGui::BeginCombo ("combo 1", lobbyState.selectedChannelName ? lobbyState.selectedChannelName.value ().data () : "Select Channel"))
+    {
+      if ((not lobbyState.selectedChannelName && not channelNames.empty ()) || (lobbyState.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, lobbyState.selectedChannelName) == channelNames.end ()))
         {
-          selectedChannelName = channelNames.front ();
+          lobbyState.selectedChannelName = channelNames.front ();
         }
       for (auto &&channelName : channelNames)
         {
-          const bool is_selected = (selectedChannelName == channelName);
-          if (ImGui::Selectable (channelName.data (), is_selected)) selectedChannelName = channelName;
+          const bool is_selected = (lobbyState.selectedChannelName == channelName);
+          if (ImGui::Selectable (channelName.data (), is_selected)) lobbyState.selectedChannelName = channelName;
           if (is_selected) ImGui::SetItemDefaultFocus ();
         }
       ImGui::EndCombo ();
     }
   ImGui::BeginChild ("scrolling", ImVec2 (0, 500), false, ImGuiWindowFlags_HorizontalScrollbar);
-  if (selectedChannelName && std::ranges::find (channelNames, selectedChannelName) != channelNames.end ())
+  if (lobbyState.selectedChannelName && std::ranges::find (channelNames, lobbyState.selectedChannelName) != channelNames.end ())
     {
-      for (auto text : WebserviceController::messagesForChannel (selectedChannelName.value ()))
+      for (auto text : WebserviceController::messagesForChannel (lobbyState.selectedChannelName.value ()))
         {
           ImGui::TextUnformatted (text.data (), text.data () + text.size ());
         }
@@ -307,25 +344,41 @@ ImGuiExample::lobby ()
     }
   ImGui::EndChild ();
   ImGui::Text ("Join Channel");
-  ImGui::InputText ("##JoinChannel", &channelToJoin);
+  ImGui::InputText ("##JoinChannel", &lobbyState.channelToJoin);
   if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
     {
-      if (not channelToJoin.empty ())
+      if (not lobbyState.channelToJoin.empty ())
         {
-          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = channelToJoin });
-          channelToJoin.clear ();
+          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = lobbyState.channelToJoin });
+          lobbyState.channelToJoin.clear ();
         }
     }
   ImGui::Text ("Send to Channel");
-  ImGui::InputText ("##SendToChannel", &messageToSendToChannel);
-  if (ImGui::Button ("SendToChannel", ImVec2 (-1, 0)))
+  ImGui::InputText ("##SendToChannel", &lobbyState.messageToSendToChannel);
+  if (ImGui::Button ("Send to Channel", ImVec2 (-1, 0)))
     {
-      if (selectedChannelName && not selectedChannelName->empty () && not messageToSendToChannel.empty ())
+      if (lobbyState.selectedChannelName && not lobbyState.selectedChannelName->empty () && not lobbyState.messageToSendToChannel.empty ())
         {
-          WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = selectedChannelName.value (), .message = messageToSendToChannel });
-          messageToSendToChannel.clear ();
+          WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = lobbyState.selectedChannelName.value (), .message = lobbyState.messageToSendToChannel });
+          lobbyState.messageToSendToChannel.clear ();
         }
     }
+
+  if (ImGui::Button ("Create Game", ImVec2 (-1, 0)))
+    {
+      std::cout << "CREATE GAME LOBBY" << std::endl;
+    }
+  if (ImGui::Button ("Join Game", ImVec2 (-1, 0)))
+    {
+      std::cout << "CREATE GAME LOBBY" << std::endl;
+    }
+  if (ImGui::Button ("Logout", ImVec2 (-1, 0)))
+    {
+      std::cout << "LOGOUT" << std::endl;
+      // TODO send logout to server
+      WebserviceController::sendObject (shared_class::LogoutAccount{});
+    }
+  return lobbyState;
 }
 
 void
@@ -342,18 +395,53 @@ ImGuiExample::drawEvent ()
   auto const windowHeight = static_cast<float> (windowSize ().y ());
   ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
   ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-  if (not WebserviceController::hasLoginState ()) login ();
-  else
-    {
-      if (WebserviceController::isLoggedIn ())
-        {
-          lobby ();
-        }
-      else
-        {
-          loginErrorPopup ();
-        }
-    }
+
+  // call login() on Login::login() and not ImGuiExample::login()
+
+  auto visit = overloaded{
+    [&] (Login &arg) {
+      // std::cout << "Login" << std::endl;
+      guiState = login (arg);
+    },
+
+    [&] (CreateAccount &arg) {
+      // std::cout << "CreateAccount" << std::endl;
+      guiState = createAccountPopup (arg);
+    },
+
+    [&] (Lobby &arg) {
+      // std::cout << "Lobby" << std::endl;
+      guiState = lobby (arg);
+    },
+  };
+  std::visit (visit, guiState);
+
+  // if (not WebserviceController::hasLoginState ()) login (loginData);
+  // else
+  //   {
+  //     if (WebserviceController::isLoggedIn ())
+  //       {
+  //         if (false)
+  //           {
+  //             if (false)
+  //               {
+  //                 // create game view
+  //               }
+  //             else
+  //               {
+  //                 // join game view
+  //               }
+  //           }
+  //         else
+  //           {
+  //             lobby (lobbyData);
+  //           }
+  //       }
+  //     else
+  //       {
+  //         loginErrorPopup ();
+  //       }
+  //   }
 
   auto shouldUpdateFontSize = false;
   debug (shouldUpdateFontSize);

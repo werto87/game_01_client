@@ -8,6 +8,7 @@
 #include <deque>
 #include <memory>
 #include <string>
+#include <variant>
 class ImGuiExample : public Magnum::Platform::Application
 {
 
@@ -29,11 +30,34 @@ public:
 
   Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
 
+  // TODO play around with variant as state machine
+  struct Login
+  {
+    bool shouldOpenCreateAnAccount;
+    std::string username;
+    std::string password;
+  };
+  struct CreateAccount
+  {
+    std::string username;
+    std::string password;
+  };
+  struct Lobby
+  {
+    boost::optional<std::string> selectedChannelName;
+    std::string channelToJoin;
+    std::string messageToSendToChannel;
+  };
+
+  typedef std::variant<Login, CreateAccount, Lobby> GuiState;
+
+  GuiState guiState{};
+
 private:
-  void createAccountPopup (bool &shouldOpenCreateAnAccount);
-  void login ();
+  GuiState createAccountPopup (CreateAccount &createAccountState);
+  GuiState login (Login &loginState);
   void loginErrorPopup ();
-  void lobby ();
+  GuiState lobby (Lobby &lobbyState);
   void debug (bool &shouldChangeFontSize);
   void createAccountErrorPopup ();
   void updateFontSize ();
@@ -41,14 +65,11 @@ private:
   bool _showCreateAccount = false;
   float _fontScale = 0.5f;
   ImFont *font2{};
-  std::string password{};
+  Login loginData{};
+  Lobby lobbyData{};
+  CreateAccount createAccountData{};
   std::string sendMessage{};
-  std::string username{};
-  std::string create_password{};
-  std::string create_username{};
-  boost::optional<std::string> selectedChannelName{};
-  std::string channelToJoin{};
-  std::string messageToSendToChannel{};
+  bool _shouldOpenCreateAnAccount{};
 };
 
 #endif /* A76A25AE_A804_47C0_8549_6F15C0EB7035 */

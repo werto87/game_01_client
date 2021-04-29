@@ -54,6 +54,12 @@ WebserviceController::loginAccountError (std::string const &objectAsString)
 }
 
 void
+WebserviceController::logoutAccountSuccess (std::string const &objectAsString)
+{
+  session = {};
+}
+
+void
 WebserviceController::joinChannelSuccess (std::string const &objectAsString)
 {
   auto joinChannelSuccessObject = confu_boost::toObject<shared_class::JoinChannelSuccess> (objectAsString);
@@ -117,6 +123,10 @@ WebserviceController::handleMessage (std::string const &msg)
       else if (typeToSearch == "LoginAccountError")
         {
           loginAccountError (objectAsString);
+        }
+      else if (typeToSearch == "LogoutAccountSuccess")
+        {
+          logoutAccountSuccess (objectAsString);
         }
       else if (typeToSearch == "JoinChannelSuccess")
         {
