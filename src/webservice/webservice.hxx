@@ -16,6 +16,8 @@ public:
 
   boost::asio::awaitable<void> writeToServer ();
 
+  void closeSocket ();
+
 private:
   boost::asio::awaitable<std::string> my_read ();
 

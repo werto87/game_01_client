@@ -1,6 +1,7 @@
 #include "src/webservice/webservice.hxx"
 #include "src/controller/webservice.hxx"
 #include "src/util/util.hxx"
+#include <unistd.h>
 
 using boost::asio::awaitable;
 using boost::asio::co_spawn;
@@ -107,4 +108,10 @@ Webservice::writeToServer ()
     {
       std::printf ("echo Exception:  %s\n", e.what ());
     }
+}
+
+void
+Webservice::closeSocket ()
+{
+  ws.close ("quit connection");
 }

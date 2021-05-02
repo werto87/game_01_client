@@ -12,12 +12,14 @@
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 #include <boost/serialization/optional.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/type_index.hpp>
 #include <confu_boost/confuBoost.hxx>
 #include <confu_soci/convenienceFunctionForSoci.hxx>
 #include <exception>
 #include <game_01_shared_class/serialization.hxx>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 
@@ -28,7 +30,7 @@ void
 WebserviceController::createAccountSuccess (std::string const &objectAsString)
 {
   auto createAccountSuccessObject = confu_boost::toObject<shared_class::CreateAccountSuccess> (objectAsString);
-  upsertAccount (database::Account{ .id = createAccountSuccessObject.accountId, .accountName = createAccountSuccessObject.accountName, .password = {} });
+  upsertAccount (database::Account{ .accountName = createAccountSuccessObject.accountName, .password = {} });
   session.isAccountCreateSuccess = true;
 }
 
@@ -45,6 +47,7 @@ WebserviceController::loginAccountSuccess (std::string const &objectAsString)
 {
   auto loginAccountSuccessObject = confu_boost::toObject<shared_class::LoginAccountSuccess> (objectAsString);
   session.isLoggedIn = true;
+  session.accountName = loginAccountSuccessObject.accountName;
 }
 
 void
@@ -56,7 +59,7 @@ WebserviceController::loginAccountError (std::string const &objectAsString)
 }
 
 void
-WebserviceController::logoutAccountSuccess (std::string const &objectAsString)
+WebserviceController::logoutAccountSuccess (std::string const &)
 {
   session = {};
 }
@@ -124,6 +127,60 @@ WebserviceController::joinGameLobbyError (std::string const &objectAsString)
   std::terminate ();
 }
 
+void
+WebserviceController::usersInGameLobby (std::string const &objectAsString)
+{
+  // TODO this should be create game lobby state and it should contain name of the lobby name of accounts in lobby and size of
+  auto usersInGameLobbyObject = confu_boost::toObject<shared_class::UsersInGameLobby> (objectAsString);
+  session.accountNamesInGameLobby.clear ();
+  session.gameLobbyName = usersInGameLobbyObject.name;
+  session.maxUserInGameLobby = usersInGameLobbyObject.maxUserSize;
+  std::ranges::transform (usersInGameLobbyObject.users, std::back_inserter (session.accountNamesInGameLobby), [] (auto const &user) { return user.accountName; });
+}
+
+void
+WebserviceController::maxUserSizeInCreateGameLobby (std::string const &objectAsString)
+{
+  auto maxUserSizeInCreateGameLobbyObject = confu_boost::toObject<shared_class::MaxUserSizeInCreateGameLobby> (objectAsString);
+  session.maxUserInGameLobby = maxUserSizeInCreateGameLobbyObject.maxUserSize;
+}
+
+void
+WebserviceController::setMaxUserSizeInCreateGameLobbyError (std::string const &objectAsString)
+{
+  auto setMaxUserSizeInCreateGameLobbyErrorObject = confu_boost::toObject<shared_class::SetMaxUserSizeInCreateGameLobbyError> (objectAsString);
+  std::terminate ();
+}
+
+void
+WebserviceController::leaveGameLobbySuccess (std::string const &objectAsString)
+{
+  session.gameLobbyName = {};
+  session.maxUserInGameLobby = {};
+  session.accountNamesInGameLobby = {};
+}
+
+void
+WebserviceController::leaveGameLobbyError (std::string const &objectAsString)
+{
+}
+
+void
+WebserviceController::wantToRelog (std::string const &objectAsString)
+{
+  auto wantToRelogObject = confu_boost::toObject<shared_class::WantToRelog> (objectAsString);
+  session.isLoggedIn = true;
+  session.accountName = wantToRelogObject.accountName;
+  session.relogToDestination = wantToRelogObject.destination;
+}
+
+void
+WebserviceController::relogToError (std::string const &objectAsString)
+{
+  auto relogToErrorObject = confu_boost::toObject<shared_class::RelogToError> (objectAsString);
+  session.relogToError = relogToErrorObject.error;
+}
+
 std::vector<std::string>
 WebserviceController::handleMessage (std::string const &msg)
 {
@@ -189,6 +246,30 @@ WebserviceController::handleMessage (std::string const &msg)
       else if (typeToSearch == "JoinGameLobbyError")
         {
           joinGameLobbyError (objectAsString);
+        }
+      else if (typeToSearch == "UsersInGameLobby")
+        {
+          usersInGameLobby (objectAsString);
+        }
+      else if (typeToSearch == "MaxUserSizeInCreateGameLobby")
+        {
+          maxUserSizeInCreateGameLobby (objectAsString);
+        }
+      else if (typeToSearch == "SetMaxUserSizeInCreateGameLobbyError")
+        {
+          setMaxUserSizeInCreateGameLobbyError (objectAsString);
+        }
+      else if (typeToSearch == "LeaveGameLobbySuccess")
+        {
+          leaveGameLobbySuccess (objectAsString);
+        }
+      else if (typeToSearch == "LeaveGameLobbyError")
+        {
+          leaveGameLobbyError (objectAsString);
+        }
+      else if (typeToSearch == "WantToRelog")
+        {
+          wantToRelog (objectAsString);
         }
       else
         {

@@ -13,6 +13,7 @@
 #include <Magnum/Shaders/Phong.h>
 #include <Magnum/Trade/MeshData.h>
 #include <algorithm>
+#include <exception>
 #include <filesystem>
 #include <game_01_shared_class/serialization.hxx>
 #include <imgui.h>
@@ -20,6 +21,7 @@
 #include <iostream>
 #include <memory>
 #include <misc/cpp/imgui_stdlib.h>
+#include <string>
 #include <variant>
 template <class... Ts> struct overloaded : Ts...
 {
@@ -167,6 +169,8 @@ login (Login &loginState, float windowSizeX, float windowSizeY, ImFont &biggerFo
   ImGui::InputText ("##username", &loginState.username);
   ImGui::Text ("Password");
   ImGui::InputText ("##password", &loginState.password, ImGuiInputTextFlags_Password);
+  // TODO if user puts in name and clicks the sign in button. button gets grey but no message gets send
+  // TODO check this for all usages of disable button
   if (loginState.loginInProgress)
     {
       ImGui::PushItemFlag (ImGuiItemFlags_Disabled, true);
@@ -319,6 +323,18 @@ lobby (Lobby &lobbyState, ImFont &)
     {
       return Login{};
     }
+  if (WebserviceController::hasCreateGameLobbyName ())
+    {
+      return LobbyForCreatingAGame{};
+    }
+  if (WebserviceController::hasRelogToDestination ())
+    {
+      return WantToRelogPopup{};
+    }
+  if (WebserviceController::hasRelogToError ())
+    {
+      return RelogToError{};
+    }
   auto channelNames = WebserviceController::channelNames ();
   if (ImGui::BeginCombo ("combo 1", lobbyState.selectedChannelName ? lobbyState.selectedChannelName.value ().data () : "Select Channel"))
     {
@@ -365,11 +381,37 @@ lobby (Lobby &lobbyState, ImFont &)
         }
     }
   // TODO create the game lobby and allow joinin a game
-  if (ImGui::Button ("Create Game", ImVec2 (-1, 0)))
+
+  ImGui::Text ("Create Game Lobby");
+  ImGui::Text ("Game Lobby Name");
+  ImGui::InputText ("##CreateGameLobbyName", &lobbyState.gameLobbyToCreateName);
+  ImGui::Text ("Game Lobby Password");
+  ImGui::InputText ("##CreateGameLobbyPassword", &lobbyState.gameLobbyToCreatePassword);
+  if (ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0)))
     {
-      std::cout << "CREATE GAME LOBBY" << std::endl;
-      // return
+      if (not lobbyState.gameLobbyToCreateName.empty ())
+        {
+          WebserviceController::sendObject (shared_class::CreateGameLobby{ .name = lobbyState.gameLobbyToCreateName, .password = lobbyState.gameLobbyToCreatePassword });
+          lobbyState.gameLobbyToCreateName.clear ();
+          lobbyState.gameLobbyToCreatePassword.clear ();
+        }
     }
+
+  ImGui::Text ("Join Game Lobby");
+  ImGui::Text ("Game Lobby Name");
+  ImGui::InputText ("##JoinGameLobbyName", &lobbyState.gameLobbyToJoinName);
+  ImGui::Text ("Game Lobby Password");
+  ImGui::InputText ("##JoinGameLobbyPassword", &lobbyState.gameLobbyToJoinPassword);
+  if (ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0)))
+    {
+      if (not lobbyState.gameLobbyToJoinName.empty ())
+        {
+          WebserviceController::sendObject (shared_class::JoinGameLobby{ .name = lobbyState.gameLobbyToJoinName, .password = lobbyState.gameLobbyToJoinPassword });
+          lobbyState.gameLobbyToJoinName.clear ();
+          lobbyState.gameLobbyToJoinPassword.clear ();
+        }
+    }
+
   if (ImGui::Button ("Join Game", ImVec2 (-1, 0)))
     {
       std::cout << "JOIN GAME LOBBY" << std::endl;
@@ -432,6 +474,151 @@ loginErrorPopup (float windowSizeX, float windowSizeY, ImFont &biggerFont)
     }
 }
 
+GuiState
+wantToRelogPopup (float windowSizeX, float windowSizeY, ImFont &biggerFont)
+{
+  auto const windowWidth = windowSizeX;
+  auto const windowHeight = windowSizeY;
+  ImGui::OpenPopup ("my_select_popup");
+  ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
+  auto closePopup = false;
+  if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+    {
+      ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+      ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+      auto headline = std::string{ "Want to relog to " + WebserviceController::relogToDestination () + "?" };
+      ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize (headline.c_str ()).x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushFont (&biggerFont);
+      ImGui::Text (headline.c_str ());
+      ImGui::PopFont ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+      ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
+      ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+      ImGui::Dummy (ImVec2 (10.0f, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
+      ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
+      ImGui::PopStyleVar ();
+      if (ImGui::Button ("do not go to destination"))
+        {
+          WebserviceController::removeRelogToDestinationMessage ();
+          WebserviceController::sendObject (shared_class::RelogTo{ .wantsToRelog = false });
+          ImGui::CloseCurrentPopup ();
+          closePopup = true;
+        }
+      ImGui::SameLine ();
+      if (ImGui::Button ("go to destination"))
+        {
+          WebserviceController::removeRelogToDestinationMessage ();
+          WebserviceController::sendObject (shared_class::RelogTo{ .wantsToRelog = true });
+          ImGui::CloseCurrentPopup ();
+          closePopup = true;
+        }
+      ImGui::EndChild ();
+      ImGui::EndChild ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+
+      ImGui::PopStyleVar ();
+      ImGui::EndPopup ();
+    }
+  if (closePopup)
+    {
+      return Lobby{};
+    }
+  else
+    {
+      return WantToRelogPopup{};
+    }
+}
+
+GuiState
+relogToErrorPopup (float windowSizeX, float windowSizeY, ImFont &biggerFont)
+{
+  auto const windowWidth = windowSizeX;
+  auto const windowHeight = windowSizeY;
+  ImGui::OpenPopup ("my_select_popup");
+  ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
+  auto closePopup = false;
+  if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+    {
+      ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+      ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+      auto headline = WebserviceController::relogToError ();
+      ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize (headline.c_str ()).x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushFont (&biggerFont);
+      ImGui::Text (headline.c_str ());
+      ImGui::PopFont ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+      ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
+      ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+      ImGui::Dummy (ImVec2 (10.0f, 0.0f));
+      ImGui::SameLine ();
+      ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
+      ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
+      ImGui::PopStyleVar ();
+      if (ImGui::Button ("ok"))
+        {
+          WebserviceController::removeRelogToError ();
+          ImGui::CloseCurrentPopup ();
+          closePopup = true;
+        }
+      ImGui::EndChild ();
+      ImGui::EndChild ();
+      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+      ImGui::SameLine ();
+
+      ImGui::PopStyleVar ();
+      ImGui::EndPopup ();
+    }
+  if (closePopup)
+    {
+      return Lobby{};
+    }
+  else
+    {
+      return WantToRelogPopup{};
+    }
+}
+
+GuiState
+lobbyForCreatingAGame (LobbyForCreatingAGame &createGameLobbyState, ImFont &)
+{
+  if (not WebserviceController::hasCreateGameLobbyName ())
+    {
+      return Lobby{};
+    }
+  else
+    {
+      ImGui::Text (std::string{ "max user count: " + std::to_string (WebserviceController::getMaxUsersInGameLobby ()) }.c_str ());
+      if (WebserviceController::getAccountName () == WebserviceController::accountNamesInCreateGameLobby ().at (0))
+        {
+          ImGui::Text ("set max user count: ");
+          ImGui::SameLine ();
+          ImGui::InputInt ("##MaxUserCount", &createGameLobbyState.setMaxAccountInGameLobby);
+          if (ImGui::Button ("set max user count", ImVec2 (-1, 0)))
+            {
+              WebserviceController::sendObject (shared_class::SetMaxUserSizeInCreateGameLobby{ .createGameLobbyName = WebserviceController::createGameLobbyName (), .maxUserSize = static_cast<size_t> (createGameLobbyState.setMaxAccountInGameLobby) });
+            }
+        }
+      for (auto &accountName : WebserviceController::accountNamesInCreateGameLobby ())
+        {
+          ImGui::Text (accountName.c_str ());
+        }
+      if (ImGui::Button ("leave game lobby", ImVec2 (-1, 0)))
+        {
+          WebserviceController::sendObject (shared_class::LeaveGameLobby{});
+        }
+      return createGameLobbyState;
+    }
+}
+
 void
 UiState::execute (float windowSizeX, float windowSizeY, ImFont &biggerFont)
 {
@@ -459,6 +646,18 @@ UiState::execute (float windowSizeX, float windowSizeY, ImFont &biggerFont)
     [&] (Lobby &arg) {
       // std::cout << "Lobby" << std::endl;
       guiState = lobby (arg, biggerFont);
+    },
+    [&] (LobbyForCreatingAGame &arg) {
+      // std::cout << "lobbyForCreatingAGame" << std::endl;
+      guiState = lobbyForCreatingAGame (arg, biggerFont);
+    },
+    [&] (WantToRelogPopup &) {
+      // std::cout << "WantToRelogPopup" << std::endl;
+      guiState = wantToRelogPopup (windowSizeX, windowSizeY, biggerFont);
+    },
+    [&] (RelogToError &) {
+      // std::cout << "RelogToError" << std::endl;
+      guiState = relogToErrorPopup (windowSizeX, windowSizeY, biggerFont);
     },
 
   };

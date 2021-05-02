@@ -84,6 +84,71 @@ public:
     return session.channelMessages.at (channel);
   }
 
+  static bool
+  hasCreateGameLobbyName ()
+  {
+    return session.gameLobbyName.has_value ();
+  }
+
+  static std::string
+  createGameLobbyName ()
+  {
+    return session.gameLobbyName.value ();
+  }
+
+  static std::vector<std::string> const &
+  accountNamesInCreateGameLobby ()
+  {
+    return session.accountNamesInGameLobby;
+  }
+  static size_t
+  getMaxUsersInGameLobby ()
+  {
+    return session.maxUserInGameLobby;
+  }
+
+  static std::string
+  getAccountName ()
+  {
+    return session.accountName;
+  }
+
+  static bool
+  hasRelogToError ()
+  {
+    return session.relogToError.has_value ();
+  }
+
+  static std::string
+  relogToError ()
+  {
+    return session.relogToError.value ();
+  }
+
+  static void
+  removeRelogToError ()
+  {
+    session.relogToError = {};
+  }
+
+  static bool
+  hasRelogToDestination ()
+  {
+    return session.relogToDestination.has_value ();
+  }
+
+  static std::string
+  relogToDestination ()
+  {
+    return session.relogToDestination.value ();
+  }
+
+  static void
+  removeRelogToDestinationMessage ()
+  {
+    session.relogToDestination = {};
+  }
+
   template <typename TypeToSend>
   static void
   sendObject (TypeToSend const &typeToSend)
@@ -107,6 +172,13 @@ private:
   static void createGameLobbyError (std::string const &objectAsString);
   static void joinGameLobbySuccess (std::string const &objectAsString);
   static void joinGameLobbyError (std::string const &objectAsString);
+  static void usersInGameLobby (std::string const &objectAsString);
+  static void maxUserSizeInCreateGameLobby (std::string const &objectAsString);
+  static void setMaxUserSizeInCreateGameLobbyError (std::string const &objectAsString);
+  static void leaveGameLobbySuccess (std::string const &objectAsString);
+  static void leaveGameLobbyError (std::string const &objectAsString);
+  static void wantToRelog (std::string const &objectAsString);
+  static void relogToError (std::string const &objectAsString);
   // END: handle messages from network-----------------------------------------------
 
   static std::deque<std::string> msgToSend;

@@ -2,6 +2,7 @@
 #define F204E65B_7FD7_4265_ACF7_FB534DB042F2
 
 #include <boost/optional.hpp>
+#include <cstddef>
 #include <imgui.h>
 #include <string>
 #include <variant>
@@ -32,9 +33,25 @@ struct Lobby
   boost::optional<std::string> selectedChannelName;
   std::string channelToJoin;
   std::string messageToSendToChannel;
+  std::string gameLobbyToCreateName;
+  std::string gameLobbyToCreatePassword;
+  std::string gameLobbyToJoinName;
+  std::string gameLobbyToJoinPassword;
+};
+struct LobbyForCreatingAGame
+{
+  int setMaxAccountInGameLobby{};
 };
 
-using GuiState = std::variant<Login, LoginError, CreateAccount, CreateAccountSuccess, CreateAccountError, Lobby>;
+struct WantToRelogPopup
+{
+};
+
+struct RelogToError
+{
+};
+
+using GuiState = std::variant<Login, LoginError, CreateAccount, CreateAccountSuccess, CreateAccountError, Lobby, LobbyForCreatingAGame, WantToRelogPopup, RelogToError>;
 
 class UiState
 {

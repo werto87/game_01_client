@@ -2,6 +2,7 @@
 #include "src/ui/ui.hxx"
 #include "src/webservice/webservice.hxx"
 #include <boost/bind/bind.hpp>
+#include <iostream>
 boost::asio::awaitable<void>
 read (boost::asio::io_context &io_context, Webservice &webservice)
 {
@@ -42,7 +43,11 @@ main (int argc, char **argv)
       auto webservice = Webservice{ io_context };
       ImGuiExample app{ { argc, argv } };
       boost::asio::signal_set signals (io_context, SIGINT, SIGTERM);
-      signals.async_wait ([&] (auto, auto) { io_context.stop (); });
+      signals.async_wait ([&] (auto, auto) {
+        std::cout << "quit" << std::endl;
+        webservice.closeSocket ();
+        io_context.stop ();
+      });
       boost::asio::co_spawn (io_context, boost::bind (read, std::ref (io_context), std::ref (webservice)), boost::asio::detached);
       boost::asio::co_spawn (io_context, boost::bind (ui, std::ref (app)), boost::asio::detached);
       io_context.run ();

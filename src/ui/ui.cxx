@@ -120,7 +120,6 @@ void
 ImGuiExample::viewportEvent (ViewportEvent &event)
 {
   GL::defaultFramebuffer.setViewport ({ {}, event.framebufferSize () });
-
   _imgui.relayout (Vector2{ event.windowSize () } / event.dpiScaling (), event.windowSize (), event.framebufferSize ());
 }
 
