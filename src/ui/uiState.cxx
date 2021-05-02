@@ -298,7 +298,6 @@ createAccountPopup (CreateAccount &createAccountState, float windowSizeX, float 
                   }
                 }
             }
-
           ImGui::PopItemWidth ();
           ImGui::EndChild ();
           ImGui::EndChild ();
@@ -411,11 +410,6 @@ lobby (Lobby &lobbyState, ImFont &)
           lobbyState.gameLobbyToJoinName.clear ();
           lobbyState.gameLobbyToJoinPassword.clear ();
         }
-    }
-
-  if (ImGui::Button ("Join Game", ImVec2 (-1, 0)))
-    {
-      std::cout << "JOIN GAME LOBBY" << std::endl;
     }
   if (ImGui::Button ("Logout", ImVec2 (-1, 0)))
     {
@@ -611,6 +605,10 @@ lobbyForCreatingAGame (LobbyForCreatingAGame &createGameLobbyState, ImFont &)
       for (auto &accountName : WebserviceController::accountNamesInCreateGameLobby ())
         {
           ImGui::Text (accountName.c_str ());
+        }
+      if (ImGui::Button ("Start Game", ImVec2 (-1, 0)))
+        {
+          std::cout << "Start Game" << std::endl;
         }
       if (ImGui::Button ("leave game lobby", ImVec2 (-1, 0)))
         {
