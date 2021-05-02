@@ -380,7 +380,8 @@ lobby (Lobby &lobbyState, ImFont &)
           lobbyState.messageToSendToChannel.clear ();
         }
     }
-  // TODO create the game lobby and allow joinin a game
+  // TODO chat in game lobby
+  // TODO allow joinin a game
 
   ImGui::Text ("Create Game Lobby");
   ImGui::Text ("Game Lobby Name");

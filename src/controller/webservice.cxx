@@ -130,7 +130,6 @@ WebserviceController::joinGameLobbyError (std::string const &objectAsString)
 void
 WebserviceController::usersInGameLobby (std::string const &objectAsString)
 {
-  // TODO this should be create game lobby state and it should contain name of the lobby name of accounts in lobby and size of
   auto usersInGameLobbyObject = confu_boost::toObject<shared_class::UsersInGameLobby> (objectAsString);
   session.accountNamesInGameLobby.clear ();
   session.gameLobbyName = usersInGameLobbyObject.name;
