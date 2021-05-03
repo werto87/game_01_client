@@ -173,20 +173,15 @@ login (Login &loginState, float windowSizeX, float windowSizeY, ImFont &biggerFo
   // TODO check this for all usages of disable button
   if (loginState.loginInProgress)
     {
-      ImGui::PushItemFlag (ImGuiItemFlags_Disabled, true);
-      ImGui::PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * 0.5f);
-      ImGui::Button ("Sign in", ImVec2 (-1, 0));
-      ImGui::PopItemFlag ();
-      ImGui::PopStyleVar ();
+      disabledButton ("Sign in");
     }
   else
     {
       if (ImGui::Button ("Sign in", ImVec2 (-1, 0)))
         {
-          loginState.loginInProgress = true;
-          std::cout << "Sign in" << std::endl;
           if (not loginState.username.empty () && not loginState.password.empty ())
             {
+              loginState.loginInProgress = true;
               WebserviceController::sendObject (shared_class::LoginAccount{ .accountName = loginState.username, .password = loginState.password });
             }
         }
@@ -205,11 +200,7 @@ login (Login &loginState, float windowSizeX, float windowSizeY, ImFont &biggerFo
   auto shouldOpenCreateAnAccount = false;
   if (loginState.loginInProgress)
     {
-      ImGui::PushItemFlag (ImGuiItemFlags_Disabled, true);
-      ImGui::PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * 0.5f);
-      ImGui::SmallButton ("create an account");
-      ImGui::PopItemFlag ();
-      ImGui::PopStyleVar ();
+      disabledSmallButton ("create an account");
     }
   else
     {
@@ -276,23 +267,18 @@ createAccountPopup (CreateAccount &createAccountState, float windowSizeX, float 
               backButtonPressed = true;
             }
           ImGui::SameLine ();
-
           if (createAccountState.createAccountInProgress)
             {
-              ImGui::PushItemFlag (ImGuiItemFlags_Disabled, true);
-              ImGui::PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * 0.5f);
-              ImGui::Button ("Create account");
-              ImGui::PopItemFlag ();
-              ImGui::PopStyleVar ();
+              disabledSmallButton ("Create account");
             }
           else
             {
               if (ImGui::Button ("Create account"))
                 {
                   {
-                    createAccountState.createAccountInProgress = true;
                     if (not createAccountState.username.empty () && not createAccountState.password.empty ())
                       {
+                        createAccountState.createAccountInProgress = true;
                         WebserviceController::sendObject (shared_class::CreateAccount{ .accountName = createAccountState.username, .password = createAccountState.password });
                       }
                   }
@@ -661,4 +647,24 @@ UiState::execute (float windowSizeX, float windowSizeY, ImFont &biggerFont)
 
   };
   std::visit (visit, guiState);
+}
+
+void
+disabledSmallButton (std::string const &buttonName)
+{
+  ImGui::PushItemFlag (ImGuiItemFlags_Disabled, true);
+  ImGui::PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * 0.5f);
+  ImGui::SmallButton (buttonName.c_str ());
+  ImGui::PopItemFlag ();
+  ImGui::PopStyleVar ();
+}
+
+void
+disabledButton (std::string const &buttonName)
+{
+  ImGui::PushItemFlag (ImGuiItemFlags_Disabled, true);
+  ImGui::PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * 0.5f);
+  ImGui::Button (buttonName.c_str (), ImVec2 (-1, 0));
+  ImGui::PopItemFlag ();
+  ImGui::PopStyleVar ();
 }
