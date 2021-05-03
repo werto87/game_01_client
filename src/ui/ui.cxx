@@ -90,7 +90,6 @@ ImGuiExample::drawEvent ()
   ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
   ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-  // call login() on Login::login() and not ImGuiExample::login()
   testStateMachine.execute (windowWidth, windowHeight, *font2);
   auto shouldUpdateFontSize = false;
   debug (shouldUpdateFontSize);

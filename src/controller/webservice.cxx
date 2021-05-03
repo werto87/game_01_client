@@ -311,3 +311,136 @@ WebserviceController::popFront ()
     }
   return result;
 }
+bool
+WebserviceController::hasLoginState ()
+{
+  return session.isLoggedIn.has_value ();
+}
+
+bool
+WebserviceController::isLoggedIn ()
+{
+  return session.isLoggedIn.value ();
+}
+
+bool
+WebserviceController::hasAccountCreateSuccessState ()
+{
+  return session.isAccountCreateSuccess.has_value ();
+}
+
+bool
+WebserviceController::isAccountCreateSuccess ()
+{
+  return session.isAccountCreateSuccess.value ();
+}
+
+void
+WebserviceController::resetSession ()
+{
+  session = Session{};
+}
+
+std::string
+WebserviceController::logInMessageFromServer ()
+{
+  return session.loggInMessageFromServer.value ();
+}
+
+bool
+WebserviceController::isCreateAccountError ()
+{
+  return session.createAccountErrorMessage.has_value ();
+}
+
+std::string
+WebserviceController::createAccountError ()
+{
+  return session.createAccountErrorMessage.value ();
+}
+
+size_t
+WebserviceController::channelCount ()
+{
+  return session.channelMessages.size ();
+}
+
+std::vector<std::string>
+WebserviceController::channelNames ()
+{
+  auto result = std::vector<std::string>{};
+  session.channelMessages >>= pipes::transform ([] (auto const &channelAndMessages) { return std::get<0> (channelAndMessages); }) >>= pipes::push_back (result);
+  return result;
+}
+
+std::vector<std::string> const &
+WebserviceController::messagesForChannel (std::string const &channel)
+{
+  return session.channelMessages.at (channel);
+}
+
+bool
+WebserviceController::hasCreateGameLobbyName ()
+{
+  return session.gameLobbyName.has_value ();
+}
+
+std::string
+WebserviceController::createGameLobbyName ()
+{
+  return session.gameLobbyName.value ();
+}
+
+std::vector<std::string> const &
+WebserviceController::accountNamesInCreateGameLobby ()
+{
+  return session.accountNamesInGameLobby;
+}
+
+size_t
+WebserviceController::getMaxUsersInGameLobby ()
+{
+  return session.maxUserInGameLobby;
+}
+
+std::string
+WebserviceController::getAccountName ()
+{
+  return session.accountName;
+}
+
+bool
+WebserviceController::hasRelogToError ()
+{
+  return session.relogToError.has_value ();
+}
+
+std::string
+WebserviceController::relogToError ()
+{
+  return session.relogToError.value ();
+}
+
+void
+WebserviceController::removeRelogToError ()
+{
+  session.relogToError = {};
+}
+
+bool
+WebserviceController::hasRelogToDestination ()
+{
+  return session.relogToDestination.has_value ();
+}
+
+std::string
+WebserviceController::relogToDestination ()
+{
+  return session.relogToDestination.value ();
+}
+
+void
+WebserviceController::removeRelogToDestinationMessage ()
+{
+  session.relogToDestination = {};
+}
