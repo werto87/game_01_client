@@ -40,6 +40,10 @@ public:
   static std::string relogToDestination ();
   static void removeRelogToDestinationMessage ();
 
+  static void removeCreateAccountErrorMessage ();
+
+  static void removeIsAccountCreateSuccess ();
+
   template <typename TypeToSend>
   static void
   sendObject (TypeToSend const &typeToSend)

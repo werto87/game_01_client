@@ -169,9 +169,7 @@ login (Login &loginState, float windowSizeX, float windowSizeY, ImFont &biggerFo
   ImGui::InputText ("##username", &loginState.username);
   ImGui::Text ("Password");
   ImGui::InputText ("##password", &loginState.password, ImGuiInputTextFlags_Password);
-  // TODO if user puts in name and clicks the sign in button. button gets grey but no message gets send
-  // TODO check this for all usages of disable button
-  if (loginState.loginInProgress)
+  if (loginState.loginInProgress || (loginState.username.empty () || loginState.password.empty ()))
     {
       disabledButton ("Sign in");
     }
@@ -210,6 +208,8 @@ login (Login &loginState, float windowSizeX, float windowSizeY, ImFont &biggerFo
   ImGui::EndChild ();
   if (shouldOpenCreateAnAccount)
     {
+      WebserviceController::removeCreateAccountErrorMessage ();
+      WebserviceController::removeIsAccountCreateSuccess ();
       return CreateAccount{};
     }
   return loginState;
@@ -267,7 +267,7 @@ createAccountPopup (CreateAccount &createAccountState, float windowSizeX, float 
               backButtonPressed = true;
             }
           ImGui::SameLine ();
-          if (createAccountState.createAccountInProgress)
+          if (createAccountState.createAccountInProgress || (createAccountState.username.empty () || createAccountState.password.empty ()))
             {
               disabledSmallButton ("Create account");
             }
@@ -320,8 +320,18 @@ lobby (Lobby &lobbyState, ImFont &)
     {
       return RelogToError{};
     }
+  ImGui::Text ("Join Channel");
+  ImGui::InputText ("##JoinChannel", &lobbyState.channelToJoin);
+  if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
+    {
+      if (not lobbyState.channelToJoin.empty ())
+        {
+          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = lobbyState.channelToJoin });
+          lobbyState.channelToJoin.clear ();
+        }
+    }
   auto channelNames = WebserviceController::channelNames ();
-  if (ImGui::BeginCombo ("combo 1", lobbyState.selectedChannelName ? lobbyState.selectedChannelName.value ().data () : "Select Channel"))
+  if (ImGui::BeginCombo ("##combo 1", lobbyState.selectedChannelName ? lobbyState.selectedChannelName.value ().data () : "Select Channel"))
     {
       if ((not lobbyState.selectedChannelName && not channelNames.empty ()) || (lobbyState.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, lobbyState.selectedChannelName) == channelNames.end ()))
         {
@@ -345,16 +355,7 @@ lobby (Lobby &lobbyState, ImFont &)
       if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
     }
   ImGui::EndChild ();
-  ImGui::Text ("Join Channel");
-  ImGui::InputText ("##JoinChannel", &lobbyState.channelToJoin);
-  if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
-    {
-      if (not lobbyState.channelToJoin.empty ())
-        {
-          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = lobbyState.channelToJoin });
-          lobbyState.channelToJoin.clear ();
-        }
-    }
+
   ImGui::Text ("Send to Channel");
   ImGui::InputText ("##SendToChannel", &lobbyState.messageToSendToChannel);
   if (ImGui::Button ("Send to Channel", ImVec2 (-1, 0)))

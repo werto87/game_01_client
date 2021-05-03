@@ -444,3 +444,15 @@ WebserviceController::removeRelogToDestinationMessage ()
 {
   session.relogToDestination = {};
 }
+
+void
+WebserviceController::removeCreateAccountErrorMessage ()
+{
+  session.createAccountErrorMessage = {};
+}
+
+void
+WebserviceController::removeIsAccountCreateSuccess ()
+{
+  session.isAccountCreateSuccess = {};
+}
