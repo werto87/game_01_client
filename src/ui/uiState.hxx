@@ -1,5 +1,5 @@
-#ifndef F204E65B_7FD7_4265_ACF7_FB534DB042F2
-#define F204E65B_7FD7_4265_ACF7_FB534DB042F2
+#ifndef AF442575_6D32_495D_85A1_C9B7994A72E9
+#define AF442575_6D32_495D_85A1_C9B7994A72E9
 
 #include <boost/optional.hpp>
 #include <cstddef>
@@ -62,4 +62,7 @@ private:
   GuiState guiState{};
 };
 
-#endif /* F204E65B_7FD7_4265_ACF7_FB534DB042F2 */
+void disabledSmallButton (std::string const &buttonName);
+void disabledButton (std::string const &buttonName);
+
+#endif /* AF442575_6D32_495D_85A1_C9B7994A72E9 */
