@@ -30,9 +30,7 @@ struct CreateAccountError
 };
 struct Lobby
 {
-  boost::optional<std::string> selectedChannelName;
-  std::string channelToJoin;
-  std::string messageToSendToChannel;
+
   std::string gameLobbyToCreateName;
   std::string gameLobbyToCreatePassword;
   std::string gameLobbyToJoinName;
@@ -51,6 +49,13 @@ struct RelogToError
 {
 };
 
+struct ChatState
+{
+  boost::optional<std::string> selectedChannelName;
+  std::string channelToJoin;
+  std::string messageToSendToChannel;
+};
+
 using GuiState = std::variant<Login, LoginError, CreateAccount, CreateAccountSuccess, CreateAccountError, Lobby, LobbyForCreatingAGame, WantToRelogPopup, RelogToError>;
 
 class UiState
@@ -60,9 +65,12 @@ public:
 
 private:
   GuiState guiState{};
+  ChatState chatState{};
 };
 
 void disabledSmallButton (std::string const &buttonName);
 void disabledButton (std::string const &buttonName);
 
 #endif /* AF442575_6D32_495D_85A1_C9B7994A72E9 */
+
+GuiState lobby (Lobby &lobbyState, ImFont &);

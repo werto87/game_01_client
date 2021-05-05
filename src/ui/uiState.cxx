@@ -301,8 +301,59 @@ createAccountPopup (CreateAccount &createAccountState, float windowSizeX, float 
     }
 }
 
+void
+chat (ChatState &chatState)
+{
+  ImGui::Text ("Join Channel");
+  ImGui::InputText ("##JoinChannel", &chatState.channelToJoin);
+  if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
+    {
+      if (not chatState.channelToJoin.empty ())
+        {
+          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = chatState.channelToJoin });
+          chatState.channelToJoin.clear ();
+        }
+    }
+  auto channelNames = WebserviceController::channelNames ();
+  if (ImGui::BeginCombo ("##combo 1", chatState.selectedChannelName ? chatState.selectedChannelName.value ().data () : "Select Channel"))
+    {
+      if ((not chatState.selectedChannelName && not channelNames.empty ()) || (chatState.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, chatState.selectedChannelName) == channelNames.end ()))
+        {
+          chatState.selectedChannelName = channelNames.front ();
+        }
+      for (auto &&channelName : channelNames)
+        {
+          const bool is_selected = (chatState.selectedChannelName == channelName);
+          if (ImGui::Selectable (channelName.data (), is_selected)) chatState.selectedChannelName = channelName;
+          if (is_selected) ImGui::SetItemDefaultFocus ();
+        }
+      ImGui::EndCombo ();
+    }
+  ImGui::BeginChild ("scrolling", ImVec2 (0, 500), false, ImGuiWindowFlags_HorizontalScrollbar);
+  if (chatState.selectedChannelName && std::ranges::find (channelNames, chatState.selectedChannelName) != channelNames.end ())
+    {
+      for (auto text : WebserviceController::messagesForChannel (chatState.selectedChannelName.value ()))
+        {
+          ImGui::TextUnformatted (text.data (), text.data () + text.size ());
+        }
+      if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
+    }
+  ImGui::EndChild ();
+
+  ImGui::Text ("Send to Channel");
+  ImGui::InputText ("##SendToChannel", &chatState.messageToSendToChannel);
+  if (ImGui::Button ("Send to Channel", ImVec2 (-1, 0)))
+    {
+      if (chatState.selectedChannelName && not chatState.selectedChannelName->empty () && not chatState.messageToSendToChannel.empty ())
+        {
+          WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = chatState.selectedChannelName.value (), .message = chatState.messageToSendToChannel });
+          chatState.messageToSendToChannel.clear ();
+        }
+    }
+}
+
 GuiState
-lobby (Lobby &lobbyState, ImFont &)
+lobby (Lobby &lobbyState, ImFont &, ChatState &chatState)
 {
   if (not(WebserviceController::hasLoginState () && WebserviceController::isLoggedIn ()))
     {
@@ -320,53 +371,8 @@ lobby (Lobby &lobbyState, ImFont &)
     {
       return RelogToError{};
     }
-  ImGui::Text ("Join Channel");
-  ImGui::InputText ("##JoinChannel", &lobbyState.channelToJoin);
-  if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
-    {
-      if (not lobbyState.channelToJoin.empty ())
-        {
-          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = lobbyState.channelToJoin });
-          lobbyState.channelToJoin.clear ();
-        }
-    }
-  auto channelNames = WebserviceController::channelNames ();
-  if (ImGui::BeginCombo ("##combo 1", lobbyState.selectedChannelName ? lobbyState.selectedChannelName.value ().data () : "Select Channel"))
-    {
-      if ((not lobbyState.selectedChannelName && not channelNames.empty ()) || (lobbyState.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, lobbyState.selectedChannelName) == channelNames.end ()))
-        {
-          lobbyState.selectedChannelName = channelNames.front ();
-        }
-      for (auto &&channelName : channelNames)
-        {
-          const bool is_selected = (lobbyState.selectedChannelName == channelName);
-          if (ImGui::Selectable (channelName.data (), is_selected)) lobbyState.selectedChannelName = channelName;
-          if (is_selected) ImGui::SetItemDefaultFocus ();
-        }
-      ImGui::EndCombo ();
-    }
-  ImGui::BeginChild ("scrolling", ImVec2 (0, 500), false, ImGuiWindowFlags_HorizontalScrollbar);
-  if (lobbyState.selectedChannelName && std::ranges::find (channelNames, lobbyState.selectedChannelName) != channelNames.end ())
-    {
-      for (auto text : WebserviceController::messagesForChannel (lobbyState.selectedChannelName.value ()))
-        {
-          ImGui::TextUnformatted (text.data (), text.data () + text.size ());
-        }
-      if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
-    }
-  ImGui::EndChild ();
-
-  ImGui::Text ("Send to Channel");
-  ImGui::InputText ("##SendToChannel", &lobbyState.messageToSendToChannel);
-  if (ImGui::Button ("Send to Channel", ImVec2 (-1, 0)))
-    {
-      if (lobbyState.selectedChannelName && not lobbyState.selectedChannelName->empty () && not lobbyState.messageToSendToChannel.empty ())
-        {
-          WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = lobbyState.selectedChannelName.value (), .message = lobbyState.messageToSendToChannel });
-          lobbyState.messageToSendToChannel.clear ();
-        }
-    }
-  // TODO chat in game lobby
+  chat (chatState);
+  // TODO controller should set the state and view should display it
   // TODO allow joinin a game
 
   ImGui::Text ("Create Game Lobby");
@@ -570,7 +576,7 @@ relogToErrorPopup (float windowSizeX, float windowSizeY, ImFont &biggerFont)
 }
 
 GuiState
-lobbyForCreatingAGame (LobbyForCreatingAGame &createGameLobbyState, ImFont &)
+lobbyForCreatingAGame (LobbyForCreatingAGame &createGameLobbyState, ImFont &, ChatState &chatState)
 {
   if (not WebserviceController::hasCreateGameLobbyName ())
     {
@@ -578,6 +584,7 @@ lobbyForCreatingAGame (LobbyForCreatingAGame &createGameLobbyState, ImFont &)
     }
   else
     {
+      chat (chatState);
       ImGui::Text (std::string{ "max user count: " + std::to_string (WebserviceController::getMaxUsersInGameLobby ()) }.c_str ());
       if (WebserviceController::getAccountName () == WebserviceController::accountNamesInCreateGameLobby ().at (0))
         {
@@ -597,7 +604,7 @@ lobbyForCreatingAGame (LobbyForCreatingAGame &createGameLobbyState, ImFont &)
         {
           std::cout << "Start Game" << std::endl;
         }
-      if (ImGui::Button ("leave game lobby", ImVec2 (-1, 0)))
+      if (ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0)))
         {
           WebserviceController::sendObject (shared_class::LeaveGameLobby{});
         }
@@ -631,11 +638,11 @@ UiState::execute (float windowSizeX, float windowSizeY, ImFont &biggerFont)
     },
     [&] (Lobby &arg) {
       // std::cout << "Lobby" << std::endl;
-      guiState = lobby (arg, biggerFont);
+      guiState = lobby (arg, biggerFont, chatState);
     },
     [&] (LobbyForCreatingAGame &arg) {
       // std::cout << "lobbyForCreatingAGame" << std::endl;
-      guiState = lobbyForCreatingAGame (arg, biggerFont);
+      guiState = lobbyForCreatingAGame (arg, biggerFont, chatState);
     },
     [&] (WantToRelogPopup &) {
       // std::cout << "WantToRelogPopup" << std::endl;

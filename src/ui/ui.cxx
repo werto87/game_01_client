@@ -91,8 +91,8 @@ ImGuiExample::drawEvent ()
   ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
   testStateMachine.execute (windowWidth, windowHeight, *font2);
-  auto shouldUpdateFontSize = false;
-  debug (shouldUpdateFontSize);
+  // auto shouldUpdateFontSize = false;
+  // debug (shouldUpdateFontSize);
 
   ImGui::End ();
   /* Update application cursor */
@@ -112,7 +112,7 @@ ImGuiExample::drawEvent ()
   GL::Renderer::disable (GL::Renderer::Feature::Blending);
   swapBuffers ();
   redraw ();
-  if (shouldUpdateFontSize) updateFontSize ();
+  // if (shouldUpdateFontSize) updateFontSize ();
 }
 
 void
