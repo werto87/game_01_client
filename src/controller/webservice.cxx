@@ -26,6 +26,8 @@
 std::deque<std::string> WebserviceController::msgToSend{};
 Session WebserviceController::session{};
 
+// TODO move this logic so it does send events to state machine
+
 void
 WebserviceController::createAccountSuccess (std::string const &objectAsString)
 {

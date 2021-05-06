@@ -49,13 +49,6 @@ struct RelogToError
 {
 };
 
-struct ChatState
-{
-  boost::optional<std::string> selectedChannelName;
-  std::string channelToJoin;
-  std::string messageToSendToChannel;
-};
-
 using GuiState = std::variant<Login, LoginError, CreateAccount, CreateAccountSuccess, CreateAccountError, Lobby, LobbyForCreatingAGame, WantToRelogPopup, RelogToError>;
 
 class UiState
@@ -65,7 +58,7 @@ public:
 
 private:
   GuiState guiState{};
-  ChatState chatState{};
+  // ChatState chatState{};
 };
 
 void disabledSmallButton (std::string const &buttonName);

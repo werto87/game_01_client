@@ -1,5 +1,6 @@
 #ifndef C5B152C0_B968_4BBC_B1F9_5823AA8FAD87
 #define C5B152C0_B968_4BBC_B1F9_5823AA8FAD87
+#include "src/controller/stateMachine.hxx"
 #include "src/util/util.hxx"
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
@@ -8,7 +9,7 @@
 class Webservice
 {
 public:
-  Webservice (boost::asio::io_context &_io_context);
+  Webservice (boost::asio::io_context &_io_context, std::shared_ptr<Machine> stateMachine);
 
   boost::asio::awaitable<void> connect ();
 
@@ -19,6 +20,8 @@ public:
   void closeSocket ();
 
 private:
+  // TODO use stateMachine send message to send to server and not webservice controller message
+  std::shared_ptr<Machine> _stateMachine;
   boost::asio::awaitable<std::string> my_read ();
 
   boost::beast::websocket::stream<boost::beast::tcp_stream> ws;

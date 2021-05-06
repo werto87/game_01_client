@@ -1,7 +1,7 @@
 #ifndef A76A25AE_A804_47C0_8549_6F15C0EB7035
 #define A76A25AE_A804_47C0_8549_6F15C0EB7035
 
-#include "src/ui/uiState.hxx"
+#include "src/controller/stateMachine.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <boost/optional.hpp>
@@ -14,7 +14,7 @@ class ImGuiExample : public Magnum::Platform::Application
 {
 
 public:
-  ImGuiExample (const Arguments &arguments);
+  ImGuiExample (const Arguments &arguments, std::shared_ptr<Machine> stateMachine);
   void drawEvent () override;
   void viewportEvent (ViewportEvent &event) override;
   void keyPressEvent (KeyEvent &event) override;
@@ -28,8 +28,8 @@ public:
   Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
 
 private:
-  UiState testStateMachine{};
   ImFont *font2{};
+  std::shared_ptr<Machine> _stateMachine;
 
   // debug--------------------------------------------
   void debug (bool &shouldChangeFontSize);

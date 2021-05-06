@@ -301,115 +301,115 @@ createAccountPopup (CreateAccount &createAccountState, float windowSizeX, float 
     }
 }
 
-void
-chat (ChatState &chatState)
-{
-  ImGui::Text ("Join Channel");
-  ImGui::InputText ("##JoinChannel", &chatState.channelToJoin);
-  if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
-    {
-      if (not chatState.channelToJoin.empty ())
-        {
-          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = chatState.channelToJoin });
-          chatState.channelToJoin.clear ();
-        }
-    }
-  auto channelNames = WebserviceController::channelNames ();
-  if (ImGui::BeginCombo ("##combo 1", chatState.selectedChannelName ? chatState.selectedChannelName.value ().data () : "Select Channel"))
-    {
-      if ((not chatState.selectedChannelName && not channelNames.empty ()) || (chatState.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, chatState.selectedChannelName) == channelNames.end ()))
-        {
-          chatState.selectedChannelName = channelNames.front ();
-        }
-      for (auto &&channelName : channelNames)
-        {
-          const bool is_selected = (chatState.selectedChannelName == channelName);
-          if (ImGui::Selectable (channelName.data (), is_selected)) chatState.selectedChannelName = channelName;
-          if (is_selected) ImGui::SetItemDefaultFocus ();
-        }
-      ImGui::EndCombo ();
-    }
-  ImGui::BeginChild ("scrolling", ImVec2 (0, 500), false, ImGuiWindowFlags_HorizontalScrollbar);
-  if (chatState.selectedChannelName && std::ranges::find (channelNames, chatState.selectedChannelName) != channelNames.end ())
-    {
-      for (auto text : WebserviceController::messagesForChannel (chatState.selectedChannelName.value ()))
-        {
-          ImGui::TextUnformatted (text.data (), text.data () + text.size ());
-        }
-      if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
-    }
-  ImGui::EndChild ();
+// void
+// chat (ChatState &chatState)
+// {
+//   ImGui::Text ("Join Channel");
+//   ImGui::InputText ("##JoinChannel", &chatState.channelToJoin);
+//   if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
+//     {
+//       if (not chatState.channelToJoin.empty ())
+//         {
+//           WebserviceController::sendObject (shared_class::JoinChannel{ .channel = chatState.channelToJoin });
+//           chatState.channelToJoin.clear ();
+//         }
+//     }
+//   auto channelNames = WebserviceController::channelNames ();
+//   if (ImGui::BeginCombo ("##combo 1", chatState.selectedChannelName ? chatState.selectedChannelName.value ().data () : "Select Channel"))
+//     {
+//       if ((not chatState.selectedChannelName && not channelNames.empty ()) || (chatState.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, chatState.selectedChannelName) == channelNames.end ()))
+//         {
+//           chatState.selectedChannelName = channelNames.front ();
+//         }
+//       for (auto &&channelName : channelNames)
+//         {
+//           const bool is_selected = (chatState.selectedChannelName == channelName);
+//           if (ImGui::Selectable (channelName.data (), is_selected)) chatState.selectedChannelName = channelName;
+//           if (is_selected) ImGui::SetItemDefaultFocus ();
+//         }
+//       ImGui::EndCombo ();
+//     }
+//   ImGui::BeginChild ("scrolling", ImVec2 (0, 500), false, ImGuiWindowFlags_HorizontalScrollbar);
+//   if (chatState.selectedChannelName && std::ranges::find (channelNames, chatState.selectedChannelName) != channelNames.end ())
+//     {
+//       for (auto text : WebserviceController::messagesForChannel (chatState.selectedChannelName.value ()))
+//         {
+//           ImGui::TextUnformatted (text.data (), text.data () + text.size ());
+//         }
+//       if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
+//     }
+//   ImGui::EndChild ();
 
-  ImGui::Text ("Send to Channel");
-  ImGui::InputText ("##SendToChannel", &chatState.messageToSendToChannel);
-  if (ImGui::Button ("Send to Channel", ImVec2 (-1, 0)))
-    {
-      if (chatState.selectedChannelName && not chatState.selectedChannelName->empty () && not chatState.messageToSendToChannel.empty ())
-        {
-          WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = chatState.selectedChannelName.value (), .message = chatState.messageToSendToChannel });
-          chatState.messageToSendToChannel.clear ();
-        }
-    }
-}
+//   ImGui::Text ("Send to Channel");
+//   ImGui::InputText ("##SendToChannel", &chatState.messageToSendToChannel);
+//   if (ImGui::Button ("Send to Channel", ImVec2 (-1, 0)))
+//     {
+//       if (chatState.selectedChannelName && not chatState.selectedChannelName->empty () && not chatState.messageToSendToChannel.empty ())
+//         {
+//           WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = chatState.selectedChannelName.value (), .message = chatState.messageToSendToChannel });
+//           chatState.messageToSendToChannel.clear ();
+//         }
+//     }
+// }
 
-GuiState
-lobby (Lobby &lobbyState, ImFont &, ChatState &chatState)
-{
-  if (not(WebserviceController::hasLoginState () && WebserviceController::isLoggedIn ()))
-    {
-      return Login{};
-    }
-  if (WebserviceController::hasCreateGameLobbyName ())
-    {
-      return LobbyForCreatingAGame{};
-    }
-  if (WebserviceController::hasRelogToDestination ())
-    {
-      return WantToRelogPopup{};
-    }
-  if (WebserviceController::hasRelogToError ())
-    {
-      return RelogToError{};
-    }
-  chat (chatState);
-  // TODO controller should set the state and view should display it
-  // TODO allow joinin a game
+// GuiState
+// lobby (Lobby &lobbyState, ImFont &, ChatState &chatState)
+// {
+//   if (not(WebserviceController::hasLoginState () && WebserviceController::isLoggedIn ()))
+//     {
+//       return Login{};
+//     }
+//   if (WebserviceController::hasCreateGameLobbyName ())
+//     {
+//       return LobbyForCreatingAGame{};
+//     }
+//   if (WebserviceController::hasRelogToDestination ())
+//     {
+//       return WantToRelogPopup{};
+//     }
+//   if (WebserviceController::hasRelogToError ())
+//     {
+//       return RelogToError{};
+//     }
+//   chat (chatState);
+//   // TODO controller should set the state and view should display it
+//   // TODO allow joinin a game
 
-  ImGui::Text ("Create Game Lobby");
-  ImGui::Text ("Game Lobby Name");
-  ImGui::InputText ("##CreateGameLobbyName", &lobbyState.gameLobbyToCreateName);
-  ImGui::Text ("Game Lobby Password");
-  ImGui::InputText ("##CreateGameLobbyPassword", &lobbyState.gameLobbyToCreatePassword);
-  if (ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0)))
-    {
-      if (not lobbyState.gameLobbyToCreateName.empty ())
-        {
-          WebserviceController::sendObject (shared_class::CreateGameLobby{ .name = lobbyState.gameLobbyToCreateName, .password = lobbyState.gameLobbyToCreatePassword });
-          lobbyState.gameLobbyToCreateName.clear ();
-          lobbyState.gameLobbyToCreatePassword.clear ();
-        }
-    }
+//   ImGui::Text ("Create Game Lobby");
+//   ImGui::Text ("Game Lobby Name");
+//   ImGui::InputText ("##CreateGameLobbyName", &lobbyState.gameLobbyToCreateName);
+//   ImGui::Text ("Game Lobby Password");
+//   ImGui::InputText ("##CreateGameLobbyPassword", &lobbyState.gameLobbyToCreatePassword);
+//   if (ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0)))
+//     {
+//       if (not lobbyState.gameLobbyToCreateName.empty ())
+//         {
+//           WebserviceController::sendObject (shared_class::CreateGameLobby{ .name = lobbyState.gameLobbyToCreateName, .password = lobbyState.gameLobbyToCreatePassword });
+//           lobbyState.gameLobbyToCreateName.clear ();
+//           lobbyState.gameLobbyToCreatePassword.clear ();
+//         }
+//     }
 
-  ImGui::Text ("Join Game Lobby");
-  ImGui::Text ("Game Lobby Name");
-  ImGui::InputText ("##JoinGameLobbyName", &lobbyState.gameLobbyToJoinName);
-  ImGui::Text ("Game Lobby Password");
-  ImGui::InputText ("##JoinGameLobbyPassword", &lobbyState.gameLobbyToJoinPassword);
-  if (ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0)))
-    {
-      if (not lobbyState.gameLobbyToJoinName.empty ())
-        {
-          WebserviceController::sendObject (shared_class::JoinGameLobby{ .name = lobbyState.gameLobbyToJoinName, .password = lobbyState.gameLobbyToJoinPassword });
-          lobbyState.gameLobbyToJoinName.clear ();
-          lobbyState.gameLobbyToJoinPassword.clear ();
-        }
-    }
-  if (ImGui::Button ("Logout", ImVec2 (-1, 0)))
-    {
-      WebserviceController::sendObject (shared_class::LogoutAccount{});
-    }
-  return lobbyState;
-}
+//   ImGui::Text ("Join Game Lobby");
+//   ImGui::Text ("Game Lobby Name");
+//   ImGui::InputText ("##JoinGameLobbyName", &lobbyState.gameLobbyToJoinName);
+//   ImGui::Text ("Game Lobby Password");
+//   ImGui::InputText ("##JoinGameLobbyPassword", &lobbyState.gameLobbyToJoinPassword);
+//   if (ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0)))
+//     {
+//       if (not lobbyState.gameLobbyToJoinName.empty ())
+//         {
+//           WebserviceController::sendObject (shared_class::JoinGameLobby{ .name = lobbyState.gameLobbyToJoinName, .password = lobbyState.gameLobbyToJoinPassword });
+//           lobbyState.gameLobbyToJoinName.clear ();
+//           lobbyState.gameLobbyToJoinPassword.clear ();
+//         }
+//     }
+//   if (ImGui::Button ("Logout", ImVec2 (-1, 0)))
+//     {
+//       WebserviceController::sendObject (shared_class::LogoutAccount{});
+//     }
+//   return lobbyState;
+// }
 
 GuiState
 loginErrorPopup (float windowSizeX, float windowSizeY, ImFont &biggerFont)
@@ -575,86 +575,86 @@ relogToErrorPopup (float windowSizeX, float windowSizeY, ImFont &biggerFont)
     }
 }
 
-GuiState
-lobbyForCreatingAGame (LobbyForCreatingAGame &createGameLobbyState, ImFont &, ChatState &chatState)
-{
-  if (not WebserviceController::hasCreateGameLobbyName ())
-    {
-      return Lobby{};
-    }
-  else
-    {
-      chat (chatState);
-      ImGui::Text (std::string{ "max user count: " + std::to_string (WebserviceController::getMaxUsersInGameLobby ()) }.c_str ());
-      if (WebserviceController::getAccountName () == WebserviceController::accountNamesInCreateGameLobby ().at (0))
-        {
-          ImGui::Text ("set max user count: ");
-          ImGui::SameLine ();
-          ImGui::InputInt ("##MaxUserCount", &createGameLobbyState.setMaxAccountInGameLobby);
-          if (ImGui::Button ("set max user count", ImVec2 (-1, 0)))
-            {
-              WebserviceController::sendObject (shared_class::SetMaxUserSizeInCreateGameLobby{ .createGameLobbyName = WebserviceController::createGameLobbyName (), .maxUserSize = static_cast<size_t> (createGameLobbyState.setMaxAccountInGameLobby) });
-            }
-        }
-      for (auto &accountName : WebserviceController::accountNamesInCreateGameLobby ())
-        {
-          ImGui::Text (accountName.c_str ());
-        }
-      if (ImGui::Button ("Start Game", ImVec2 (-1, 0)))
-        {
-          std::cout << "Start Game" << std::endl;
-        }
-      if (ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0)))
-        {
-          WebserviceController::sendObject (shared_class::LeaveGameLobby{});
-        }
-      return createGameLobbyState;
-    }
-}
+// GuiState
+// lobbyForCreatingAGame (LobbyForCreatingAGame &createGameLobbyState, ImFont &, ChatState &chatState)
+// {
+//   if (not WebserviceController::hasCreateGameLobbyName ())
+//     {
+//       return Lobby{};
+//     }
+//   else
+//     {
+//       chat (chatState);
+//       ImGui::Text (std::string{ "max user count: " + std::to_string (WebserviceController::getMaxUsersInGameLobby ()) }.c_str ());
+//       if (WebserviceController::getAccountName () == WebserviceController::accountNamesInCreateGameLobby ().at (0))
+//         {
+//           ImGui::Text ("set max user count: ");
+//           ImGui::SameLine ();
+//           ImGui::InputInt ("##MaxUserCount", &createGameLobbyState.setMaxAccountInGameLobby);
+//           if (ImGui::Button ("set max user count", ImVec2 (-1, 0)))
+//             {
+//               WebserviceController::sendObject (shared_class::SetMaxUserSizeInCreateGameLobby{ .createGameLobbyName = WebserviceController::createGameLobbyName (), .maxUserSize = static_cast<size_t> (createGameLobbyState.setMaxAccountInGameLobby) });
+//             }
+//         }
+//       for (auto &accountName : WebserviceController::accountNamesInCreateGameLobby ())
+//         {
+//           ImGui::Text (accountName.c_str ());
+//         }
+//       if (ImGui::Button ("Start Game", ImVec2 (-1, 0)))
+//         {
+//           std::cout << "Start Game" << std::endl;
+//         }
+//       if (ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0)))
+//         {
+//           WebserviceController::sendObject (shared_class::LeaveGameLobby{});
+//         }
+//       return createGameLobbyState;
+//     }
+// }
 
 void
 UiState::execute (float windowSizeX, float windowSizeY, ImFont &biggerFont)
 {
-  auto visit = overloaded{
-    [&] (Login &arg) {
-      // std::cout << "Login" << std::endl;
-      guiState = login (arg, windowSizeX, windowSizeY, biggerFont);
-    },
-    [&] (LoginError &) {
-      // std::cout << "LoginError" << std::endl;
-      guiState = loginErrorPopup (windowSizeX, windowSizeY, biggerFont);
-    },
-    [&] (CreateAccount &arg) {
-      // std::cout << "CreateAccount" << std::endl;
-      guiState = createAccountPopup (arg, windowSizeX, windowSizeY, biggerFont);
-    },
-    [&] (CreateAccountSuccess &) {
-      // std::cout << "CreateAccountSuccess" << std::endl;
-      guiState = createAccountSuccessPopup (windowSizeX, windowSizeY, biggerFont);
-    },
-    [&] (CreateAccountError &) {
-      // std::cout << "CreateAccountError" << std::endl;
-      guiState = createAccountErrorPopup (windowSizeX, windowSizeY, biggerFont);
-    },
-    [&] (Lobby &arg) {
-      // std::cout << "Lobby" << std::endl;
-      guiState = lobby (arg, biggerFont, chatState);
-    },
-    [&] (LobbyForCreatingAGame &arg) {
-      // std::cout << "lobbyForCreatingAGame" << std::endl;
-      guiState = lobbyForCreatingAGame (arg, biggerFont, chatState);
-    },
-    [&] (WantToRelogPopup &) {
-      // std::cout << "WantToRelogPopup" << std::endl;
-      guiState = wantToRelogPopup (windowSizeX, windowSizeY, biggerFont);
-    },
-    [&] (RelogToError &) {
-      // std::cout << "RelogToError" << std::endl;
-      guiState = relogToErrorPopup (windowSizeX, windowSizeY, biggerFont);
-    },
+  // auto visit = overloaded{
+  //   [&] (Login &arg) {
+  //     // std::cout << "Login" << std::endl;
+  //     guiState = login (arg, windowSizeX, windowSizeY, biggerFont);
+  //   },
+  //   [&] (LoginError &) {
+  //     // std::cout << "LoginError" << std::endl;
+  //     guiState = loginErrorPopup (windowSizeX, windowSizeY, biggerFont);
+  //   },
+  //   [&] (CreateAccount &arg) {
+  //     // std::cout << "CreateAccount" << std::endl;
+  //     guiState = createAccountPopup (arg, windowSizeX, windowSizeY, biggerFont);
+  //   },
+  //   [&] (CreateAccountSuccess &) {
+  //     // std::cout << "CreateAccountSuccess" << std::endl;
+  //     guiState = createAccountSuccessPopup (windowSizeX, windowSizeY, biggerFont);
+  //   },
+  //   [&] (CreateAccountError &) {
+  //     // std::cout << "CreateAccountError" << std::endl;
+  //     guiState = createAccountErrorPopup (windowSizeX, windowSizeY, biggerFont);
+  //   },
+  //   [&] (Lobby &arg) {
+  //     // std::cout << "Lobby" << std::endl;
+  //     guiState = lobby (arg, biggerFont, chatState);
+  //   },
+  //   [&] (LobbyForCreatingAGame &arg) {
+  //     // std::cout << "lobbyForCreatingAGame" << std::endl;
+  //     guiState = lobbyForCreatingAGame (arg, biggerFont, chatState);
+  //   },
+  //   [&] (WantToRelogPopup &) {
+  //     // std::cout << "WantToRelogPopup" << std::endl;
+  //     guiState = wantToRelogPopup (windowSizeX, windowSizeY, biggerFont);
+  //   },
+  //   [&] (RelogToError &) {
+  //     // std::cout << "RelogToError" << std::endl;
+  //     guiState = relogToErrorPopup (windowSizeX, windowSizeY, biggerFont);
+  //   },
 
-  };
-  std::visit (visit, guiState);
+  // };
+  // std::visit (visit, guiState);
 }
 
 void
