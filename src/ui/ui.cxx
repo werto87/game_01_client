@@ -23,7 +23,6 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <variant>
 
-// BEGIN: TEST FIELD
 void
 login (LoginState &loginState, float windowSizeX, float windowSizeY, ImFont &biggerFont)
 {
@@ -192,17 +191,9 @@ chat (ChatState &chatState)
 {
   ImGui::Text ("Join Channel");
   ImGui::InputText ("##JoinChannel", &chatState.channelToJoin);
-  if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
-    {
-      // TODO this should be done in state machine
-      // if (not chatState.channelToJoin.empty ())
-      //   {
-      //     WebserviceController::sendObject (shared_class::JoinChannel{ .channel = chatState.channelToJoin });
-      //     chatState.channelToJoin.clear ();
-      //   }
-    }
+  chatState.joinChannelClicked = ImGui::Button ("Join Channel", ImVec2 (-1, 0));
   auto channelNames = chatState.channelNames ();
-  if (ImGui::BeginCombo ("##combo 1", chatState.selectedChannelName ? chatState.selectedChannelName.value ().data () : "Select Channel"))
+  if (ImGui::BeginCombo ("##combo 1", chatState.selectChannelComboBoxName ().c_str ()))
     {
       if ((not chatState.selectedChannelName && not channelNames.empty ()) || (chatState.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, chatState.selectedChannelName) == channelNames.end ()))
         {
@@ -229,14 +220,7 @@ chat (ChatState &chatState)
 
   ImGui::Text ("Send to Channel");
   ImGui::InputText ("##SendToChannel", &chatState.messageToSendToChannel);
-  if (ImGui::Button ("Send to Channel", ImVec2 (-1, 0)))
-    {
-      if (chatState.selectedChannelName && not chatState.selectedChannelName->empty () && not chatState.messageToSendToChannel.empty ())
-        {
-          // WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = chatState.selectedChannelName.value (), .message = chatState.messageToSendToChannel });
-          // chatState.messageToSendToChannel.clear ();
-        }
-    }
+  chatState.sendMessageClicked = ImGui::Button ("Send to Channel", ImVec2 (-1, 0));
 }
 
 void
@@ -278,8 +262,6 @@ lobbyForCreatingAGame (GameLobbyState &gameLobbyState, ChatState &chatState)
   gameLobbyState.sendMaxUserCountClicked = ImGui::Button ("Start Game", ImVec2 (-1, 0));
   gameLobbyState.leaveGameLobby = ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0));
 }
-
-// END: TEST FIELD
 
 void
 visitAndAdvance (std::shared_ptr<Machine> stateMachine, float windowSizeX, float windowSizeY, ImFont &biggerFont)
@@ -352,6 +334,7 @@ ImGuiExample::debug (bool &shouldChangeFontSize)
     {
       if (not sendMessage.empty ())
         {
+          // TODO ignore this debug thing until we need it again
           //   WebserviceController::sendMessage (sendMessage);
         }
     }
