@@ -64,7 +64,9 @@ Webservice::read ()
     {
       for (;;)
         {
-          WebserviceController::sendMessage (WebserviceController::handleMessage (co_await my_read ()));
+          // TODO make handleMessage a free function
+          // auto msgs = WebserviceController::handleMessage (co_await my_read ());
+          // _stateMachine->msgToSend.insert (_stateMachine->msgToSend.end (), make_move_iterator (msgs.begin ()), make_move_iterator (msgs.end ()));
         }
     }
   catch (std::exception &e)

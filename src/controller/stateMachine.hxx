@@ -1,6 +1,5 @@
 #ifndef C9E380D5_9F74_4D76_B294_0625A478F2FD
 #define C9E380D5_9F74_4D76_B294_0625A478F2FD
-
 #include <algorithm>
 #include <boost/mpl/list.hpp>
 #include <boost/statechart/custom_reaction.hpp>
@@ -16,6 +15,7 @@
 #include <exception>
 #include <game_01_shared_class/serialization.hxx>
 #include <iostream>
+#include <pipes/pipes.hpp>
 #include <stdexcept>
 #include <variant>
 
@@ -162,8 +162,10 @@ struct LobbyState
 };
 struct GameLobbyState
 {
+  std::string accountName{};
   std::string gameLobbyName{};
   int maxUserInGameLobby{};
+  int maxUserInGameLobbyToSend{};
   std::vector<std::string> accountNamesInGameLobby{};
   bool sendMaxUserCountClicked = false;
   bool leaveGameLobby = false;
@@ -364,6 +366,21 @@ struct CreateAccountSuccess : sc::simple_state<CreateAccountSuccess, Machine>
 
 struct ChatState
 {
+
+  std::vector<std::string> const &
+  messagesForChannel (std::string const &channel)
+  {
+    return channelMessages.at (channel);
+  }
+
+  std::vector<std::string>
+  channelNames ()
+  {
+    auto result = std::vector<std::string>{};
+    channelMessages >>= pipes::transform ([] (auto const &channelAndMessages) { return std::get<0> (channelAndMessages); }) >>= pipes::push_back (result);
+    return result;
+  }
+
   std::optional<std::string> selectedChannelName;
   std::string channelToJoin;
   std::string messageToSendToChannel;
@@ -399,6 +416,7 @@ struct MakeGameLobby : sc::simple_state<MakeGameLobby, Machine, Lobby>
     return discard_event ();
   }
   ChatState chatState{};
+  std::string accountName{};
 };
 
 struct JoinChannelError : sc::simple_state<JoinChannelError, Machine>
@@ -445,7 +463,7 @@ struct Lobby : sc::state<Lobby, MakeGameLobby>
   }
 };
 
-struct GameLobbyWaitForServer : sc::state<GameLobbyWaitForServer, Machine>
+struct GameLobbyWaitForServer : sc::state<GameLobbyWaitForServer, MakeGameLobby>
 {
 
   typedef mpl::list<sc::custom_reaction<EvNextState>, sc::custom_reaction<EvJoinGameLobbyError>, sc::custom_reaction<EvUsersInGameLobby>, sc::custom_reaction<EvCreateGameLobbyError>> reactions;
@@ -477,7 +495,7 @@ struct GameLobbyWaitForServer : sc::state<GameLobbyWaitForServer, Machine>
   sc::result
   react (const EvUsersInGameLobby &evUsersInGameLobby)
   {
-    outermost_context ().state = GameLobbyState{ .gameLobbyName = evUsersInGameLobby.gameLobbyName, .maxUserInGameLobby = evUsersInGameLobby.maxUserInGameLobby, .accountNamesInGameLobby = evUsersInGameLobby.accountNamesInGameLobby };
+    outermost_context ().state = GameLobbyState{ .accountName = context<MakeGameLobby> ().accountName, .gameLobbyName = evUsersInGameLobby.gameLobbyName, .maxUserInGameLobby = evUsersInGameLobby.maxUserInGameLobby, .accountNamesInGameLobby = evUsersInGameLobby.accountNamesInGameLobby };
     return transit<GameLobby> ();
   }
 };

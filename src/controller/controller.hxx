@@ -1,5 +1,5 @@
-// #ifndef F06EFE63_F044_49C0_9D23_F73303313BC1
-// #define F06EFE63_F044_49C0_9D23_F73303313BC1
+// #ifndef CA43EC75_CA67_44F7_B24E_0441BC1855FE
+// #define CA43EC75_CA67_44F7_B24E_0441BC1855FE
 
 // #include "src/model/session.hxx"
 // #include <confu_soci/convenienceFunctionForSoci.hxx>
@@ -79,4 +79,5 @@
 //   static std::deque<std::string> msgToSend;
 //   static Session session;
 // };
-// #endif /* F06EFE63_F044_49C0_9D23_F73303313BC1 */
+
+// #endif /* CA43EC75_CA67_44F7_B24E_0441BC1855FE */

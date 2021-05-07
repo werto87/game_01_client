@@ -5,4 +5,6 @@
  webservice.cxx
  stateMachine.hxx
  stateMachine.cxx
+ controller.hxx
+ controller.cxx
  )

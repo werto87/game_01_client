@@ -194,13 +194,14 @@ chat (ChatState &chatState)
   ImGui::InputText ("##JoinChannel", &chatState.channelToJoin);
   if (ImGui::Button ("Join Channel", ImVec2 (-1, 0)))
     {
-      if (not chatState.channelToJoin.empty ())
-        {
-          WebserviceController::sendObject (shared_class::JoinChannel{ .channel = chatState.channelToJoin });
-          chatState.channelToJoin.clear ();
-        }
+      // TODO this should be done in state machine
+      // if (not chatState.channelToJoin.empty ())
+      //   {
+      //     WebserviceController::sendObject (shared_class::JoinChannel{ .channel = chatState.channelToJoin });
+      //     chatState.channelToJoin.clear ();
+      //   }
     }
-  auto channelNames = WebserviceController::channelNames ();
+  auto channelNames = chatState.channelNames ();
   if (ImGui::BeginCombo ("##combo 1", chatState.selectedChannelName ? chatState.selectedChannelName.value ().data () : "Select Channel"))
     {
       if ((not chatState.selectedChannelName && not channelNames.empty ()) || (chatState.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, chatState.selectedChannelName) == channelNames.end ()))
@@ -218,7 +219,7 @@ chat (ChatState &chatState)
   ImGui::BeginChild ("scrolling", ImVec2 (0, 500), false, ImGuiWindowFlags_HorizontalScrollbar);
   if (chatState.selectedChannelName && std::ranges::find (channelNames, chatState.selectedChannelName) != channelNames.end ())
     {
-      for (auto text : WebserviceController::messagesForChannel (chatState.selectedChannelName.value ()))
+      for (auto const &text : chatState.channelMessages.at (chatState.selectedChannelName.value ()))
         {
           ImGui::TextUnformatted (text.data (), text.data () + text.size ());
         }
@@ -232,8 +233,8 @@ chat (ChatState &chatState)
     {
       if (chatState.selectedChannelName && not chatState.selectedChannelName->empty () && not chatState.messageToSendToChannel.empty ())
         {
-          WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = chatState.selectedChannelName.value (), .message = chatState.messageToSendToChannel });
-          chatState.messageToSendToChannel.clear ();
+          // WebserviceController::sendObject (shared_class::BroadCastMessage{ .channel = chatState.selectedChannelName.value (), .message = chatState.messageToSendToChannel });
+          // chatState.messageToSendToChannel.clear ();
         }
     }
 }
@@ -262,8 +263,8 @@ void
 lobbyForCreatingAGame (GameLobbyState &gameLobbyState, ChatState &chatState)
 {
   chat (chatState);
-  ImGui::Text (std::string{ "max user count: " + std::to_string (WebserviceController::getMaxUsersInGameLobby ()) }.c_str ());
-  if (WebserviceController::getAccountName () == WebserviceController::accountNamesInCreateGameLobby ().at (0))
+  ImGui::Text (std::string{ "max user count: " + std::to_string (gameLobbyState.maxUserInGameLobbyToSend) }.c_str ());
+  if (gameLobbyState.accountName == gameLobbyState.accountNamesInGameLobby.at (0))
     {
       ImGui::Text ("set max user count: ");
       ImGui::SameLine ();
@@ -351,7 +352,7 @@ ImGuiExample::debug (bool &shouldChangeFontSize)
     {
       if (not sendMessage.empty ())
         {
-          WebserviceController::sendMessage (sendMessage);
+          //   WebserviceController::sendMessage (sendMessage);
         }
     }
   ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);
