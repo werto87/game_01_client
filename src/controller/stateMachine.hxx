@@ -61,6 +61,7 @@ struct EvCreateAccountError : sc::event<EvCreateAccountError>
 };
 struct EvLoginAccountSuccess : sc::event<EvLoginAccountSuccess>
 {
+  std::string accountName{};
 };
 struct EvLoginAccountError : sc::event<EvLoginAccountError>
 {
@@ -206,7 +207,7 @@ struct Login : sc::state<Login, Machine>
 
 struct LoginWaitForServer : sc::state<LoginWaitForServer, Machine>
 {
-  typedef mpl::list<sc::custom_reaction<EvNextState>, sc::transition<EvLoginAccountSuccess, Lobby>, sc::custom_reaction<EvLoginAccountError>, sc::custom_reaction<EvWantToRelog>> reactions;
+  typedef mpl::list<sc::custom_reaction<EvNextState>, sc::custom_reaction<EvLoginAccountSuccess>, sc::custom_reaction<EvLoginAccountError>, sc::custom_reaction<EvWantToRelog>> reactions;
   LoginWaitForServer (my_context ctx) : my_base (ctx) { outermost_context ().state = WaitForServerPopupState{}; }
   sc::result
   react (const EvNextState &)
@@ -229,8 +230,17 @@ struct LoginWaitForServer : sc::state<LoginWaitForServer, Machine>
   sc::result
   react (const EvWantToRelog &evWantToRelog)
   {
+    // TODO set account name
     outermost_context ().state = MessageBoxPopupState{ .message = "do you want to go to lobby or relog to " + evWantToRelog.destination, .buttons{ { "Lobby", false }, { evWantToRelog.destination, false } } };
     return transit<LoginWantToRelog> ();
+  }
+  sc::result
+  react (const EvLoginAccountSuccess &evLoginAccountSuccess)
+  {
+    // TODO set account name
+    // return transit<MakeGameLobby> (&MakeGameLobby::accountLogin, evLoginAccountSuccess);
+
+    return transit<Lobby> ();
   }
 };
 
@@ -366,7 +376,11 @@ struct CreateAccountSuccess : sc::simple_state<CreateAccountSuccess, Machine>
 
 struct ChatState
 {
-
+  std::string
+  selectChannelComboBoxName ()
+  {
+    return selectedChannelName.value_or ("Select Channel");
+  }
   std::vector<std::string> const &
   messagesForChannel (std::string const &channel)
   {
@@ -385,10 +399,18 @@ struct ChatState
   std::string channelToJoin;
   std::string messageToSendToChannel;
   std::map<std::string, std::vector<std::string>> channelMessages{};
+  bool joinChannelClicked = false;
+  bool sendMessageClicked = false;
 };
 struct MakeGameLobby : sc::simple_state<MakeGameLobby, Machine, Lobby>
 {
-  typedef mpl::list<sc::custom_reaction<EvMessage>, sc::transition<EvLogoutAccountSuccess, Login>, sc::custom_reaction<EvJoinChannelSuccess>, sc::custom_reaction<EvJoinChannelSuccess>, sc::custom_reaction<EvJoinChannelError>> reactions;
+  typedef mpl::list<sc::custom_reaction<EvNextState>, sc::custom_reaction<EvMessage>, sc::transition<EvLogoutAccountSuccess, Login>, sc::custom_reaction<EvJoinChannelSuccess>, sc::custom_reaction<EvJoinChannelError>> reactions;
+
+  void
+  accountLogin (const EvLoginAccountSuccess &evLoginAccountSuccess)
+  {
+    accountName = evLoginAccountSuccess.accountName;
+  }
 
   sc::result
   react (const EvJoinChannelSuccess &evJoinChannelSuccess)
@@ -411,10 +433,26 @@ struct MakeGameLobby : sc::simple_state<MakeGameLobby, Machine, Lobby>
       }
     else
       {
-        std::cout << "can not find chat channel: " << evMessage.channel << "on client" << std::endl;
+        std::cout << "can not find chat channel: " << evMessage.channel << " on client" << std::endl;
       }
     return discard_event ();
   }
+  sc::result
+  react (const EvNextState &)
+  {
+    if (not chatState.channelToJoin.empty ())
+      {
+        sendObject (outermost_context ().msgToSend, shared_class::JoinChannel{ .channel = chatState.channelToJoin });
+        chatState.channelToJoin.clear ();
+      }
+    if (chatState.selectedChannelName && not chatState.selectedChannelName->empty () && not chatState.messageToSendToChannel.empty ())
+      {
+        sendObject (outermost_context ().msgToSend, shared_class::BroadCastMessage{ .channel = chatState.selectedChannelName.value (), .message = chatState.messageToSendToChannel });
+        chatState.messageToSendToChannel.clear ();
+      }
+    return discard_event ();
+  }
+
   ChatState chatState{};
   std::string accountName{};
 };
@@ -458,7 +496,7 @@ struct Lobby : sc::state<Lobby, MakeGameLobby>
       }
     else
       {
-        return discard_event ();
+        return forward_event ();
       }
   }
 };
@@ -510,7 +548,7 @@ struct GameLobby : sc::simple_state<GameLobby, MakeGameLobby>
     if (gameLobbyState.sendMaxUserCountClicked)
       {
         sendObject (outermost_context ().msgToSend, shared_class::SetMaxUserSizeInCreateGameLobby{ .createGameLobbyName = gameLobbyState.gameLobbyName, .maxUserSize = static_cast<size_t> (gameLobbyState.maxUserInGameLobby) });
-        return discard_event ();
+        return forward_event ();
       }
     else if (gameLobbyState.leaveGameLobby)
       {
@@ -519,7 +557,7 @@ struct GameLobby : sc::simple_state<GameLobby, MakeGameLobby>
       }
     else
       {
-        return discard_event ();
+        return forward_event ();
       }
   }
 };
