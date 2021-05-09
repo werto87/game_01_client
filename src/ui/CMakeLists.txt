@@ -1,6 +1,8 @@
  target_sources(${TARGET_NAME} PRIVATE 
- "ui.hxx"
- "ui.cxx"
- "uiState.hxx"
- "uiState.cxx"
-  )
+ ui.hxx
+ ui.cxx
+ uiState.hxx
+ uiState.cxx
+ screen.hxx
+ screen.cxx
+)

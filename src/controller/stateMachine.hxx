@@ -1,583 +1,111 @@
-#ifndef C9E380D5_9F74_4D76_B294_0625A478F2FD
-#define C9E380D5_9F74_4D76_B294_0625A478F2FD
-#include <algorithm>
-#include <boost/mpl/list.hpp>
-#include <boost/statechart/custom_reaction.hpp>
-#include <boost/statechart/event.hpp>
-#include <boost/statechart/simple_state.hpp>
-#include <boost/statechart/state.hpp>
-#include <boost/statechart/state_machine.hpp>
-#include <boost/statechart/transition.hpp>
+
+#ifndef F74E399C_E6DE_488D_B216_CC0117DE1B1D
+#define F74E399C_E6DE_488D_B216_CC0117DE1B1D
+
+#include "src/ui/screen.hxx"
+#include <boost/sml.hpp>
+#include <cassert>
 #include <confu_boost/confuBoost.hxx>
 #include <confu_soci/convenienceFunctionForSoci.hxx>
-#include <cstddef>
-#include <deque>
-#include <exception>
+#include <functional>
 #include <game_01_shared_class/serialization.hxx>
 #include <iostream>
+#include <map>
 #include <pipes/pipes.hpp>
-#include <stdexcept>
+#include <queue>
 #include <variant>
 
-namespace sc = boost::statechart;
-namespace mpl = boost::mpl;
-
-template <class... Ts> struct overloaded : Ts...
+struct MakeGameMachine
 {
-  using Ts::operator()...;
-};
-template <class... Ts> overloaded (Ts...) -> overloaded<Ts...>;
-
-template <typename TypeToSend>
-static void
-sendObject (std::deque<std::string> &msgToSend, TypeToSend const &typeToSend)
-{
-  msgToSend.push_back (confu_soci::typeNameWithOutNamespace (typeToSend) + '|' + confu_boost::toString (typeToSend));
-}
-
-struct Login;
-struct CreateAccount;
-struct Lobby;
-struct GameLobbyError;
-struct CreateGameLobby;
-struct JoinGameLobby;
-struct LoginWaitForServer;
-struct LoginAccountError;
-struct MakeGameLobby;
-struct CreateAccountError;
-struct CreateAccountSuccess;
-struct JoinChannelError;
-struct GameLobby;
-struct CreateAccountWaitForServer;
-struct GameLobbyWaitForServer;
-struct LoginWantToRelog;
-
-struct EvCreateAccountSuccess : sc::event<EvCreateAccountSuccess>
-{
-};
-struct EvCreateAccountError : sc::event<EvCreateAccountError>
-{
-  std::string error{};
-};
-struct EvLoginAccountSuccess : sc::event<EvLoginAccountSuccess>
-{
-  std::string accountName{};
-};
-struct EvLoginAccountError : sc::event<EvLoginAccountError>
-{
-  std::string error{};
-};
-struct EvLogoutAccountSuccess : sc::event<EvLogoutAccountSuccess>
-{
-};
-struct EvJoinChannelSuccess : sc::event<EvJoinChannelSuccess>
-{
-  std::string channelName{};
-};
-struct EvJoinChannelError : sc::event<EvJoinChannelError>
-{
-  std::string error{};
-};
-struct EvMessage : sc::event<EvMessage>
-{
-  std::string channel{};
-  std::string message{};
-};
-struct EvCreateGameLobbyError : sc::event<EvCreateGameLobbyError>
-{
-  std::string error{};
-};
-struct EvJoinGameLobbyError : sc::event<EvJoinGameLobbyError>
-{
-  std::string error{};
-};
-
-struct EvUsersInGameLobby : sc::event<EvUsersInGameLobby>
-{
-  std::string gameLobbyName{};
-  int maxUserInGameLobby{};
-  std::vector<std::string> accountNamesInGameLobby{};
-};
-struct EvMaxUserSizeInCreateGameLobby : sc::event<EvMaxUserSizeInCreateGameLobby>
-{
-  size_t maxUserInGameLobby{};
-};
-
-struct EvLeaveGameLobbySuccess : sc::event<EvLeaveGameLobbySuccess>
-{
-};
-struct EvLeaveGameLobbyError : sc::event<EvLeaveGameLobbyError>
-{
-  std::string error{};
-};
-struct EvWantToRelog : sc::event<EvWantToRelog>
-{
-  std::string destination{};
-};
-struct EvRelogToError : sc::event<EvRelogToError>
-{
-  std::string error{};
-};
-
-// checks state and calcs next state from it
-struct EvNextState : sc::event<EvNextState>
-{
-};
-
-struct LoginState
-{
-  std::string accountName;
-  std::string password;
-  bool createAccountButtonClicked = false;
-  bool signInButtonClicked = false;
-};
-
-struct WaitForServerPopupState
-{
-  bool cancelButtonClicked;
-};
-
-struct MessageBoxPopupState
-{
-  std::string message;
-  std::map<std::string, bool> buttons;
-};
-
-struct CreateAccountState
-{
-  std::string accountName;
-  std::string password;
-  bool createAccountClicked = false;
-  bool backClicked = false;
-};
-
-struct LobbyState
-{
-  std::string createGameLobbyName;
-  std::string createGameLobbyPassword;
-  std::string joinGameLobbyName;
-  std::string joinGameLobbyPassword;
-  bool createCreateGameLobbyClicked = false;
-  bool createJoinGameLobbyClicked = false;
-  bool logoutButtonClicked = false;
-};
-struct GameLobbyState
-{
-  std::string accountName{};
-  std::string gameLobbyName{};
-  int maxUserInGameLobby{};
-  int maxUserInGameLobbyToSend{};
-  std::vector<std::string> accountNamesInGameLobby{};
-  bool sendMaxUserCountClicked = false;
-  bool leaveGameLobby = false;
-};
-
-typedef std::variant<LoginState, MessageBoxPopupState, CreateAccountState, LobbyState, GameLobbyState, WaitForServerPopupState> GuiState;
-
-struct Machine : sc::state_machine<Machine, Login>
-{
-  Machine () { std::cout << "machine created" << std::endl; }
-  GuiState state{};
-  std::deque<std::string> msgToSend;
-};
-
-struct Login : sc::state<Login, Machine>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  Login (my_context ctx) : my_base (ctx) { outermost_context ().state = LoginState{}; }
-  sc::result
-  react (const EvNextState &)
+  auto
+  operator() () const noexcept
   {
-    auto const &loginState = std::get<LoginState> (outermost_context ().state);
-    if (loginState.createAccountButtonClicked)
-      {
-        return transit<CreateAccount> ();
-      }
-    else if (loginState.signInButtonClicked && not loginState.accountName.empty () && not loginState.password.empty ())
-      {
-        sendObject (outermost_context ().msgToSend, shared_class::LoginAccount{ .accountName = loginState.accountName, .password = loginState.password });
-        return transit<LoginWaitForServer> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
+    using namespace sml;
+    return make_transition_table (
+        // clang-format off
+        //TODO add statemachine which wraps this and deals with lobby events and with evalChat 
+        //right now we have to write the same code again and again we can send an event and handle it in wrapper
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+* state<Lobby>                        + event<createGameLobbyWaitForServer>                                                                       = state<CreateGameLobbyWaitForServer>
+, state<Lobby>                        + event<draw>                         /(drawLobby,evalLobby,evalChat)         
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/ 
+, state<CreateGameLobbyWaitForServer> + event<createGameLobbyError>                                                                               = state<CreateGameLobbyError>
+, state<CreateGameLobbyWaitForServer> + event<gameLobbyData>                                                                                      = state<CreateGameLobby>
+, state<CreateGameLobbyWaitForServer> + event<lobby>                                                                                              = state<Lobby>
+, state<CreateGameLobbyWaitForServer> + event<draw>                         /(drawCreateGameLobbyWaitForServer,evalCreateGameLobbyWaitForServer)         
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/ 
+, state<CreateGameLobbyError>         + event<lobby>                                                                                              = state<Lobby>
+, state<CreateGameLobbyError>         + event<draw>                         /(drawCreateGameLobbyError,evalCreateGameLobbyError)  
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+, state<CreateGameLobby>              + event<lobby>                                                                                              = state<Lobby>
+, state<CreateGameLobby>              + event<draw>                         /(drawCreateGameLobby,evalCreateGameLobby,evalChat)  
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+);
+    // clang-format on 
   }
 };
 
-struct LoginWaitForServer : sc::state<LoginWaitForServer, Machine>
+struct LoginStateMachine
 {
-  typedef mpl::list<sc::custom_reaction<EvNextState>, sc::custom_reaction<EvLoginAccountSuccess>, sc::custom_reaction<EvLoginAccountError>, sc::custom_reaction<EvWantToRelog>> reactions;
-  LoginWaitForServer (my_context ctx) : my_base (ctx) { outermost_context ().state = WaitForServerPopupState{}; }
-  sc::result
-  react (const EvNextState &)
+  auto
+  operator() () const noexcept
   {
-    if (std::get<WaitForServerPopupState> (outermost_context ().state).cancelButtonClicked)
-      {
-        return transit<Login> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-  sc::result
-  react (const EvLoginAccountError &evLoginAccountError)
-  {
-    outermost_context ().state = MessageBoxPopupState{ .message = evLoginAccountError.error, .buttons{ { "back", false } } };
-    return transit<LoginAccountError> ();
-  }
-  sc::result
-  react (const EvWantToRelog &evWantToRelog)
-  {
-    // TODO set account name
-    outermost_context ().state = MessageBoxPopupState{ .message = "do you want to go to lobby or relog to " + evWantToRelog.destination, .buttons{ { "Lobby", false }, { evWantToRelog.destination, false } } };
-    return transit<LoginWantToRelog> ();
-  }
-  sc::result
-  react (const EvLoginAccountSuccess &evLoginAccountSuccess)
-  {
-    // TODO set account name
-    // return transit<MakeGameLobby> (&MakeGameLobby::accountLogin, evLoginAccountSuccess);
-
-    return transit<Lobby> ();
+    using namespace sml;
+    return make_transition_table(
+        // clang-format off
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+* state<Login>                        + event<loginWaitForServer>                                                                           = state<LoginWaitForServer>
+, state<Login>                        + event<createAccount>                                                                                = state<CreateAccount>
+, state<Login>                        + event<draw>                        /(drawLogin,evalLogin)         
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<LoginWaitForServer>           + event<loginError>                                                                                   = state<LoginError>
+, state<LoginWaitForServer>           + event<loginSuccess>                / (setAccountName,process(makeGameMachine{}))                    = X      
+, state<LoginWaitForServer>           + event<login>                                                                                        = state<Login>
+, state<LoginWaitForServer>           + event<draw>                        /(drawLoginWaitForServer,evalLoginWaitForServer)         
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<LoginError>                   + event<login>                                                                                        = state<Login>
+, state<LoginError>                   + event<draw>                        /(drawLoginError,evalLoginError)     
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<CreateAccount>                + event<createAccountWaitForServer>                                                                   = state<CreateAccountWaitForServer>
+, state<CreateAccount>                + event<login>                                                                                        = state<Login>
+, state<CreateAccount>                + event<draw>                        /(drawCreateAccount,evalCreateAccount)  
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<CreateAccountWaitForServer>   + event<createAccountError>                                                                           = state<createAccountError>
+, state<CreateAccountWaitForServer>   + event<createAccountSuccess>                                                                         = state<CreateAccountSuccess>
+, state<CreateAccountWaitForServer>   + event<createAccount>                                                                                = state<CreateAccount>
+, state<CreateAccountWaitForServer>   + event<draw>                        /(drawCreateAccountWaitForServer,evalCreateAccountWaitForServer)
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<CreateAccountError>           + event<createAccount>                                                                                = state<CreateAccount>
+, state<CreateAccountError>           + event<draw>                        /(drawCreateAccountError,evalCreateAccountError)
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<CreateAccountSuccess>         + event<createAccount>                                                                                = state<CreateAccount>
+, state<CreateAccountSuccess>         + event<draw>                        /(drawCreateAccountSuccess,evalCreateAccountSuccess)
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+);
+    // clang-format on
   }
 };
 
-struct LoginAccountError : sc::simple_state<LoginAccountError, Machine>
+struct WrapperMachine
 {
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  sc::result
-  react (const EvNextState &)
+  auto
+  operator() ()
   {
-    auto messageBoxPopupState = std::get<MessageBoxPopupState> (outermost_context ().state);
-    if (messageBoxPopupState.buttons.count ("back") == 1 && messageBoxPopupState.buttons.find ("back")->second)
-      {
-        return transit<Login> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
+    using namespace sml;
+    auto resetGameMachineData = [] (MakeGameMachineData &makeGameMachineData) { makeGameMachineData = MakeGameMachineData{}; };
+    return make_transition_table (
+        // clang-format off
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+* state<LoginStateMachine>            + event<makeGameMachine>                                             = state<MakeGameMachine>
+, state<MakeGameMachine>              + event<logoutSuccess>                                               = state<LoginStateMachine>
+, state<MakeGameMachine>              + sml::on_exit<makeGameMachine>            / resetGameMachineData
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+// clang-format on   
+    );
   }
 };
 
-struct LoginWantToRelog : sc::simple_state<LoginWantToRelog, Machine>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  sc::result
-  react (const EvNextState &)
-  {
-    auto messageBoxPopupState = std::get<MessageBoxPopupState> (outermost_context ().state);
-    if (messageBoxPopupState.buttons.count ("Lobby") == 1 && messageBoxPopupState.buttons.find ("Lobby")->second)
-      {
-        return transit<Lobby> ();
-      }
-    else if (messageBoxPopupState.buttons.count ("Game Lobby") == 1 && messageBoxPopupState.buttons.find ("Game Lobby")->second)
-      {
-        return transit<GameLobby> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-};
+typedef sml::sm<WrapperMachine, sml::process_queue<std::queue>> StateMachine;
 
-struct CreateAccount : sc::state<CreateAccount, Machine>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  CreateAccount (my_context ctx) : my_base (ctx) { outermost_context ().state = CreateAccountState{}; }
-  sc::result
-  react (const EvNextState &)
-  {
-    auto const &createAccountState = std::get<CreateAccountState> (outermost_context ().state);
-    if (createAccountState.createAccountClicked)
-      {
-        sendObject (outermost_context ().msgToSend, shared_class::CreateAccount{ .accountName = createAccountState.accountName, .password = createAccountState.password });
-        return transit<CreateAccountWaitForServer> ();
-      }
-    else if (createAccountState.backClicked)
-      {
-        return transit<Login> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-};
 
-struct CreateAccountWaitForServer : sc::state<CreateAccountWaitForServer, Machine>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>, sc::custom_reaction<EvCreateAccountSuccess>, sc::custom_reaction<EvCreateAccountError>> reactions;
-  CreateAccountWaitForServer (my_context ctx) : my_base (ctx) { outermost_context ().state = WaitForServerPopupState{}; }
-  sc::result
-  react (const EvNextState &)
-  {
-    if (std::get<WaitForServerPopupState> (outermost_context ().state).cancelButtonClicked)
-      {
-        return transit<CreateAccount> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-  sc::result
-  react (const EvCreateAccountSuccess &)
-  {
-    outermost_context ().state = MessageBoxPopupState{ .message = "create account success", .buttons{ { "back", false } } };
-    return transit<CreateAccountSuccess> ();
-  }
-  sc::result
-  react (const EvCreateAccountError &evCreateAccountError)
-  {
-    outermost_context ().state = MessageBoxPopupState{ .message = evCreateAccountError.error, .buttons{ { "back", false } } };
-    return transit<CreateAccountError> ();
-  }
-};
-
-struct CreateAccountError : sc::simple_state<CreateAccountError, Machine>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  sc::result
-  react (const EvNextState &)
-  {
-    auto messageBoxPopupState = std::get<MessageBoxPopupState> (outermost_context ().state);
-    if (messageBoxPopupState.buttons.count ("back") == 1 && messageBoxPopupState.buttons.find ("back")->second)
-      {
-        return transit<CreateAccount> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-};
-
-struct CreateAccountSuccess : sc::simple_state<CreateAccountSuccess, Machine>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  sc::result
-  react (const EvNextState &)
-  {
-    auto messageBoxPopupState = std::get<MessageBoxPopupState> (outermost_context ().state);
-    if (messageBoxPopupState.buttons.count ("back") == 1 && messageBoxPopupState.buttons.find ("back")->second)
-      {
-        return transit<CreateAccount> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-};
-
-struct ChatState
-{
-  std::string
-  selectChannelComboBoxName ()
-  {
-    return selectedChannelName.value_or ("Select Channel");
-  }
-  std::vector<std::string> const &
-  messagesForChannel (std::string const &channel)
-  {
-    return channelMessages.at (channel);
-  }
-
-  std::vector<std::string>
-  channelNames ()
-  {
-    auto result = std::vector<std::string>{};
-    channelMessages >>= pipes::transform ([] (auto const &channelAndMessages) { return std::get<0> (channelAndMessages); }) >>= pipes::push_back (result);
-    return result;
-  }
-
-  std::optional<std::string> selectedChannelName;
-  std::string channelToJoin;
-  std::string messageToSendToChannel;
-  std::map<std::string, std::vector<std::string>> channelMessages{};
-  bool joinChannelClicked = false;
-  bool sendMessageClicked = false;
-};
-struct MakeGameLobby : sc::simple_state<MakeGameLobby, Machine, Lobby>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>, sc::custom_reaction<EvMessage>, sc::transition<EvLogoutAccountSuccess, Login>, sc::custom_reaction<EvJoinChannelSuccess>, sc::custom_reaction<EvJoinChannelError>> reactions;
-
-  void
-  accountLogin (const EvLoginAccountSuccess &evLoginAccountSuccess)
-  {
-    accountName = evLoginAccountSuccess.accountName;
-  }
-
-  sc::result
-  react (const EvJoinChannelSuccess &evJoinChannelSuccess)
-  {
-    chatState.channelMessages.insert_or_assign (evJoinChannelSuccess.channelName, std::vector<std::string>{});
-    return discard_event ();
-  }
-  sc::result
-  react (const EvJoinChannelError &evJoinChannelError)
-  {
-    outermost_context ().state = MessageBoxPopupState{ .message = evJoinChannelError.error, .buttons{ { "back", false } } };
-    return transit<JoinChannelError> ();
-  }
-  sc::result
-  react (const EvMessage &evMessage)
-  {
-    if (chatState.channelMessages.count (evMessage.channel) == 1)
-      {
-        chatState.channelMessages.find (evMessage.channel)->second.push_back (evMessage.message);
-      }
-    else
-      {
-        std::cout << "can not find chat channel: " << evMessage.channel << " on client" << std::endl;
-      }
-    return discard_event ();
-  }
-  sc::result
-  react (const EvNextState &)
-  {
-    if (not chatState.channelToJoin.empty ())
-      {
-        sendObject (outermost_context ().msgToSend, shared_class::JoinChannel{ .channel = chatState.channelToJoin });
-        chatState.channelToJoin.clear ();
-      }
-    if (chatState.selectedChannelName && not chatState.selectedChannelName->empty () && not chatState.messageToSendToChannel.empty ())
-      {
-        sendObject (outermost_context ().msgToSend, shared_class::BroadCastMessage{ .channel = chatState.selectedChannelName.value (), .message = chatState.messageToSendToChannel });
-        chatState.messageToSendToChannel.clear ();
-      }
-    return discard_event ();
-  }
-
-  ChatState chatState{};
-  std::string accountName{};
-};
-
-struct JoinChannelError : sc::simple_state<JoinChannelError, Machine>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  sc::result
-  react (const EvNextState &)
-  {
-    auto messageBoxPopupState = std::get<MessageBoxPopupState> (outermost_context ().state);
-    if (messageBoxPopupState.buttons.count ("back") == 1 && messageBoxPopupState.buttons.find ("back")->second)
-      {
-        return transit<Lobby> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-};
-
-struct Lobby : sc::state<Lobby, MakeGameLobby>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-
-  Lobby (my_context ctx) : my_base (ctx) { outermost_context ().state = LobbyState{}; }
-  sc::result
-  react (const EvNextState &)
-  {
-    auto lobbyState = std::get<LobbyState> (outermost_context ().state);
-    if (lobbyState.createCreateGameLobbyClicked && not lobbyState.createGameLobbyName.empty ())
-      {
-        sendObject (outermost_context ().msgToSend, shared_class::CreateGameLobby{ .name = lobbyState.createGameLobbyName, .password = lobbyState.createGameLobbyPassword });
-        return transit<GameLobbyWaitForServer> ();
-      }
-    else if (lobbyState.createJoinGameLobbyClicked && not lobbyState.joinGameLobbyName.empty ())
-      {
-        sendObject (outermost_context ().msgToSend, shared_class::JoinGameLobby{ .name = lobbyState.joinGameLobbyName, .password = lobbyState.joinGameLobbyPassword });
-        return transit<GameLobbyWaitForServer> ();
-      }
-    else
-      {
-        return forward_event ();
-      }
-  }
-};
-
-struct GameLobbyWaitForServer : sc::state<GameLobbyWaitForServer, MakeGameLobby>
-{
-
-  typedef mpl::list<sc::custom_reaction<EvNextState>, sc::custom_reaction<EvJoinGameLobbyError>, sc::custom_reaction<EvUsersInGameLobby>, sc::custom_reaction<EvCreateGameLobbyError>> reactions;
-  GameLobbyWaitForServer (my_context ctx) : my_base (ctx) { outermost_context ().state = WaitForServerPopupState{}; }
-  sc::result
-  react (const EvNextState &)
-  {
-    if (std::get<WaitForServerPopupState> (outermost_context ().state).cancelButtonClicked)
-      {
-        return transit<Lobby> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-  sc::result
-  react (const EvJoinGameLobbyError &evJoinGameLobbyError)
-  {
-    outermost_context ().state = MessageBoxPopupState{ .message = evJoinGameLobbyError.error, .buttons{ { "back", false } } };
-    return transit<GameLobbyError> ();
-  }
-  sc::result
-  react (const EvCreateGameLobbyError &evCreateGameLobbyError)
-  {
-    outermost_context ().state = MessageBoxPopupState{ .message = evCreateGameLobbyError.error, .buttons{ { "back", false } } };
-    return transit<GameLobbyError> ();
-  }
-  sc::result
-  react (const EvUsersInGameLobby &evUsersInGameLobby)
-  {
-    outermost_context ().state = GameLobbyState{ .accountName = context<MakeGameLobby> ().accountName, .gameLobbyName = evUsersInGameLobby.gameLobbyName, .maxUserInGameLobby = evUsersInGameLobby.maxUserInGameLobby, .accountNamesInGameLobby = evUsersInGameLobby.accountNamesInGameLobby };
-    return transit<GameLobby> ();
-  }
-};
-
-struct GameLobby : sc::simple_state<GameLobby, MakeGameLobby>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  sc::result
-  react (const EvNextState &)
-  {
-    auto gameLobbyState = std::get<GameLobbyState> (outermost_context ().state);
-    if (gameLobbyState.sendMaxUserCountClicked)
-      {
-        sendObject (outermost_context ().msgToSend, shared_class::SetMaxUserSizeInCreateGameLobby{ .createGameLobbyName = gameLobbyState.gameLobbyName, .maxUserSize = static_cast<size_t> (gameLobbyState.maxUserInGameLobby) });
-        return forward_event ();
-      }
-    else if (gameLobbyState.leaveGameLobby)
-      {
-        sendObject (outermost_context ().msgToSend, shared_class::LeaveGameLobby{});
-        return transit<Lobby> ();
-      }
-    else
-      {
-        return forward_event ();
-      }
-  }
-};
-
-struct GameLobbyError : sc::simple_state<GameLobbyError, Machine>
-{
-  typedef mpl::list<sc::custom_reaction<EvNextState>> reactions;
-  sc::result
-  react (const EvNextState &)
-  {
-    auto messageBoxPopupState = std::get<MessageBoxPopupState> (outermost_context ().state);
-    if (messageBoxPopupState.buttons.count ("back") == 1 && messageBoxPopupState.buttons.find ("back")->second)
-      {
-        return transit<Lobby> ();
-      }
-    else
-      {
-        return discard_event ();
-      }
-  }
-};
-
-#endif /* C9E380D5_9F74_4D76_B294_0625A478F2FD */
+#endif /* F74E399C_E6DE_488D_B216_CC0117DE1B1D */

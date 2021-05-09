@@ -5,4 +5,5 @@
  stateMachine.cxx
  controller.hxx
  controller.cxx
+ state.hxx
  )

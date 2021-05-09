@@ -2,6 +2,7 @@
 #define A76A25AE_A804_47C0_8549_6F15C0EB7035
 
 #include "src/controller/stateMachine.hxx"
+#include "src/ui/screen.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <boost/optional.hpp>
@@ -10,11 +11,12 @@
 #include <memory>
 #include <string>
 #include <variant>
+
 class ImGuiExample : public Magnum::Platform::Application
 {
 
 public:
-  ImGuiExample (const Arguments &arguments, std::shared_ptr<Machine> stateMachine);
+  ImGuiExample (const Arguments &arguments, StateMachine &stateMachine);
   void drawEvent () override;
   void viewportEvent (ViewportEvent &event) override;
   void keyPressEvent (KeyEvent &event) override;
@@ -29,8 +31,7 @@ public:
 
 private:
   ImFont *font2{};
-  std::shared_ptr<Machine> _stateMachine;
-
+  StateMachine &_stateMachine;
   // debug--------------------------------------------
   void debug (bool &shouldChangeFontSize);
   void createAccountErrorPopup ();

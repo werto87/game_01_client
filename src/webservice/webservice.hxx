@@ -9,7 +9,7 @@
 class Webservice
 {
 public:
-  Webservice (boost::asio::io_context &_io_context, std::shared_ptr<Machine> stateMachine);
+  Webservice (boost::asio::io_context &_io_context, MessagesToSendToServer &messagesToSendToServer, StateMachine &stateMachine);
 
   boost::asio::awaitable<void> connect ();
 
@@ -21,9 +21,9 @@ public:
 
 private:
   // TODO use stateMachine send message to send to server and not webservice controller message
-  std::shared_ptr<Machine> _stateMachine;
   boost::asio::awaitable<std::string> my_read ();
-
+  MessagesToSendToServer &_messagesToSendToServer;
+  StateMachine &_stateMachine;
   boost::beast::websocket::stream<boost::beast::tcp_stream> ws;
 };
 #endif /* C5B152C0_B968_4BBC_B1F9_5823AA8FAD87 */

@@ -12,7 +12,7 @@ namespace http = beast::http;           // from <boost/beast/http.hpp>
 namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
-Webservice::Webservice (boost::asio::io_context &_io_context, std::shared_ptr<Machine> stateMachine) : _stateMachine{ stateMachine }, ws{ _io_context } { _stateMachine->initiate (); }
+Webservice::Webservice (boost::asio::io_context &_io_context, MessagesToSendToServer &messagesToSendToServer, StateMachine &stateMachine) : _messagesToSendToServer{ messagesToSendToServer }, _stateMachine{ stateMachine }, ws{ _io_context } {}
 
 awaitable<void>
 Webservice::connect ()
@@ -98,11 +98,11 @@ Webservice::writeToServer ()
           using namespace std::chrono_literals;
           timer.expires_after (100ms);
           co_await timer.async_wait (use_awaitable);
-          while (not _stateMachine->msgToSend.empty ())
+          while (not _messagesToSendToServer.messagesToSendToServer.empty ())
             {
               auto result = std::string{};
-              result = std::move (_stateMachine->msgToSend.front ());
-              _stateMachine->msgToSend.pop_front ();
+              result = std::move (_messagesToSendToServer.messagesToSendToServer.front ());
+              _messagesToSendToServer.messagesToSendToServer.pop_front ();
               co_await ws.async_write (buffer (std::move (result)), use_awaitable);
             }
         }

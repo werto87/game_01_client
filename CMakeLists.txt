@@ -65,6 +65,7 @@ CONAN_PKG::confu_soci
 CONAN_PKG::confu_boost
 CONAN_PKG::range-v3
 CONAN_PKG::pipes
+CONAN_PKG::sml
 CONAN_PKG::game_01_shared_class
 )
 

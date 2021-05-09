@@ -1,4 +1,5 @@
 #include "src/controller/database.hxx"
+#include "src/controller/stateMachine.hxx"
 #include "src/ui/ui.hxx"
 #include "src/webservice/webservice.hxx"
 #include <boost/bind/bind.hpp>
@@ -37,12 +38,14 @@ main (int argc, char **argv)
 #endif
   try
     {
+      using namespace sml;
 
-      auto stateMachine = std::make_shared<Machine> ();
+      auto messagesToSendToServer = MessagesToSendToServer{};
+      auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer };
       createEmptyDatabase ();
       createTables ();
       boost::asio::io_context io_context (1);
-      auto webservice = Webservice{ io_context, stateMachine };
+      auto webservice = Webservice{ io_context, messagesToSendToServer, stateMachine };
       ImGuiExample app{ { argc, argv }, stateMachine };
       boost::asio::signal_set signals (io_context, SIGINT, SIGTERM);
       signals.async_wait ([&] (auto, auto) {
