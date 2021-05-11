@@ -48,6 +48,7 @@ private:
   void leaveGameLobbyError (std::string const &objectAsString);
   void wantToRelog (std::string const &objectAsString);
   void relogToError (std::string const &objectAsString);
+  void relogToSuccess (std::string const &objectAsString);
   // END: handle messages from network-----------------------------------------------
 };
 #endif /* C5B152C0_B968_4BBC_B1F9_5823AA8FAD87 */

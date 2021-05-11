@@ -10,7 +10,10 @@
 #include <vector>
 namespace sml = boost::sml;
 
-const auto setCreateGameLobbyWaitForServer = [] (CreateGameLobbyWaitForServer &createGameLobbyWaitForServer) { createGameLobbyWaitForServer = CreateGameLobbyWaitForServer{}; };
+const auto setCreateGameLobbyWaitForServer = [] (CreateGameLobbyWaitForServer &createGameLobbyWaitForServer) {
+  //
+  createGameLobbyWaitForServer = CreateGameLobbyWaitForServer{};
+};
 const auto resetGameMachineData = [] (MakeGameMachineData &makeGameMachineData) { makeGameMachineData = MakeGameMachineData{}; };
 
 const auto reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &usersInGameLobby, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {

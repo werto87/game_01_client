@@ -4,6 +4,7 @@
 
 #include "src/controller/loginStateMachine.hxx"
 #include "src/controller/makeGameMachine.hxx"
+#include <boost/sml.hpp>
 #include <queue>
 struct WrapperMachine
 {
@@ -13,11 +14,13 @@ struct WrapperMachine
     using namespace sml;
     return make_transition_table (
         // clang-format off
-/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
-* state<LoginStateMachine>            + event<makeGameMachine>                                             = state<MakeGameMachine>
-, state<MakeGameMachine>              + event<shared_class::LogoutAccountSuccess>                          = state<LoginStateMachine>
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+* state<LoginStateMachine>            + event<makeGameMachine>                                                                                                              = state<MakeGameMachine>
+, state<MakeGameMachine>              + event<shared_class::LogoutAccountSuccess>                                                                                           = state<LoginStateMachine>
+, state<LoginStateMachine>            + event<goToCreateGameLobby>                                                                                                          = state<MakeGameMachine>
 , state<MakeGameMachine>              + sml::on_exit<_>                           / resetGameMachineData
-/*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<MakeGameMachine>              + sml::on_entry<goToCreateGameLobby>        / (process(createGameLobbyWaitForServer{}),process(shared_class::JoinGameLobbySuccess{}))
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 // clang-format on   
     );
   }

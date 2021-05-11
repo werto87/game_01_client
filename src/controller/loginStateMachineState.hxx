@@ -11,7 +11,9 @@ struct loginStateMachine
 };
 struct makeGameMachine
 {
-  std::string accountName;
+};
+struct goToCreateGameLobby
+{
 };
 
 struct login

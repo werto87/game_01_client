@@ -1,7 +1,5 @@
 #include "src/ui/ui.hxx"
-#include "src/controller/database.hxx"
-#include "src/controller/stateMachine.hxx"
-
+#include "src/controller/commonEvent.hxx"
 #include <Magnum/GL/Buffer.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Mesh.h>

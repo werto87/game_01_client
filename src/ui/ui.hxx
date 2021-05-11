@@ -2,7 +2,6 @@
 #define A76A25AE_A804_47C0_8549_6F15C0EB7035
 
 #include "src/controller/stateMachine.hxx"
-#include "src/ui/screen.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <boost/optional.hpp>

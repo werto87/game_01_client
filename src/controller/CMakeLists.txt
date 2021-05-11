@@ -11,4 +11,5 @@
  sendObject.hxx
  loginStateMachineState.hxx
  makeGameMachineState.hxx
+ commonEvent.hxx
  )

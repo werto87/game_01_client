@@ -242,6 +242,12 @@ Webservice::wantToRelog (std::string const &objectAsString)
 }
 
 void
+Webservice::relogToSuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::RelogToSuccess> (objectAsString));
+}
+
+void
 Webservice::relogToError (std::string const &objectAsString)
 {
   _stateMachine.process_event (confu_boost::toObject<shared_class::RelogToError> (objectAsString));
@@ -336,6 +342,10 @@ Webservice::handleMessage (std::string const &msg)
       else if (typeToSearch == "WantToRelog")
         {
           wantToRelog (objectAsString);
+        }
+      else if (typeToSearch == "RelogToSuccess")
+        {
+          relogToSuccess (objectAsString);
         }
       else
         {

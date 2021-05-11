@@ -18,6 +18,11 @@ const auto showLoginError = [] (auto const &loginAccountError, LoginWaitForServe
   loginWaitForServer.message = loginAccountError.error;
 };
 
+const auto showWantToRelog = [] (shared_class::WantToRelog const &wantToRelog, LoginWaitForServer &loginWaitForServer) {
+  loginWaitForServer.buttons = std::vector<std::pair<std::string, bool>>{ { "Lobby", false }, { "Back to Create Game Lobby", false } };
+  loginWaitForServer.message = wantToRelog.destination;
+};
+
 const auto evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendToServer, sml::back::process<loginWaitForServer, createAccount> process_event) {
   if (login.loginClicked && not login.accountName.empty () && not login.password.empty ())
     {
@@ -27,9 +32,27 @@ const auto evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendT
   if (login.createAccountClicked) process_event (createAccount{});
 };
 
-const auto evalLoginWaitForServer = [] (LoginWaitForServer &loginWaitForServer, sml::back::process<login> process_event) {
+const auto evalLoginWaitForServer = [] (LoginWaitForServer &loginWaitForServer, MessagesToSendToServer &messagesToSendToServer, sml::back::process<login, shared_class::LoginAccountSuccess> process_event) {
   // TODO implement cancel should send something to the server
-  if (loginWaitForServer.buttons.front ().second) process_event (login{});
+  if (loginWaitForServer.buttons.size () == 2)
+    {
+      if (loginWaitForServer.buttons.front ().second)
+        {
+          process_event (shared_class::LoginAccountSuccess{});
+          sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::RelogTo{ .wantsToRelog = false });
+        }
+      if (loginWaitForServer.buttons.at (1).second)
+        {
+          sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::RelogTo{ .wantsToRelog = true });
+        }
+    }
+  else
+    {
+      if (loginWaitForServer.buttons.front ().second) process_event (login{});
+    }
+
+  // has only two buttons if want to relog is active
+  // kinda complicated
 };
 
 const auto evalLoginError = [] (LoginError &loginError, sml::back::process<login> process_event) {
@@ -57,7 +80,8 @@ const auto evalCreateAccountSuccess = [] (CreateAccountSuccess &createAccountSuc
   if (createAccountSuccess.backToAccountClicked) process_event (createAccount{});
 };
 
-const auto setAccountNameLoginAccountSuccess = [] (shared_class::LoginAccountSuccess const &loginSuccessEv, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.accountName = loginSuccessEv.accountName; };
+const auto setAccountName = [] (auto const &loginSuccessEv, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.accountName = loginSuccessEv.accountName; };
+
 const auto reactToJoinChannelSuccess = [] (shared_class::JoinChannelSuccess const &joinChannelSuccess, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.chatData.channelMessages.insert_or_assign (joinChannelSuccess.channel, std::vector<std::string>{}); };
 const auto reactToMessage = [] (shared_class::Message const &message, MakeGameMachineData &makeGameMachineData) {
   if (makeGameMachineData.chatData.channelMessages.count (message.channel) == 1)

@@ -2,9 +2,13 @@
 #define B7441788_8126_4373_8FB3_72A5D223C8CB
 
 #include "imgui.h"
-#include "src/controller/loginStateMachineAction.hxx"
-#include "src/controller/makeGameMachineAction.hxx"
+#include "src/controller/commonEvent.hxx"
+#include "src/controller/loginStateMachineState.hxx"
+#include "src/controller/makeGameMachineState.hxx"
+#include "src/controller/stateMachineData.hxx"
+#include <algorithm>
 #include <misc/cpp/imgui_stdlib.h>
+#include <ranges>
 #include <type_traits>
 
 namespace ImGui
@@ -164,16 +168,9 @@ loginScreen (T &data, float windowWidth, float windowHeight, ImFont &biggerFont)
 
 template <typename T>
 void
-createAccountScreen (T &data, float windowSizeX, float windowSizeY, ImFont &biggerFont)
+createAccountScreen (T &data, float windowWidth, float windowHeight, ImFont &biggerFont)
 {
   constexpr auto isCreateAccount = std::is_same<T, CreateAccount>::value;
-
-  auto const windowWidth = windowSizeX;
-  auto const windowHeight = windowSizeY;
-  // ImGui::OpenPopup ("my_select_popup");
-  // ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
-  // if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-  //  {
   ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
@@ -252,16 +249,8 @@ createAccountScreen (T &data, float windowSizeX, float windowSizeY, ImFont &bigg
   ImGui::EndChild ();
   ImGui::EndChild ();
   ImGui::PopStyleVar ();
-  // ImGui::EndPopup ();
-  // }
 }
 
-struct draw
-{
-  float windowSizeX{};
-  float windowSizeY{};
-  ImFont *biggerFont{};
-};
 // TODO maybe we can use overloaded lambda and name it draw and overload it on the types to draw
 const auto drawLogin = [] (draw const &drawEv, Login &login) { loginScreen (login, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont); };
 const auto drawLoginWaitForServer = [] (draw const &drawEv, LoginWaitForServer &loginWaitForServer) {
@@ -294,6 +283,9 @@ const auto drawCreateGameLobbyWaitForServer = [] (draw const &drawEv, CreateGame
   // messageBoxPopupScreen (createGameLobbyWaitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
 };
 const auto drawCreateGameLobbyError = [] (draw const &, CreateGameLobbyError &) {};
-const auto drawCreateGameLobby = [] (draw const &, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) { createGameLobbyScreen (createGameLobby, makeGameMachineData.chatData); };
+const auto drawCreateGameLobby = [] (draw const &, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {
+  //
+  createGameLobbyScreen (createGameLobby, makeGameMachineData.chatData);
+};
 
 #endif /* B7441788_8126_4373_8FB3_72A5D223C8CB */
