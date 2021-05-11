@@ -2,8 +2,13 @@
  database.hxx
  database.cxx
  stateMachine.hxx
- stateMachine.cxx
- controller.hxx
- controller.cxx
- state.hxx
+ loginStateMachine.hxx
+ makeGameMachine.hxx
+ stateMachineData.hxx
+ stateMachineData.cxx
+ loginStateMachineAction.hxx
+ makeGameMachineAction.hxx
+ sendObject.hxx
+ loginStateMachineState.hxx
+ makeGameMachineState.hxx
  )

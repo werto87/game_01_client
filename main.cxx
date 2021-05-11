@@ -5,7 +5,7 @@
 #include <boost/bind/bind.hpp>
 #include <iostream>
 boost::asio::awaitable<void>
-read (boost::asio::io_context &io_context, Webservice &webservice)
+doWebservice (boost::asio::io_context &io_context, Webservice &webservice)
 {
   co_await webservice.connect ();
   boost::asio::co_spawn (
@@ -17,10 +17,19 @@ read (boost::asio::io_context &io_context, Webservice &webservice)
 boost::asio::awaitable<void>
 ui (ImGuiExample &app)
 {
+
   app.redraw ();
   for (;;)
     {
-      app.mainLoopIteration ();
+      try
+        {
+          app.mainLoopIteration ();
+        }
+      catch (...)
+        {
+          std::printf ("Exception \n");
+          std::terminate ();
+        }
       auto timer = boost::asio::steady_timer (co_await boost::asio::this_coro::executor);
       using namespace std::chrono_literals;
       timer.expires_after (1ms);
@@ -39,9 +48,9 @@ main (int argc, char **argv)
   try
     {
       using namespace sml;
-
       auto messagesToSendToServer = MessagesToSendToServer{};
-      auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer };
+      my_logger logger;
+      auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer, logger };
       createEmptyDatabase ();
       createTables ();
       boost::asio::io_context io_context (1);
@@ -53,7 +62,7 @@ main (int argc, char **argv)
         webservice.closeSocket ();
         io_context.stop ();
       });
-      boost::asio::co_spawn (io_context, boost::bind (read, std::ref (io_context), std::ref (webservice)), boost::asio::detached);
+      boost::asio::co_spawn (io_context, boost::bind (doWebservice, std::ref (io_context), std::ref (webservice)), boost::asio::detached);
       boost::asio::co_spawn (io_context, boost::bind (ui, std::ref (app)), boost::asio::detached);
       io_context.run ();
     }

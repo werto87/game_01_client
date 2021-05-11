@@ -20,10 +20,34 @@ public:
   void closeSocket ();
 
 private:
-  // TODO use stateMachine send message to send to server and not webservice controller message
   boost::asio::awaitable<std::string> my_read ();
   MessagesToSendToServer &_messagesToSendToServer;
   StateMachine &_stateMachine;
   boost::beast::websocket::stream<boost::beast::tcp_stream> ws;
+
+  // BEGIN: handle messages from network---------------------------------------------
+  std::vector<std::string> handleMessage (std::string const &msg);
+  void createAccountSuccess (std::string const &objectAsString);
+  void createAccountError (std::string const &objectAsString);
+  void loginAccountSuccess (std::string const &objectAsString);
+  void loginAccountError (std::string const &objectAsString);
+  void logoutAccountSuccess (std::string const &objectAsString);
+  void joinChannelSuccess (std::string const &objectAsString);
+  void joinChannelError (std::string const &objectAsString);
+  void message (std::string const &objectAsString);
+  void broadCastMessageSuccess (std::string const &objectAsString);
+  void broadCastMessageError (std::string const &objectAsString);
+  void createGameLobbySuccess (std::string const &objectAsString);
+  void createGameLobbyError (std::string const &objectAsString);
+  void joinGameLobbySuccess (std::string const &objectAsString);
+  void joinGameLobbyError (std::string const &objectAsString);
+  void usersInGameLobby (std::string const &objectAsString);
+  void maxUserSizeInCreateGameLobby (std::string const &objectAsString);
+  void setMaxUserSizeInCreateGameLobbyError (std::string const &objectAsString);
+  void leaveGameLobbySuccess (std::string const &objectAsString);
+  void leaveGameLobbyError (std::string const &objectAsString);
+  void wantToRelog (std::string const &objectAsString);
+  void relogToError (std::string const &objectAsString);
+  // END: handle messages from network-----------------------------------------------
 };
 #endif /* C5B152C0_B968_4BBC_B1F9_5823AA8FAD87 */

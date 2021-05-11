@@ -1,5 +1,8 @@
 #include "src/webservice/webservice.hxx"
 #include "src/util/util.hxx"
+#include <boost/serialization/optional.hpp>
+#include <boost/serialization/vector.hpp>
+#include <game_01_shared_class/serialization.hxx>
 #include <unistd.h>
 
 using boost::asio::awaitable;
@@ -63,9 +66,8 @@ Webservice::read ()
     {
       for (;;)
         {
-          // TODO make handleMessage a free function
-          // auto msgs = WebserviceController::handleMessage (co_await my_read ());
-          // _stateMachine->msgToSend.insert (_stateMachine->msgToSend.end (), make_move_iterator (msgs.begin ()), make_move_iterator (msgs.end ()));
+          auto msgs = handleMessage (co_await my_read ());
+          _messagesToSendToServer.messagesToSendToServer.insert (_messagesToSendToServer.messagesToSendToServer.end (), std::make_move_iterator (msgs.begin ()), std::make_move_iterator (msgs.end ()));
         }
     }
   catch (std::exception &e)
@@ -77,11 +79,11 @@ Webservice::read ()
 awaitable<std::string>
 Webservice::my_read ()
 {
-  std::cout << "read" << std::endl;
+  // std::cout << "read" << std::endl;
   boost::beast::flat_buffer buffer;
   co_await ws.async_read (buffer, boost::asio::use_awaitable);
   auto msg = boost::beast::buffers_to_string (buffer.data ());
-  std::cout << "number of letters '" << msg.size () << "' msg: '" << msg << "'" << std::endl;
+  std::cout << "{Server} " << msg << "'" << std::endl;
   co_return msg;
 }
 
@@ -117,4 +119,228 @@ void
 Webservice::closeSocket ()
 {
   ws.close ("quit connection");
+}
+
+void
+Webservice::createAccountSuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::CreateAccountSuccess> (objectAsString));
+}
+
+void
+Webservice::createAccountError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::CreateAccountError> (objectAsString));
+}
+
+void
+Webservice::loginAccountSuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::LoginAccountSuccess> (objectAsString));
+}
+
+void
+Webservice::loginAccountError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::LoginAccountError> (objectAsString));
+}
+
+void
+Webservice::logoutAccountSuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::LogoutAccountSuccess> (objectAsString));
+}
+
+void
+Webservice::joinChannelSuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::JoinChannelSuccess> (objectAsString));
+}
+
+void
+Webservice::joinChannelError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::JoinChannelError> (objectAsString));
+}
+
+void
+Webservice::message (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::Message> (objectAsString));
+}
+
+void
+Webservice::broadCastMessageSuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::BroadCastMessageSuccess> (objectAsString));
+}
+
+void
+Webservice::broadCastMessageError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::BroadCastMessageError> (objectAsString));
+}
+
+void
+Webservice::createGameLobbySuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::CreateGameLobbySuccess> (objectAsString));
+}
+
+void
+Webservice::createGameLobbyError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::CreateGameLobbyError> (objectAsString));
+}
+
+void
+Webservice::joinGameLobbySuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::JoinGameLobbySuccess> (objectAsString));
+}
+
+void
+Webservice::joinGameLobbyError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::JoinGameLobbyError> (objectAsString));
+}
+
+void
+Webservice::usersInGameLobby (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::UsersInGameLobby> (objectAsString));
+}
+
+void
+Webservice::maxUserSizeInCreateGameLobby (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::MaxUserSizeInCreateGameLobby> (objectAsString));
+}
+
+void
+Webservice::setMaxUserSizeInCreateGameLobbyError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::SetMaxUserSizeInCreateGameLobbyError> (objectAsString));
+}
+
+void
+Webservice::leaveGameLobbySuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::LeaveGameLobbySuccess> (objectAsString));
+}
+
+void
+Webservice::leaveGameLobbyError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::LeaveGameLobbyError> (objectAsString));
+}
+
+void
+Webservice::wantToRelog (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::WantToRelog> (objectAsString));
+}
+
+void
+Webservice::relogToError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::RelogToError> (objectAsString));
+}
+
+std::vector<std::string>
+Webservice::handleMessage (std::string const &msg)
+{
+  auto result = std::vector<std::string>{};
+  std::vector<std::string> splitMesssage{};
+  boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
+  if (splitMesssage.size () == 2)
+    {
+      auto typeToSearch = splitMesssage.at (0);
+      auto objectAsString = splitMesssage.at (1);
+      if (typeToSearch == "CreateAccountSuccess")
+        {
+          createAccountSuccess (objectAsString);
+        }
+      else if (typeToSearch == "CreateAccountError")
+        {
+          createAccountError (objectAsString);
+        }
+      else if (typeToSearch == "LoginAccountSuccess")
+        {
+          loginAccountSuccess (objectAsString);
+        }
+      else if (typeToSearch == "LoginAccountError")
+        {
+          loginAccountError (objectAsString);
+        }
+      else if (typeToSearch == "LogoutAccountSuccess")
+        {
+          logoutAccountSuccess (objectAsString);
+        }
+      else if (typeToSearch == "JoinChannelSuccess")
+        {
+          joinChannelSuccess (objectAsString);
+        }
+      else if (typeToSearch == "JoinChannelError")
+        {
+          joinChannelError (objectAsString);
+        }
+      else if (typeToSearch == "Message")
+        {
+          message (objectAsString);
+        }
+      else if (typeToSearch == "BroadCastMessageSuccess")
+        {
+          broadCastMessageSuccess (objectAsString);
+        }
+      else if (typeToSearch == "BroadCastMessageError")
+        {
+          broadCastMessageError (objectAsString);
+        }
+      else if (typeToSearch == "CreateGameLobbySuccess")
+        {
+          createGameLobbySuccess (objectAsString);
+        }
+      else if (typeToSearch == "CreateGameLobbyError")
+        {
+          createGameLobbyError (objectAsString);
+        }
+      else if (typeToSearch == "JoinGameLobbySuccess")
+        {
+          joinGameLobbySuccess (objectAsString);
+        }
+      else if (typeToSearch == "JoinGameLobbyError")
+        {
+          joinGameLobbyError (objectAsString);
+        }
+      else if (typeToSearch == "UsersInGameLobby")
+        {
+          usersInGameLobby (objectAsString);
+        }
+      else if (typeToSearch == "MaxUserSizeInCreateGameLobby")
+        {
+          maxUserSizeInCreateGameLobby (objectAsString);
+        }
+      else if (typeToSearch == "SetMaxUserSizeInCreateGameLobbyError")
+        {
+          setMaxUserSizeInCreateGameLobbyError (objectAsString);
+        }
+      else if (typeToSearch == "LeaveGameLobbySuccess")
+        {
+          leaveGameLobbySuccess (objectAsString);
+        }
+      else if (typeToSearch == "LeaveGameLobbyError")
+        {
+          leaveGameLobbyError (objectAsString);
+        }
+      else if (typeToSearch == "WantToRelog")
+        {
+          wantToRelog (objectAsString);
+        }
+      else
+        {
+          std::cout << "could not find a match for typeToSearch '" << typeToSearch << "'" << std::endl;
+        }
+    }
+  return result;
 }

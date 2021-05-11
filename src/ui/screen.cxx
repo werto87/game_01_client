@@ -1,171 +1,50 @@
 #include "src/ui/screen.hxx"
-#include "src/controller/state.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
-void
-loginScreen (Login &login, float windowSizeX, float windowSizeY, ImFont &biggerFont)
+namespace ImGui
 {
-  auto const windowWidth = windowSizeX;
-  auto const windowHeight = windowSizeY;
-  ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
-  ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-  ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to XYZ").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-  ImGui::SameLine ();
-  ImGui::PushFont (&biggerFont);
-  ImGui::Text ("Sign in to XYZ");
-  ImGui::PopFont ();
-  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-  ImGui::SameLine ();
-  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
-  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
-  ImGui::PopStyleVar ();
-  ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-  ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-  ImGui::SameLine ();
-  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 30), false, window_flags);
-  ImGui::PushItemWidth (-1.0f);
-  ImGui::Text ("Username");
-  ImGui::InputText ("##username", &login.accountName);
-  ImGui::Text ("Password");
-  ImGui::InputText ("##password", &login.password, ImGuiInputTextFlags_Password);
-  login.loginClicked = ImGui::Button ("Sign in", ImVec2 (-1, 0));
-  ImGui::PopItemWidth ();
-  ImGui::EndChild ();
-  ImGui::EndChild ();
-  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-  ImGui::SameLine ();
-  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::BeginChild ("ChildR123", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 20), true, window_flags);
-  ImGui::Dummy (ImVec2 (((windowWidth / 2) - (ImGui::CalcTextSize ("New to XYZ?").x + ImGui::CalcTextSize ("create an account").x + (ImGui::GetStyle ().ItemSpacing.x * 6))) / 2, 0.0f));
-  ImGui::SameLine ();
-  ImGui::Text ("New to XYZ?");
-  ImGui::SameLine ();
-  login.createAccountClicked = ImGui::SmallButton ("create an account");
-  ImGui::PopStyleVar ();
-  ImGui::EndChild ();
-}
-
 void
-createAccountScreen (CreateAccount &createAccount, float windowSizeX, float windowSizeY, ImFont &biggerFont)
+LoadingIndicatorCircle (const char *label, const float indicator_radius, const ImVec4 &main_color, const ImVec4 &backdrop_color, const int circle_count, const float speed)
 {
-  auto const windowWidth = windowSizeX;
-  auto const windowHeight = windowSizeY;
-  ImGui::OpenPopup ("my_select_popup");
-  ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
-  if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+  ImGuiWindow *window = GetCurrentWindow ();
+  if (window->SkipItems)
     {
-      ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-      ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-      ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-      ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Create your account").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-      ImGui::SameLine ();
-      ImGui::PushFont (&biggerFont);
-      ImGui::Text ("Create your account");
-      ImGui::PopFont ();
-      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-      ImGui::SameLine ();
-      ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
-      ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-      ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-      ImGui::SameLine ();
-      ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
-      ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-      ImGui::PopStyleVar ();
-      ImGui::PushItemWidth (-1.0f);
-      ImGui::Text ("Username");
-      ImGui::InputText ("##account-username", &createAccount.accountName);
-      ImGui::Text ("Password");
-      ImGui::InputText ("##account-password", &createAccount.password, ImGuiInputTextFlags_Password);
-      createAccount.backToLoginClicked = ImGui::Button ("Back");
-      ImGui::SameLine ();
-      createAccount.createAccountClicked = ImGui::Button ("Create account");
-      ImGui::PopItemWidth ();
-      ImGui::EndChild ();
-      ImGui::EndChild ();
-      ImGui::PopStyleVar ();
-      ImGui::EndPopup ();
+      return;
+    }
+
+  ImGuiContext &g = *GImGui;
+  const ImGuiID id = window->GetID (label);
+
+  ImVec2 pos = window->DC.CursorPos;
+
+  const float circle_radius = indicator_radius / 8.0f;
+  // pos.y += (indicator_radius / 2) - (circle_radius * 2);
+  // pos.x -= 270;
+  const ImRect bb (pos, ImVec2 (pos.x + indicator_radius * 2.0f, pos.y + indicator_radius * 2.0f));
+  ItemSize (bb, 1);
+  if (!ItemAdd (bb, id))
+    {
+      return;
+    }
+  const float t = g.Time;
+  const auto degree_offset = 2.0f * IM_PI / circle_count;
+  for (int i = 0; i < circle_count; ++i)
+    {
+      const auto x = indicator_radius * std::sin (degree_offset * i);
+      const auto y = indicator_radius * std::cos (degree_offset * i);
+      const auto growth = std::max (0.0f, std::sin (t * speed - i * degree_offset));
+      ImVec4 color;
+      color.x = main_color.x * growth + backdrop_color.x * (1.0f - growth);
+      color.y = main_color.y * growth + backdrop_color.y * (1.0f - growth);
+      color.z = main_color.z * growth + backdrop_color.z * (1.0f - growth);
+      color.w = growth;
+      window->DrawList->AddCircleFilled (ImVec2 (pos.x + indicator_radius + x, pos.y + indicator_radius - y), circle_radius + growth * circle_radius, GetColorU32 (color));
     }
 }
-
-// void
-// waitForServerPopup (WaitForServerPopupState &waitForServerPopupState, float windowSizeX, float windowSizeY, ImFont &biggerFont)
-// {
-//   auto const windowWidth = windowSizeX;
-//   auto const windowHeight = windowSizeY;
-//   ImGui::OpenPopup ("my_select_popup");
-//   ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
-//   if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-//     {
-//       ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-//       ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-//       ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-//       ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("WaitForServerPopupState").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-//       ImGui::SameLine ();
-//       ImGui::PushFont (&biggerFont);
-//       ImGui::Text ("WaitForServerPopupState");
-//       ImGui::PopFont ();
-//       ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-//       ImGui::SameLine ();
-//       ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
-//       ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-//       ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-//       ImGui::SameLine ();
-//       ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
-//       ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-//       ImGui::PopStyleVar ();
-//       ImGui::Text ("Wait For Server");
-//       ImGui::EndChild ();
-//       ImGui::EndChild ();
-//       ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-//       ImGui::SameLine ();
-//       waitForServerPopupState.cancelButtonClicked = ImGui::Button ("Cancel");
-//       ImGui::PopStyleVar ();
-//       ImGui::EndPopup ();
-//     }
-// }
-
-// void
-// messageBoxPopup (MessageBoxPopupState &messageBoxPopupState, float windowSizeX, float windowSizeY, ImFont &biggerFont)
-// {
-//   auto const windowWidth = windowSizeX;
-//   auto const windowHeight = windowSizeY;
-//   ImGui::OpenPopup ("my_select_popup");
-//   ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
-//   if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-//     {
-//       ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-//       ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-//       ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-//       ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("WaitForServerPopupState").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-//       ImGui::SameLine ();
-//       ImGui::PushFont (&biggerFont);
-//       ImGui::Text ("WaitForServerPopupState");
-//       ImGui::PopFont ();
-//       ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-//       ImGui::SameLine ();
-//       ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
-//       ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-//       ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-//       ImGui::SameLine ();
-//       ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
-//       ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-//       ImGui::PopStyleVar ();
-//       ImGui::Text ("Wait For Server");
-//       ImGui::EndChild ();
-//       ImGui::EndChild ();
-//       ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-//       for (auto &button : messageBoxPopupState.buttons)
-//         {
-//           ImGui::SameLine ();
-//           button.second = ImGui::Button (button.first.c_str ());
-//         }
-//       ImGui::PopStyleVar ();
-//       ImGui::EndPopup ();
-//     }
-// }
+}
 
 void
 chatScreen (ChatData &chatData)
@@ -208,7 +87,6 @@ void
 lobbyScreen (Lobby &lobby, ImFont &, ChatData &chatData)
 {
   chatScreen (chatData);
-  // TODO allow joinin a game
   ImGui::Text ("Create Game Lobby");
   ImGui::Text ("Game Lobby Name");
   ImGui::InputText ("##CreateGameLobbyName", &lobby.createGameLobbyName);
@@ -227,19 +105,23 @@ lobbyScreen (Lobby &lobby, ImFont &, ChatData &chatData)
 void
 createGameLobbyScreen (CreateGameLobby &createGameLobby, ChatData &chatData)
 {
+  // TODO allow joinin a game
   chatScreen (chatData);
-  ImGui::Text (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobbyToSend) }.c_str ());
-  if (createGameLobby.accountName == createGameLobby.accountNamesInGameLobby.at (0))
+  if (not createGameLobby.accountNamesInGameLobby.empty () && createGameLobby.accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
       ImGui::Text ("set max user count: ");
-      ImGui::SameLine ();
       ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
       createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
     }
+  else
+    {
+      ImGui::Text (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobby) }.c_str ());
+    }
+  ImGui::Text ("user in lobby:");
   for (auto &accountName : createGameLobby.accountNamesInGameLobby)
     {
       ImGui::Text (accountName.c_str ());
     }
-  createGameLobby.sendMaxUserCountClicked = ImGui::Button ("Start Game", ImVec2 (-1, 0));
+  createGameLobby.startGame = ImGui::Button ("Start Game", ImVec2 (-1, 0));
   createGameLobby.leaveGameLobby = ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0));
 }
