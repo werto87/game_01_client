@@ -49,8 +49,11 @@ const auto evalLoginWaitForServer = [] (LoginWaitForServer &loginWaitForServer, 
     }
   else
     {
-      // TODO implement cancel should send something to the server
-      if (loginWaitForServer.buttons.front ().second) process_event (login{});
+      if (loginWaitForServer.buttons.front ().second)
+        {
+          process_event (login{});
+          sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LoginAccountCancel{});
+        }
     }
 };
 
@@ -67,9 +70,12 @@ const auto evalCreateAccount = [] (CreateAccount &createAccount, MessagesToSendT
   if (createAccount.backToLoginClicked) process_event (login{});
 };
 
-const auto evalCreateAccountWaitForServer = [] (CreateAccountWaitForServer &createAccountWaitForServer, sml::back::process<createAccount> process_event) {
-  // TODO implement cancel should send something to the server
-  if (createAccountWaitForServer.buttons.front ().second) process_event (createAccount{});
+const auto evalCreateAccountWaitForServer = [] (CreateAccountWaitForServer &createAccountWaitForServer, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccount> process_event) {
+  if (createAccountWaitForServer.buttons.front ().second)
+    {
+      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::CreateAccountCancel{});
+      process_event (createAccount{});
+    }
 };
 
 const auto evalCreateAccountError = [] (CreateAccountError &createAccountError, sml::back::process<createAccount> process_event) {

@@ -42,7 +42,6 @@ const auto evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendT
 };
 
 const auto evalCreateGameLobbyWaitForServer = [] (CreateGameLobbyWaitForServer &createGameLobbyWaitForServer, MessagesToSendToServer &, sml::back::process<lobby> process_event) {
-  // TODO implement cancel should send something to the server
   if (createGameLobbyWaitForServer.buttons.front ().second) process_event (lobby{});
 };
 
@@ -73,6 +72,11 @@ const auto evalChat = [] (MakeGameMachineData &makeGameMachineData, MessagesToSe
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::BroadCastMessage{ .channel = makeGameMachineData.chatData.selectedChannelName.value (), .message = makeGameMachineData.chatData.messageToSendToChannel });
       makeGameMachineData.chatData.messageToSendToChannel.clear ();
     }
+};
+
+const auto showCreateGameLobbyWaitForServerError = [] (auto const &error, CreateGameLobbyWaitForServer &createGameLobbyWaitForServer) {
+  createGameLobbyWaitForServer.buttons = std::vector<std::pair<std::string, bool>>{ { "Back", false } };
+  createGameLobbyWaitForServer.message = error.error;
 };
 
 #endif /* D734150A_1DCA_4DAA_BA79_A99F78A5BED4 */

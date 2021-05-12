@@ -3,6 +3,7 @@
 
 #include "src/controller/makeGameMachineAction.hxx"
 #include "src/ui/screen.hxx"
+
 struct MakeGameMachine
 {
   auto
@@ -20,13 +21,11 @@ struct MakeGameMachine
 , state<Lobby>                        + event<draw>                               / (drawLobby,evalLobby,evalChat)         
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/ 
 , state<CreateGameLobbyWaitForServer> + on_entry<_>                               / setCreateGameLobbyWaitForServer
-, state<CreateGameLobbyWaitForServer> + event<shared_class::CreateGameLobbyError>                                                                       = state<CreateGameLobbyError>
+, state<CreateGameLobbyWaitForServer> + event<shared_class::CreateGameLobbyError> / showCreateGameLobbyWaitForServerError                                                                      
+, state<CreateGameLobbyWaitForServer> + event<shared_class::JoinGameLobbyError>   / showCreateGameLobbyWaitForServerError
 , state<CreateGameLobbyWaitForServer> + event<shared_class::JoinGameLobbySuccess>                                                                       = state<CreateGameLobby>
 , state<CreateGameLobbyWaitForServer> + event<lobby>                                                                                                    = state<Lobby>
 , state<CreateGameLobbyWaitForServer> + event<draw>                               / (drawCreateGameLobbyWaitForServer,evalCreateGameLobbyWaitForServer)         
-/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/ 
-, state<CreateGameLobbyError>         + event<lobby>                                                                                                    = state<Lobby>
-, state<CreateGameLobbyError>         + event<draw>                               / (drawCreateGameLobbyError,evalCreateGameLobbyError)  
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 , state<CreateGameLobby>              + event<lobby>                                                                                                    = state<Lobby>
 , state<CreateGameLobby>              + event<shared_class::JoinChannelSuccess>   / reactToJoinChannelSuccess

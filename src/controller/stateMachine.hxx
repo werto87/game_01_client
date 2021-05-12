@@ -16,7 +16,7 @@ struct WrapperMachine
         // clang-format off
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 * state<LoginStateMachine>            + event<makeGameMachine>                                                                                                              = state<MakeGameMachine>
-, state<MakeGameMachine>              + event<shared_class::LogoutAccountSuccess>                                                                                           = state<LoginStateMachine>
+, state<MakeGameMachine>              + event<shared_class::LogoutAccountSuccess> /[](Lobby & lobby){ lobby=Lobby{};}                                                                                          = state<LoginStateMachine>
 , state<LoginStateMachine>            + event<goToCreateGameLobby>                                                                                                          = state<MakeGameMachine>
 , state<MakeGameMachine>              + sml::on_exit<_>                           / resetGameMachineData
 , state<MakeGameMachine>              + sml::on_entry<goToCreateGameLobby>        / (process(createGameLobbyWaitForServer{}),process(shared_class::JoinGameLobbySuccess{}))

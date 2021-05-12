@@ -32,7 +32,6 @@ PopDisabled ()
 } // namespace ImGui
 
 void chatScreen (ChatData &chatData);
-void lobbyScreen (Lobby &lobby, ImFont &, ChatData &chatData);
 void createGameLobbyScreen (CreateGameLobby &createGameLobby, ChatData &chatData);
 
 template <typename T> concept hasPopUpData = requires { T{}.message; };
@@ -250,6 +249,94 @@ createAccountScreen (T &data, float windowWidth, float windowHeight, ImFont &big
   ImGui::PopStyleVar ();
 }
 
+template <typename T>
+void
+lobbyScreen (T &data, ImFont &, ChatData &chatData)
+{
+  constexpr auto isLobby = std::is_same<T, Lobby>::value;
+  chatScreen (chatData);
+  ImGui::Text ("Create Game Lobby");
+  ImGui::Text ("Game Lobby Name");
+  if constexpr (isLobby)
+    {
+      ImGui::InputText ("##CreateGameLobbyName", &data.createGameLobbyName);
+    }
+  else
+    {
+      ImGui::PushDisabled ();
+      auto placeholder = std::string{};
+      ImGui::InputText ("##CreateGameLobbyName", &placeholder);
+      ImGui::PopDisabled ();
+    }
+  ImGui::Text ("Game Lobby Password");
+  if constexpr (isLobby)
+    {
+      ImGui::InputText ("##CreateGameLobbyPassword", &data.createGameLobbyPassword);
+    }
+  else
+    {
+      ImGui::PushDisabled ();
+      auto placeholder = std::string{};
+      ImGui::InputText ("##CreateGameLobbyPassword", &placeholder);
+      ImGui::PopDisabled ();
+    }
+  if constexpr (isLobby)
+    {
+      data.createCreateGameLobbyClicked = ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0));
+    }
+  else
+    {
+      ImGui::PushDisabled ();
+      ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0));
+      ImGui::PopDisabled ();
+    }
+  ImGui::Text ("Join Game Lobby");
+  ImGui::Text ("Game Lobby Name");
+  if constexpr (isLobby)
+    {
+      ImGui::InputText ("##JoinGameLobbyName", &data.joinGameLobbyName);
+    }
+  else
+    {
+      ImGui::PushDisabled ();
+      auto placeholder = std::string{};
+      ImGui::InputText ("##JoinGameLobbyName", &placeholder);
+      ImGui::PopDisabled ();
+    }
+  ImGui::Text ("Game Lobby Password");
+  if constexpr (isLobby)
+    {
+      ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword);
+    }
+  else
+    {
+      ImGui::PushDisabled ();
+      auto placeholder = std::string{};
+      ImGui::InputText ("##JoinGameLobbyPassword", &placeholder);
+      ImGui::PopDisabled ();
+    }
+  if constexpr (isLobby)
+    {
+      data.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
+    }
+  else
+    {
+      ImGui::PushDisabled ();
+      ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
+      ImGui::PopDisabled ();
+    }
+  if constexpr (isLobby)
+    {
+      data.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
+    }
+  else
+    {
+      ImGui::PushDisabled ();
+      ImGui::Button ("Logout", ImVec2 (-1, 0));
+      ImGui::PopDisabled ();
+    }
+}
+
 const auto drawLogin = [] (draw const &drawEv, Login &login) { loginScreen (login, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont); };
 const auto drawLoginWaitForServer = [] (draw const &drawEv, LoginWaitForServer &loginWaitForServer) {
   if (loginWaitForServer.message)
@@ -277,8 +364,15 @@ const auto drawCreateAccountError = [] (draw const &, CreateAccountError &) {};
 const auto drawCreateAccountSuccess = [] (draw const &, CreateAccountSuccess &) {};
 
 const auto drawLobby = [] (draw const &drawEv, Lobby &lobby, MakeGameMachineData &makeGameMachineData) { lobbyScreen (lobby, *drawEv.biggerFont, makeGameMachineData.chatData); };
-const auto drawCreateGameLobbyWaitForServer = [] (draw const &drawEv, CreateGameLobbyWaitForServer &createGameLobbyWaitForServer) {
-  // messageBoxPopupScreen (createGameLobbyWaitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+const auto drawCreateGameLobbyWaitForServer = [] (draw const &drawEv, CreateGameLobbyWaitForServer &createGameLobbyWaitForServer, MakeGameMachineData &makeGameMachineData) {
+  if (createGameLobbyWaitForServer.message)
+    {
+      messageBoxPopupScreen (createGameLobbyWaitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+    }
+  else
+    {
+      lobbyScreen (createGameLobbyWaitForServer, *drawEv.biggerFont, makeGameMachineData.chatData);
+    }
 };
 const auto drawCreateGameLobbyError = [] (draw const &, CreateGameLobbyError &) {};
 const auto drawCreateGameLobby = [] (draw const &, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {

@@ -84,25 +84,6 @@ chatScreen (ChatData &chatData)
 }
 
 void
-lobbyScreen (Lobby &lobby, ImFont &, ChatData &chatData)
-{
-  chatScreen (chatData);
-  ImGui::Text ("Create Game Lobby");
-  ImGui::Text ("Game Lobby Name");
-  ImGui::InputText ("##CreateGameLobbyName", &lobby.createGameLobbyName);
-  ImGui::Text ("Game Lobby Password");
-  ImGui::InputText ("##CreateGameLobbyPassword", &lobby.createGameLobbyPassword);
-  lobby.createCreateGameLobbyClicked = ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0));
-  ImGui::Text ("Join Game Lobby");
-  ImGui::Text ("Game Lobby Name");
-  ImGui::InputText ("##JoinGameLobbyName", &lobby.joinGameLobbyName);
-  ImGui::Text ("Game Lobby Password");
-  ImGui::InputText ("##JoinGameLobbyPassword", &lobby.joinGameLobbyPassword);
-  lobby.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
-  lobby.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
-}
-
-void
 createGameLobbyScreen (CreateGameLobby &createGameLobby, ChatData &chatData)
 {
   // TODO allow joinin a game
