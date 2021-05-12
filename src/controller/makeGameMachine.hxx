@@ -13,9 +13,6 @@ struct MakeGameMachine
         // clang-format off
         //TODO add statemachine which wraps this and deals with lobby events and with evalChat 
         //right now we have to write the same code again and again we can send an event and handle it in wrapper
-
-
-        // TODO send success switch to create lobby send users set it on state
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 * state<Lobby>                        + event<createGameLobbyWaitForServer>                                                                             = state<CreateGameLobbyWaitForServer>
 , state<Lobby>                        + event<shared_class::JoinChannelSuccess>   / reactToJoinChannelSuccess

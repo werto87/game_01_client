@@ -20,7 +20,7 @@ const auto showLoginError = [] (auto const &loginAccountError, LoginWaitForServe
 
 const auto showWantToRelog = [] (shared_class::WantToRelog const &wantToRelog, LoginWaitForServer &loginWaitForServer) {
   loginWaitForServer.buttons = std::vector<std::pair<std::string, bool>>{ { "Lobby", false }, { "Back to Create Game Lobby", false } };
-  loginWaitForServer.message = wantToRelog.destination;
+  loginWaitForServer.message = "Do you want to go back to " + wantToRelog.destination;
 };
 
 const auto evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendToServer, sml::back::process<loginWaitForServer, createAccount> process_event) {
@@ -33,7 +33,8 @@ const auto evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendT
 };
 
 const auto evalLoginWaitForServer = [] (LoginWaitForServer &loginWaitForServer, MessagesToSendToServer &messagesToSendToServer, sml::back::process<login, shared_class::LoginAccountSuccess> process_event) {
-  // TODO implement cancel should send something to the server
+  // TODO has only two buttons if want to relog is active
+  // kinda complicated
   if (loginWaitForServer.buttons.size () == 2)
     {
       if (loginWaitForServer.buttons.front ().second)
@@ -48,11 +49,9 @@ const auto evalLoginWaitForServer = [] (LoginWaitForServer &loginWaitForServer, 
     }
   else
     {
+      // TODO implement cancel should send something to the server
       if (loginWaitForServer.buttons.front ().second) process_event (login{});
     }
-
-  // has only two buttons if want to relog is active
-  // kinda complicated
 };
 
 const auto evalLoginError = [] (LoginError &loginError, sml::back::process<login> process_event) {

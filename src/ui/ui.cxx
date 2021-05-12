@@ -52,8 +52,8 @@ ImGuiExample::debug (bool &shouldChangeFontSize)
     {
       if (not sendMessage.empty ())
         {
-          // TODO ignore this debug thing until we need it again
-          //   WebserviceController::sendMessage (sendMessage);
+          // ignore this debug thing until we need it again
+          // WebserviceController::sendMessage (sendMessage);
         }
     }
   ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);

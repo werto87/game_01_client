@@ -37,11 +37,10 @@ void createGameLobbyScreen (CreateGameLobby &createGameLobby, ChatData &chatData
 
 template <typename T> concept hasPopUpData = requires { T{}.message; };
 
+// TODO find a solution where we can seperate function into declaration and definition so we dont need to include imgui in statemachine
 void
-messageBoxPopupScreen (hasPopUpData auto &messageBoxPopup, float windowSizeX, float windowSizeY, ImFont &biggerFont)
+messageBoxPopupScreen (hasPopUpData auto &messageBoxPopup, float windowWidth, float windowHeight, ImFont &biggerFont)
 {
-  auto const windowWidth = windowSizeX;
-  auto const windowHeight = windowSizeY;
   ImGui::OpenPopup ("my_select_popup");
   ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
   if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
@@ -251,7 +250,6 @@ createAccountScreen (T &data, float windowWidth, float windowHeight, ImFont &big
   ImGui::PopStyleVar ();
 }
 
-// TODO maybe we can use overloaded lambda and name it draw and overload it on the types to draw
 const auto drawLogin = [] (draw const &drawEv, Login &login) { loginScreen (login, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont); };
 const auto drawLoginWaitForServer = [] (draw const &drawEv, LoginWaitForServer &loginWaitForServer) {
   if (loginWaitForServer.message)
