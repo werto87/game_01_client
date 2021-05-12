@@ -14,15 +14,18 @@ struct MakeGameMachine
         // clang-format off
         //TODO add statemachine which wraps this and deals with lobby events and with evalChat 
         //right now we have to write the same code again and again we can send an event and handle it in wrapper
+        // TODO add grey out when wait for server in chat and in game lobby
+        // TODO add grey out in relogTo dialog
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 * state<Lobby>                        + event<createGameLobbyWaitForServer>                                                                             = state<CreateGameLobbyWaitForServer>
 , state<Lobby>                        + event<shared_class::JoinChannelSuccess>   / reactToJoinChannelSuccess
 , state<Lobby>                        + event<shared_class::Message>              / reactToMessage
 , state<Lobby>                        + event<draw>                               / (drawLobby,evalLobby,evalChat)         
+, state<Lobby>                        + on_entry<_>                               / setLobby
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/ 
 , state<CreateGameLobbyWaitForServer> + on_entry<_>                               / setCreateGameLobbyWaitForServer
-, state<CreateGameLobbyWaitForServer> + event<shared_class::CreateGameLobbyError> / showCreateGameLobbyWaitForServerError                                                                      
-, state<CreateGameLobbyWaitForServer> + event<shared_class::JoinGameLobbyError>   / showCreateGameLobbyWaitForServerError
+, state<CreateGameLobbyWaitForServer> + event<shared_class::CreateGameLobbyError> / setErrorEvent                                                                      
+, state<CreateGameLobbyWaitForServer> + event<shared_class::JoinGameLobbyError>   / setErrorEvent
 , state<CreateGameLobbyWaitForServer> + event<shared_class::JoinGameLobbySuccess>                                                                       = state<CreateGameLobby>
 , state<CreateGameLobbyWaitForServer> + event<lobby>                                                                                                    = state<Lobby>
 , state<CreateGameLobbyWaitForServer> + event<draw>                               / (drawCreateGameLobbyWaitForServer,evalCreateGameLobbyWaitForServer)         

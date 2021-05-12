@@ -84,11 +84,11 @@ chatScreen (ChatData &chatData)
 }
 
 void
-createGameLobbyScreen (CreateGameLobby &createGameLobby, ChatData &chatData)
+createGameLobbyScreen (CreateGameLobby &createGameLobby, std::string accountName, ChatData &chatData)
 {
   // TODO allow joinin a game
   chatScreen (chatData);
-  if (not createGameLobby.accountNamesInGameLobby.empty () && createGameLobby.accountName == createGameLobby.accountNamesInGameLobby.at (0))
+  if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
       ImGui::Text ("set max user count: ");
       ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
@@ -105,4 +105,33 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, ChatData &chatData)
     }
   createGameLobby.startGame = ImGui::Button ("Start Game", ImVec2 (-1, 0));
   createGameLobby.leaveGameLobby = ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0));
+}
+void
+messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, float windowWidth, float windowHeight, ImFont &biggerFont)
+{
+  ImGui::Dummy (ImVec2 (0.0f, (windowHeight - ((ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+  ImGui::Dummy (ImVec2 ((windowWidth - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+  ImGui::PushFont (&biggerFont);
+  ImGui::PopFont ();
+  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+  ImGui::SameLine ();
+  ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
+  ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+  ImGui::Dummy (ImVec2 (10.0f, 0.0f));
+  ImGui::SameLine ();
+  ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
+  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
+  ImGui::PopStyleVar ();
+  ImGui::Text (messageBoxPopup.message.c_str ());
+  ImGui::EndChild ();
+  ImGui::EndChild ();
+  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+  for (auto &button : messageBoxPopup.buttons)
+    {
+      ImGui::SameLine ();
+      button.pressed = ImGui::Button (button.name.c_str ());
+    }
+  ImGui::PopStyleVar ();
 }

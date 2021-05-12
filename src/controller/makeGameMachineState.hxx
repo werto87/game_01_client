@@ -38,7 +38,6 @@ struct CreateGameLobbyError
 };
 struct CreateGameLobby
 {
-  std::string accountName{};
   std::string gameLobbyName{};
   int maxUserInGameLobby{};
   std::vector<std::string> accountNamesInGameLobby{};

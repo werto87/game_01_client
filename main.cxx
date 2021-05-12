@@ -50,7 +50,8 @@ main (int argc, char **argv)
       using namespace sml;
       auto messagesToSendToServer = MessagesToSendToServer{};
       my_logger logger;
-      auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer, logger };
+      auto messageBoxPopup = MessageBoxPopup{};
+      auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer, logger, messageBoxPopup };
       createEmptyDatabase ();
       createTables ();
       boost::asio::io_context io_context (1);

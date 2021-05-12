@@ -10,6 +10,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <ranges>
 #include <type_traits>
+#include <variant>
 
 namespace ImGui
 {
@@ -32,46 +33,13 @@ PopDisabled ()
 } // namespace ImGui
 
 void chatScreen (ChatData &chatData);
-void createGameLobbyScreen (CreateGameLobby &createGameLobby, ChatData &chatData);
+void createGameLobbyScreen (CreateGameLobby &createGameLobby, std::string accountName, ChatData &chatData);
 
 template <typename T> concept hasPopUpData = requires { T{}.message; };
 
 // TODO find a solution where we can seperate function into declaration and definition so we dont need to include imgui in statemachine
-void
-messageBoxPopupScreen (hasPopUpData auto &messageBoxPopup, float windowWidth, float windowHeight, ImFont &biggerFont)
-{
-  ImGui::OpenPopup ("my_select_popup");
-  ImGui::SetNextWindowSize (ImVec2 (windowHeight, windowHeight));
-  if (ImGui::BeginPopup ("my_select_popup", ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-    {
-      ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-      ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-      ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-      ImGui::Dummy (ImVec2 ((windowWidth - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-      ImGui::PushFont (&biggerFont);
-      ImGui::PopFont ();
-      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-      ImGui::SameLine ();
-      ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
-      ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-      ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-      ImGui::SameLine ();
-      ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
-      ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-      ImGui::PopStyleVar ();
-      ImGui::Text (messageBoxPopup.message.value ().c_str ());
-      ImGui::EndChild ();
-      ImGui::EndChild ();
-      ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-      for (auto &button : messageBoxPopup.buttons)
-        {
-          ImGui::SameLine ();
-          button.second = ImGui::Button (button.first.c_str ());
-        }
-      ImGui::PopStyleVar ();
-      ImGui::EndPopup ();
-    }
-}
+
+void messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, float windowWidth, float windowHeight, ImFont &biggerFont);
 
 template <typename T>
 void
@@ -251,7 +219,7 @@ createAccountScreen (T &data, float windowWidth, float windowHeight, ImFont &big
 
 template <typename T>
 void
-lobbyScreen (T &data, ImFont &, ChatData &chatData)
+lobbyScreen (T &data, ChatData &chatData)
 {
   constexpr auto isLobby = std::is_same<T, Lobby>::value;
   chatScreen (chatData);
@@ -338,22 +306,23 @@ lobbyScreen (T &data, ImFont &, ChatData &chatData)
 }
 
 const auto drawLogin = [] (draw const &drawEv, Login &login) { loginScreen (login, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont); };
-const auto drawLoginWaitForServer = [] (draw const &drawEv, LoginWaitForServer &loginWaitForServer) {
-  if (loginWaitForServer.message)
+const auto drawLoginWaitForServer = [] (draw const &drawEv, LoginWaitForServer &loginWaitForServer, MessageBoxPopup &messageBoxPopup) {
+  if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
-      messageBoxPopupScreen (loginWaitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+      messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
     }
   else
     {
       loginScreen (loginWaitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
     }
 };
+
 const auto drawLoginError = [] (draw const &, LoginError &) {};
 const auto drawCreateAccount = [] (draw const &drawEv, CreateAccount &createAccount) { createAccountScreen (createAccount, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont); };
-const auto drawCreateAccountWaitForServer = [] (draw const &drawEv, CreateAccountWaitForServer &createAccountWaitForServer) {
-  if (createAccountWaitForServer.message)
+const auto drawCreateAccountWaitForServer = [] (draw const &drawEv, CreateAccountWaitForServer &createAccountWaitForServer, MessageBoxPopup &messageBoxPopup) {
+  if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
-      messageBoxPopupScreen (createAccountWaitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+      messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
     }
   else
     {
@@ -363,21 +332,24 @@ const auto drawCreateAccountWaitForServer = [] (draw const &drawEv, CreateAccoun
 const auto drawCreateAccountError = [] (draw const &, CreateAccountError &) {};
 const auto drawCreateAccountSuccess = [] (draw const &, CreateAccountSuccess &) {};
 
-const auto drawLobby = [] (draw const &drawEv, Lobby &lobby, MakeGameMachineData &makeGameMachineData) { lobbyScreen (lobby, *drawEv.biggerFont, makeGameMachineData.chatData); };
-const auto drawCreateGameLobbyWaitForServer = [] (draw const &drawEv, CreateGameLobbyWaitForServer &createGameLobbyWaitForServer, MakeGameMachineData &makeGameMachineData) {
-  if (createGameLobbyWaitForServer.message)
+const auto drawLobby = [] (draw const &, Lobby &lobby, MakeGameMachineData &makeGameMachineData) { lobbyScreen (lobby, makeGameMachineData.chatData); };
+const auto drawCreateGameLobbyWaitForServer = [] (draw const &drawEv, CreateGameLobbyWaitForServer &createGameLobbyWaitForServer, MakeGameMachineData &makeGameMachineData, MessageBoxPopup &messageBoxPopup) {
+  if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
-      messageBoxPopupScreen (createGameLobbyWaitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+      messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
     }
   else
     {
-      lobbyScreen (createGameLobbyWaitForServer, *drawEv.biggerFont, makeGameMachineData.chatData);
+      lobbyScreen (createGameLobbyWaitForServer, makeGameMachineData.chatData);
     }
 };
 const auto drawCreateGameLobbyError = [] (draw const &, CreateGameLobbyError &) {};
-const auto drawCreateGameLobby = [] (draw const &, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {
-  //
-  createGameLobbyScreen (createGameLobby, makeGameMachineData.chatData);
+const auto drawCreateGameLobby = [] (draw const &, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) { createGameLobbyScreen (createGameLobby, makeGameMachineData.accountName, makeGameMachineData.chatData); };
+
+const auto showMessageBoxPopup = [] (draw const &drawEv, MessageBoxPopup &messageBoxPopup) { messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont); };
+
+const auto evalMessageBoxPopup = [] (MessageBoxPopup &messageBoxPopup) {
+  // TODO std::visit messageBoxPopup.event
 };
 
 #endif /* B7441788_8126_4373_8FB3_72A5D223C8CB */

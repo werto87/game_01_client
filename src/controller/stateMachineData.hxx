@@ -1,10 +1,12 @@
 #ifndef B6D64EAB_CF55_4504_9D9D_098D831157E9
 #define B6D64EAB_CF55_4504_9D9D_098D831157E9
-
 #include <deque>
+#include <game_01_shared_class/serialization.hxx>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
+#include <variant>
 #include <vector>
 
 struct ChatData
@@ -21,6 +23,22 @@ struct ChatData
   std::map<std::string, std::vector<std::string>> channelMessages{};
   bool joinChannelClicked = false;
   bool sendMessageClicked = false;
+};
+// TODO add a struct which has
+
+struct Button
+{
+  std::string name{};
+  bool pressed = false;
+  auto operator<=> (Button const &) const = default;
+};
+
+typedef std::variant<std::monostate, shared_class::CreateGameLobbyError, shared_class::JoinGameLobbyError, shared_class::LoginAccountError, shared_class::WantToRelog, shared_class::CreateAccountError> MessageBoxEvent;
+struct MessageBoxPopup
+{
+  MessageBoxEvent event{};
+  std::string message{};
+  std::vector<Button> buttons{};
 };
 
 struct MakeGameMachineData

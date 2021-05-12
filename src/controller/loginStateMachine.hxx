@@ -16,9 +16,10 @@ struct LoginStateMachine
 * state<Login>                        + event<loginWaitForServer>                                                                                   = state<LoginWaitForServer>
 , state<Login>                        + event<createAccount>                                                                                        = state<CreateAccount>
 , state<Login>                        + event<draw>                               / (drawLogin,evalLogin)         
+, state<Login>                        + on_entry<_>                               / setLogin
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 , state<LoginWaitForServer>           + on_entry<_>                               / setLoginWaitForServer
-, state<LoginWaitForServer>           + event<shared_class::LoginAccountError>    / showLoginError
+, state<LoginWaitForServer>           + event<shared_class::LoginAccountError>    / setErrorEvent
 , state<LoginWaitForServer>           + event<shared_class::WantToRelog>          / (setAccountName,showWantToRelog)
 , state<LoginWaitForServer>           + event<shared_class::LoginAccountSuccess>  / (setAccountName,process(makeGameMachine{}))                     = X      
 , state<LoginWaitForServer>           + event<shared_class::RelogToSuccess>       / process(goToCreateGameLobby{})                                  = X
@@ -28,10 +29,11 @@ struct LoginStateMachine
 , state<CreateAccount>                + event<createAccountWaitForServer>                                                                           = state<CreateAccountWaitForServer>
 , state<CreateAccount>                + event<login>                                                                                                = state<Login>
 , state<CreateAccount>                + event<draw>                               / (drawCreateAccount,evalCreateAccount)  
+, state<CreateAccount>                + on_entry<_>                               / setCreateAccount
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 , state<CreateAccountWaitForServer>   + on_entry<_>                               / setCreateAccountWaitForServer
-, state<CreateAccountWaitForServer>   + event<shared_class::CreateAccountError>   / showLoginErrorCreateAccount                                                  
-, state<CreateAccountWaitForServer>   + event<shared_class::LoginAccountSuccess> / (setAccountName,process(makeGameMachine{}))                      = X
+, state<CreateAccountWaitForServer>   + event<shared_class::CreateAccountError>   / setErrorEvent                                                  
+, state<CreateAccountWaitForServer>   + event<shared_class::LoginAccountSuccess>  / (setAccountName,process(makeGameMachine{}))                     = X
 , state<CreateAccountWaitForServer>   + event<createAccount>                                                                                        = state<CreateAccount>
 , state<CreateAccountWaitForServer>   + event<draw>                               / (drawCreateAccountWaitForServer,evalCreateAccountWaitForServer)
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
