@@ -10,7 +10,7 @@
 #include <vector>
 namespace sml = boost::sml;
 
-const auto setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+const auto setLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
@@ -19,14 +19,21 @@ const auto setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopu
   waitForServer->clock_wait = timer::now ();
 };
 
-const auto reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &usersInGameLobby, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {
+const auto setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+  messageBoxPopup = MessageBoxPopup{};
+  waitForServer = WaitForServer{};
+  using timer = std::chrono::system_clock;
+  waitForServer->clock_wait = timer::now ();
+};
+
+const auto reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &usersInGameLobby, CreateGameLobby &createGameLobby) {
   createGameLobby.accountNamesInGameLobby.clear ();
   std::ranges::transform (usersInGameLobby.users, std::back_inserter (createGameLobby.accountNamesInGameLobby), [] (shared_class::UserInGameLobby const &user) { return user.accountName; });
   createGameLobby.gameLobbyName = usersInGameLobby.name;
   createGameLobby.maxUserInGameLobby = static_cast<int> (usersInGameLobby.maxUserSize);
 };
 
-const auto evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createGameLobbyWaitForServer> process_event) {
+const auto evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobbyWaitForServer> process_event) {
   if (lobby.logoutButtonClicked)
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LogoutAccount{});
@@ -34,17 +41,24 @@ const auto evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendT
   if (lobby.createCreateGameLobbyClicked && not lobby.createGameLobbyName.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::CreateGameLobby{ .name = lobby.createGameLobbyName, .password = lobby.createGameLobbyPassword });
-      process_event (createGameLobbyWaitForServer{});
+      process_event (lobbyWaitForServer{});
     }
   if (lobby.createJoinGameLobbyClicked && not lobby.joinGameLobbyName.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinGameLobby{ .name = lobby.joinGameLobbyName, .password = lobby.joinGameLobbyPassword });
-      process_event (createGameLobbyWaitForServer{});
+      process_event (lobbyWaitForServer{});
+    }
+};
+
+const auto evalLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<lobby> process_event) {
+  if (std::holds_alternative<shared_class::JoinGameLobbyError> (messageBoxPopup.event) || std::holds_alternative<shared_class::CreateGameLobbyError> (messageBoxPopup.event))
+    {
+      if (messageBoxPopup.buttons.front ().pressed) process_event (lobby{});
     }
 };
 
 const auto evalCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<lobby> process_event) {
-  if (std::holds_alternative<shared_class::JoinGameLobbyError> (messageBoxPopup.event) || std::holds_alternative<shared_class::CreateGameLobbyError> (messageBoxPopup.event))
+  if (std::holds_alternative<shared_class::SetMaxUserSizeInCreateGameLobbyError> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (lobby{});
     }
@@ -58,7 +72,7 @@ const auto reactToMessage = [] (shared_class::Message const &message, MakeGameMa
     }
 };
 
-const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobby> process_event) {
+const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobby, createGameLobbyWaitForServer> process_event) {
   if (createGameLobby.leaveGameLobby)
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LeaveGameLobby{});
@@ -66,6 +80,7 @@ const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MessagesT
     }
   if (createGameLobby.sendMaxUserCountClicked)
     {
+      process_event (createGameLobbyWaitForServer{});
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::SetMaxUserSizeInCreateGameLobby{ .createGameLobbyName = createGameLobby.gameLobbyName, .maxUserSize = static_cast<size_t> (createGameLobby.maxUserInGameLobby) });
     }
 };

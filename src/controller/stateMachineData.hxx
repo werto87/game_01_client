@@ -33,7 +33,7 @@ struct Button
   auto operator<=> (Button const &) const = default;
 };
 
-typedef std::variant<std::monostate, shared_class::CreateGameLobbyError, shared_class::JoinGameLobbyError, shared_class::LoginAccountError, shared_class::WantToRelog, shared_class::CreateAccountError> MessageBoxEvent;
+typedef std::variant<std::monostate, shared_class::CreateGameLobbyError, shared_class::JoinGameLobbyError, shared_class::LoginAccountError, shared_class::WantToRelog, shared_class::CreateAccountError, shared_class::SetMaxUserSizeInCreateGameLobbyError> MessageBoxEvent;
 struct MessageBoxPopup
 {
   MessageBoxEvent event{};

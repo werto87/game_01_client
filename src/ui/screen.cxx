@@ -111,15 +111,20 @@ chatScreen (ChatData &chatData)
 }
 
 void
-createGameLobbyScreen (CreateGameLobby &createGameLobby, std::string accountName, ChatData &chatData)
+createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData)
 {
   // TODO allow joinin a game
+  auto const shouldLockScreen = waitForServer.has_value ();
   chatScreen (chatData);
   if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
       ImGui::Text ("set max user count: ");
+      ImGui::PushDisabled (shouldLockScreen);
       ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
+      ImGui::PopDisabled (shouldLockScreen);
+      ImGui::PushDisabled (shouldLockScreen);
       createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
+      ImGui::PopDisabled (shouldLockScreen);
     }
   else
     {
@@ -130,8 +135,10 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::string accountName
     {
       ImGui::Text (lobbyMemberAccountName.c_str ());
     }
+  ImGui::PushDisabled (shouldLockScreen);
   createGameLobby.startGame = ImGui::Button ("Start Game", ImVec2 (-1, 0));
   createGameLobby.leaveGameLobby = ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0));
+  ImGui::PopDisabled (shouldLockScreen);
 }
 
 void

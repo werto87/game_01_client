@@ -16,6 +16,9 @@ struct createGameLobby
 {
 };
 
+struct lobbyWaitForServer
+{
+};
 struct Lobby
 {
   std::string createGameLobbyName;
@@ -26,6 +29,11 @@ struct Lobby
   bool createJoinGameLobbyClicked = false;
   bool logoutButtonClicked = false;
 };
+
+struct LobbyWaitForServer
+{
+};
+
 struct CreateGameLobbyWaitForServer
 {
 };
