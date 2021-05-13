@@ -28,8 +28,6 @@ struct Lobby
 };
 struct CreateGameLobbyWaitForServer
 {
-  std::optional<std::string> message{};
-  std::vector<std::pair<std::string, bool>> buttons{ { "cancel", false } };
 };
 struct CreateGameLobbyError
 {

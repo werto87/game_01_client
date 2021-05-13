@@ -51,7 +51,7 @@ main (int argc, char **argv)
       auto messagesToSendToServer = MessagesToSendToServer{};
       my_logger logger;
       auto messageBoxPopup = MessageBoxPopup{};
-      auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer, logger, messageBoxPopup };
+      auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer, logger, messageBoxPopup, std::optional<WaitForServer>{} };
       createEmptyDatabase ();
       createTables ();
       boost::asio::io_context io_context (1);

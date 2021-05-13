@@ -4,6 +4,27 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
+
+namespace ImGui
+{
+inline void
+PushDisabled ()
+{
+  extern void PushItemFlag (int option, bool enabled);
+  PushItemFlag (1 << 2 /*ImGuiItemFlags_Disabled*/, !false);
+  PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * (false ? 1.0f : 0.5f));
+}
+
+inline void
+PopDisabled ()
+{
+  extern void PopItemFlag ();
+  PopItemFlag ();
+  PopStyleVar ();
+}
+
+} // namespace ImGui
+
 // namespace ImGui
 // {
 // void
@@ -134,4 +155,258 @@ messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, float windowWidth, floa
       button.pressed = ImGui::Button (button.name.c_str ());
     }
   ImGui::PopStyleVar ();
+}
+
+void
+loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont)
+{
+  auto const shouldLockScreen = waitForServer.has_value ();
+  ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+  ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to XYZ").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+  ImGui::SameLine ();
+  ImGui::PushFont (&biggerFont);
+  ImGui::Text ("Sign in to XYZ");
+  ImGui::PopFont ();
+  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+  ImGui::SameLine ();
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
+  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+  ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
+  ImGui::PopStyleVar ();
+  ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+  ImGui::Dummy (ImVec2 (10.0f, 0.0f));
+  ImGui::SameLine ();
+  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 30), false, window_flags);
+  ImGui::PushItemWidth (-1.0f);
+  ImGui::Text ("Username");
+  if (shouldLockScreen)
+    {
+      auto placeholder = std::string{};
+      ImGui::PushDisabled ();
+      ImGui::InputText ("##username", &data.accountName);
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      ImGui::InputText ("##username", &data.accountName);
+    }
+  ImGui::Text ("Password");
+  if (shouldLockScreen)
+    {
+      auto placeholder = std::string{};
+      ImGui::PushDisabled ();
+      ImGui::InputText ("##password", &data.password, ImGuiInputTextFlags_Password);
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      ImGui::InputText ("##password", &data.password, ImGuiInputTextFlags_Password);
+    }
+  if (shouldLockScreen)
+    {
+      auto &button = waitForServer->buttons.front ();
+      using namespace std::chrono_literals;
+      if (waitForServer->elapsedTime () >= 5s)
+        {
+          button.pressed = ImGui::Button (button.name.c_str (), ImVec2 (-1, 0));
+        }
+      else
+        {
+          ImGui::PushDisabled ();
+          ImGui::Button (button.name.c_str (), ImVec2 (-1, 0));
+          ImGui::PopDisabled ();
+        }
+    }
+  else
+    {
+      data.loginClicked = ImGui::Button ("Sign in", ImVec2 (-1, 0));
+    }
+  ImGui::PopItemWidth ();
+  ImGui::EndChild ();
+  ImGui::EndChild ();
+  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+  ImGui::SameLine ();
+  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+  ImGui::BeginChild ("ChildR123", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 20), true, window_flags);
+  ImGui::Dummy (ImVec2 (((windowWidth / 2) - (ImGui::CalcTextSize ("New to XYZ?").x + ImGui::CalcTextSize ("create an account").x + (ImGui::GetStyle ().ItemSpacing.x * 6))) / 2, 0.0f));
+  ImGui::SameLine ();
+  ImGui::Text ("New to XYZ?");
+  ImGui::SameLine ();
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::SmallButton ("Create an Account");
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      data.createAccountClicked = ImGui::SmallButton ("Create an Account");
+    }
+
+  ImGui::PopStyleVar ();
+  ImGui::EndChild ();
+}
+
+void
+createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont)
+{
+  auto const shouldLockScreen = waitForServer.has_value ();
+  ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
+  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
+  ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Create your Account").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+  ImGui::SameLine ();
+  ImGui::PushFont (&biggerFont);
+  ImGui::Text ("Create your Account");
+  ImGui::PopFont ();
+  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
+  ImGui::SameLine ();
+  ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
+  ImGui::Dummy (ImVec2 (0.0f, 10.0f));
+  ImGui::Dummy (ImVec2 (10.0f, 0.0f));
+  ImGui::SameLine ();
+  ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
+  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
+  ImGui::PopStyleVar ();
+  ImGui::PushItemWidth (-1.0f);
+  ImGui::Text ("Username");
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::InputText ("##account-username", &data.accountName);
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      ImGui::InputText ("##account-username", &data.accountName);
+    }
+
+  ImGui::Text ("Password");
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::InputText ("##account-password", &data.password, ImGuiInputTextFlags_Password);
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      ImGui::InputText ("##account-password", &data.password, ImGuiInputTextFlags_Password);
+    }
+  if (shouldLockScreen)
+    {
+      auto &button = waitForServer->buttons.front ();
+      using namespace std::chrono_literals;
+      if (waitForServer->elapsedTime () >= 5s)
+        {
+          button.pressed = ImGui::Button (button.name.c_str (), ImVec2 (-1, 0));
+        }
+      else
+        {
+          ImGui::PushDisabled ();
+          ImGui::Button (button.name.c_str (), ImVec2 (-1, 0));
+          ImGui::PopDisabled ();
+        }
+    }
+  else
+    {
+      data.backToLoginClicked = ImGui::Button ("Back");
+    }
+  ImGui::SameLine ();
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::Button ("Create Account and Sign in");
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      data.createAccountClicked = ImGui::Button ("Create Account and Sign in");
+    }
+  ImGui::PopItemWidth ();
+  ImGui::EndChild ();
+  ImGui::EndChild ();
+  ImGui::PopStyleVar ();
+}
+
+void
+lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData &chatData)
+{
+  auto const shouldLockScreen = waitForServer.has_value ();
+  chatScreen (chatData);
+  ImGui::Text ("Create Game Lobby");
+  ImGui::Text ("Game Lobby Name");
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::InputText ("##CreateGameLobbyName", &data.createGameLobbyName);
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      ImGui::InputText ("##CreateGameLobbyName", &data.createGameLobbyName);
+    }
+  ImGui::Text ("Game Lobby Password");
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::InputText ("##CreateGameLobbyPassword", &data.createGameLobbyPassword);
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      ImGui::InputText ("##CreateGameLobbyPassword", &data.createGameLobbyPassword);
+    }
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0));
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      data.createCreateGameLobbyClicked = ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0));
+    }
+  ImGui::Text ("Join Game Lobby");
+  ImGui::Text ("Game Lobby Name");
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::InputText ("##JoinGameLobbyName", &data.joinGameLobbyName);
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      ImGui::InputText ("##JoinGameLobbyName", &data.joinGameLobbyName);
+    }
+  ImGui::Text ("Game Lobby Password");
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword);
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword);
+    }
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      data.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
+    }
+  if (shouldLockScreen)
+    {
+      ImGui::PushDisabled ();
+      ImGui::Button ("Logout", ImVec2 (-1, 0));
+      ImGui::PopDisabled ();
+    }
+  else
+    {
+      data.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
+    }
 }

@@ -1,5 +1,6 @@
 #ifndef B6D64EAB_CF55_4504_9D9D_098D831157E9
 #define B6D64EAB_CF55_4504_9D9D_098D831157E9
+#include <chrono>
 #include <deque>
 #include <game_01_shared_class/serialization.hxx>
 #include <map>
@@ -8,7 +9,6 @@
 #include <string>
 #include <variant>
 #include <vector>
-
 struct ChatData
 {
   std::string selectChannelComboBoxName ();
@@ -45,6 +45,19 @@ struct MakeGameMachineData
 {
   ChatData chatData{};
   std::string accountName{};
+};
+
+struct WaitForServer
+{
+  using timer = std::chrono::system_clock;
+
+  timer::duration
+  elapsedTime () const
+  {
+    return timer::now () - clock_wait;
+  }
+  timer::time_point clock_wait;
+  std::vector<Button> buttons{};
 };
 
 struct MessagesToSendToServer

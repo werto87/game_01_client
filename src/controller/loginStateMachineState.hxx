@@ -38,17 +38,6 @@ struct Login
 };
 struct LoginWaitForServer
 {
-  using timer = std::chrono::system_clock;
-  timer::time_point clock_wait;
-  timer::duration
-  elapsedTime ()
-  {
-    return timer::now () - clock_wait;
-  }
-  std::optional<std::string> message{};
-  std::vector<std::pair<std::string, bool>> buttons{ { "Cancel Sign in", false } };
-
-private:
 };
 struct LoginError
 {
@@ -64,15 +53,6 @@ struct CreateAccount
 };
 struct CreateAccountWaitForServer
 {
-  using timer = std::chrono::system_clock;
-  timer::time_point clock_wait;
-  timer::duration
-  elapsedTime ()
-  {
-    return timer::now () - clock_wait;
-  }
-  std::optional<std::string> message{};
-  std::vector<std::pair<std::string, bool>> buttons{ { "Cancel", false }, { "Create Account", false } };
 };
 struct CreateAccountError
 {

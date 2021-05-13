@@ -6,6 +6,13 @@
 #include "src/controller/makeGameMachine.hxx"
 #include <boost/sml.hpp>
 #include <queue>
+
+const auto reset = [] (Lobby &lobby, Login &login, CreateAccount &createAccount) {
+  lobby = Lobby{};
+  login = Login{};
+  createAccount = CreateAccount{};
+};
+const auto resetGameMachineData = [] (MakeGameMachineData &makeGameMachineData) { makeGameMachineData = MakeGameMachineData{}; };
 struct WrapperMachine
 {
   auto
@@ -16,7 +23,7 @@ struct WrapperMachine
         // clang-format off
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 * state<LoginStateMachine>            + event<makeGameMachine>                                                                                                              = state<MakeGameMachine>
-, state<MakeGameMachine>              + event<shared_class::LogoutAccountSuccess> /[](Lobby & lobby){ lobby=Lobby{};}                                                                                          = state<LoginStateMachine>
+, state<MakeGameMachine>              + event<shared_class::LogoutAccountSuccess> / reset                                                                                   = state<LoginStateMachine>
 , state<LoginStateMachine>            + event<goToCreateGameLobby>                                                                                                          = state<MakeGameMachine>
 , state<MakeGameMachine>              + sml::on_exit<_>                           / resetGameMachineData
 , state<MakeGameMachine>              + sml::on_entry<goToCreateGameLobby>        / (process(createGameLobbyWaitForServer{}),process(shared_class::JoinGameLobbySuccess{}))

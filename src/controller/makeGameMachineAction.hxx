@@ -10,17 +10,14 @@
 #include <vector>
 namespace sml = boost::sml;
 
-const auto setCreateGameLobbyWaitForServer = [] (CreateGameLobbyWaitForServer &createGameLobbyWaitForServer, MessageBoxPopup &messageBoxPopup) {
-  createGameLobbyWaitForServer = CreateGameLobbyWaitForServer{};
+const auto setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
+  waitForServer = WaitForServer{};
+  using timer = std::chrono::system_clock;
+  // TODO we could use it with logout re enable logout after 5 sec
+  // waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Create Account", .pressed = false } };
+  waitForServer->clock_wait = timer::now ();
 };
-
-const auto setLobby = [] (Lobby &lobby, MessageBoxPopup &messageBoxPopup) {
-  lobby = Lobby{};
-  messageBoxPopup = MessageBoxPopup{};
-};
-
-const auto resetGameMachineData = [] (MakeGameMachineData &makeGameMachineData) { makeGameMachineData = MakeGameMachineData{}; };
 
 const auto reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &usersInGameLobby, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {
   createGameLobby.accountNamesInGameLobby.clear ();
@@ -53,8 +50,12 @@ const auto evalCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPop
     }
 };
 
-const auto evalCreateGameLobbyError = [] (CreateGameLobbyError &createGameLobbyError, sml::back::process<lobby> process_event) {
-  if (createGameLobbyError.backToLobbyClicked) process_event (lobby{});
+const auto reactToJoinChannelSuccess = [] (shared_class::JoinChannelSuccess const &joinChannelSuccess, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.chatData.channelMessages.insert_or_assign (joinChannelSuccess.channel, std::vector<std::string>{}); };
+const auto reactToMessage = [] (shared_class::Message const &message, MakeGameMachineData &makeGameMachineData) {
+  if (makeGameMachineData.chatData.channelMessages.count (message.channel) == 1)
+    {
+      makeGameMachineData.chatData.channelMessages.at (message.channel).push_back (message.fromAccount + ": " + message.message);
+    }
 };
 
 const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobby> process_event) {

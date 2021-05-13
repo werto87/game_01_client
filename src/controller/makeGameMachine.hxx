@@ -21,14 +21,14 @@ struct MakeGameMachine
 , state<Lobby>                        + event<shared_class::JoinChannelSuccess>   / reactToJoinChannelSuccess
 , state<Lobby>                        + event<shared_class::Message>              / reactToMessage
 , state<Lobby>                        + event<draw>                               / (drawLobby,evalLobby,evalChat)         
-, state<Lobby>                        + on_entry<_>                               / setLobby
+, state<Lobby>                        + on_entry<_>                               / resetPopupAndWaitForServer
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/ 
 , state<CreateGameLobbyWaitForServer> + on_entry<_>                               / setCreateGameLobbyWaitForServer
 , state<CreateGameLobbyWaitForServer> + event<shared_class::CreateGameLobbyError> / setErrorEvent                                                                      
 , state<CreateGameLobbyWaitForServer> + event<shared_class::JoinGameLobbyError>   / setErrorEvent
 , state<CreateGameLobbyWaitForServer> + event<shared_class::JoinGameLobbySuccess>                                                                       = state<CreateGameLobby>
 , state<CreateGameLobbyWaitForServer> + event<lobby>                                                                                                    = state<Lobby>
-, state<CreateGameLobbyWaitForServer> + event<draw>                               / (drawCreateGameLobbyWaitForServer,evalCreateGameLobbyWaitForServer)         
+, state<CreateGameLobbyWaitForServer> + event<draw>                               / (drawLobby,evalCreateGameLobbyWaitForServer)         
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 , state<CreateGameLobby>              + event<lobby>                                                                                                    = state<Lobby>
 , state<CreateGameLobby>              + event<shared_class::JoinChannelSuccess>   / reactToJoinChannelSuccess
