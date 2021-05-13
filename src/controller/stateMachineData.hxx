@@ -9,6 +9,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+
 struct ChatData
 {
   std::string selectChannelComboBoxName ();

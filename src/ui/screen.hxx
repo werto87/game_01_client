@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <variant>
 
-void chatScreen (ChatData &chatData);
+void chatScreen (ChatData &chatData, bool shouldLockScreen);
 void createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData);
 void messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, float windowWidth, float windowHeight, ImFont &biggerFont);
 void loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont);

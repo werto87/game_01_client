@@ -14,8 +14,6 @@ const auto setLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::op
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
-  // TODO we could use it with logout re enable logout after 5 sec
-  // waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Create Account", .pressed = false } };
   waitForServer->clock_wait = timer::now ();
 };
 
@@ -85,16 +83,34 @@ const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MessagesT
     }
 };
 
-const auto evalChat = [] (MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer) {
+// TODO evalChatLobby and evalChatCreateGameLobby are very close maybe its possible to refactor here
+const auto evalChatLobby = [] (MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobbyWaitForServer> process_event) {
   if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinChannel{ .channel = makeGameMachineData.chatData.channelToJoin });
       makeGameMachineData.chatData.channelToJoin.clear ();
+      process_event (lobbyWaitForServer{});
     }
   if (makeGameMachineData.chatData.sendMessageClicked && makeGameMachineData.chatData.selectedChannelName && not makeGameMachineData.chatData.selectedChannelName->empty () && not makeGameMachineData.chatData.messageToSendToChannel.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::BroadCastMessage{ .channel = makeGameMachineData.chatData.selectedChannelName.value (), .message = makeGameMachineData.chatData.messageToSendToChannel });
       makeGameMachineData.chatData.messageToSendToChannel.clear ();
+      process_event (lobbyWaitForServer{});
+    }
+};
+
+const auto evalChatCreateGameLobby = [] (MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createGameLobbyWaitForServer> process_event) {
+  if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
+    {
+      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinChannel{ .channel = makeGameMachineData.chatData.channelToJoin });
+      makeGameMachineData.chatData.channelToJoin.clear ();
+      process_event (createGameLobbyWaitForServer{});
+    }
+  if (makeGameMachineData.chatData.sendMessageClicked && makeGameMachineData.chatData.selectedChannelName && not makeGameMachineData.chatData.selectedChannelName->empty () && not makeGameMachineData.chatData.messageToSendToChannel.empty ())
+    {
+      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::BroadCastMessage{ .channel = makeGameMachineData.chatData.selectedChannelName.value (), .message = makeGameMachineData.chatData.messageToSendToChannel });
+      makeGameMachineData.chatData.messageToSendToChannel.clear ();
+      process_event (createGameLobbyWaitForServer{});
     }
 };
 

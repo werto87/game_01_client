@@ -74,11 +74,13 @@ PopDisabled (bool enabled)
 // }
 
 void
-chatScreen (ChatData &chatData)
+chatScreen (ChatData &chatData, bool shouldLockScreen)
 {
+  ImGui::PushDisabled (shouldLockScreen);
   ImGui::Text ("Join Channel");
   ImGui::InputText ("##JoinChannel", &chatData.channelToJoin);
   chatData.joinChannelClicked = ImGui::Button ("Join Channel", ImVec2 (-1, 0));
+  ImGui::PopDisabled (shouldLockScreen);
   auto channelNames = chatData.channelNames ();
   if (ImGui::BeginCombo ("##combo 1", chatData.selectChannelComboBoxName ().c_str ()))
     {
@@ -104,10 +106,11 @@ chatScreen (ChatData &chatData)
       if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
     }
   ImGui::EndChild ();
-
+  ImGui::PushDisabled (shouldLockScreen);
   ImGui::Text ("Send to Channel");
   ImGui::InputText ("##SendToChannel", &chatData.messageToSendToChannel);
   chatData.sendMessageClicked = ImGui::Button ("Send to Channel", ImVec2 (-1, 0));
+  ImGui::PopDisabled (shouldLockScreen);
 }
 
 void
@@ -115,7 +118,7 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
 {
   // TODO allow joinin a game
   auto const shouldLockScreen = waitForServer.has_value ();
-  chatScreen (chatData);
+  chatScreen (chatData, shouldLockScreen);
   if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
       ImGui::Text ("set max user count: ");
@@ -302,32 +305,20 @@ void
 lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData &chatData)
 {
   auto const shouldLockScreen = waitForServer.has_value ();
-  chatScreen (chatData);
+  chatScreen (chatData, shouldLockScreen);
+  ImGui::PushDisabled (shouldLockScreen);
   ImGui::Text ("Create Game Lobby");
   ImGui::Text ("Game Lobby Name");
-  ImGui::PushDisabled (shouldLockScreen);
   ImGui::InputText ("##CreateGameLobbyName", &data.createGameLobbyName);
-  ImGui::PopDisabled (shouldLockScreen);
   ImGui::Text ("Game Lobby Password");
-  ImGui::PushDisabled (shouldLockScreen);
   ImGui::InputText ("##CreateGameLobbyPassword", &data.createGameLobbyPassword);
-  ImGui::PopDisabled (shouldLockScreen);
-  ImGui::PushDisabled (shouldLockScreen);
   data.createCreateGameLobbyClicked = ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen);
   ImGui::Text ("Join Game Lobby");
   ImGui::Text ("Game Lobby Name");
-  ImGui::PushDisabled (shouldLockScreen);
   ImGui::InputText ("##JoinGameLobbyName", &data.joinGameLobbyName);
-  ImGui::PopDisabled (shouldLockScreen);
   ImGui::Text ("Game Lobby Password");
-  ImGui::PushDisabled (shouldLockScreen);
   ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword);
-  ImGui::PopDisabled (shouldLockScreen);
-  ImGui::PushDisabled (shouldLockScreen);
   data.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen);
-  ImGui::PushDisabled (shouldLockScreen);
   data.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
   ImGui::PopDisabled (shouldLockScreen);
 }
