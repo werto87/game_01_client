@@ -1,14 +1,11 @@
 #ifndef B7441788_8126_4373_8FB3_72A5D223C8CB
 #define B7441788_8126_4373_8FB3_72A5D223C8CB
 
-#include "imgui.h"
 #include "src/controller/commonEvent.hxx"
 #include "src/controller/loginStateMachineState.hxx"
 #include "src/controller/makeGameMachineState.hxx"
 #include "src/controller/stateMachineData.hxx"
 #include <algorithm>
-#include <misc/cpp/imgui_stdlib.h>
-#include <ranges>
 #include <type_traits>
 #include <variant>
 

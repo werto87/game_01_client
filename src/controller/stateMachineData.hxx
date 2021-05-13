@@ -24,12 +24,12 @@ struct ChatData
   bool joinChannelClicked = false;
   bool sendMessageClicked = false;
 };
-// TODO add a struct which has
 
 struct Button
 {
   std::string name{};
   bool pressed = false;
+  bool disabled = false;
   auto operator<=> (Button const &) const = default;
 };
 

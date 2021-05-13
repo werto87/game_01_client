@@ -14,8 +14,7 @@ struct MakeGameMachine
         // clang-format off
         //TODO add statemachine which wraps this and deals with lobby events and with evalChat 
         //right now we have to write the same code again and again we can send an event and handle it in wrapper
-        // TODO add grey out when wait for server in chat and in game lobby
-        // TODO add grey out in relogTo dialog
+        // TODO add grey out when wait for server in chat
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 * state<Lobby>                        + event<createGameLobbyWaitForServer>                                                                             = state<CreateGameLobbyWaitForServer>
 , state<Lobby>                        + event<shared_class::JoinChannelSuccess>   / reactToJoinChannelSuccess

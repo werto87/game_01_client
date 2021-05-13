@@ -15,7 +15,7 @@ namespace sml = boost::sml;
 
 const auto showWantToRelog = [] (shared_class::WantToRelog const &wantToRelog, MessageBoxPopup &messageBoxPopup) {
   messageBoxPopup.event = wantToRelog;
-  messageBoxPopup.buttons = std::vector<Button>{ { "Lobby", false }, { "Back to Create Game Lobby", false } };
+  messageBoxPopup.buttons = std::vector<Button>{ { .name = "Lobby", .pressed = false, .disabled = false }, { .name = "Back to Create Game Lobby", .pressed = false, .disabled = false } };
   messageBoxPopup.message = "Do you want to go back to " + wantToRelog.destination;
 };
 
@@ -33,11 +33,15 @@ const auto evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForSer
     {
       if (messageBoxPopup.buttons.front ().pressed)
         {
+          messageBoxPopup.buttons.front ().disabled = true;
+          messageBoxPopup.buttons.back ().disabled = true;
           process_event (shared_class::LoginAccountSuccess{});
           sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::RelogTo{ .wantsToRelog = false });
         }
       else if (messageBoxPopup.buttons.back ().pressed)
         {
+          messageBoxPopup.buttons.front ().disabled = true;
+          messageBoxPopup.buttons.back ().disabled = true;
           sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::RelogTo{ .wantsToRelog = true });
         }
     }
@@ -91,14 +95,14 @@ const auto setLoginWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::op
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
-  waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Sign in", .pressed = false } };
+  waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Sign in", .pressed = false, .disabled = false } };
   waitForServer->clock_wait = timer::now ();
 };
 const auto setCreateAccountWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
-  waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Create Account", .pressed = false } };
+  waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Create Account", .pressed = false, .disabled = false } };
   waitForServer->clock_wait = timer::now ();
 };
 
