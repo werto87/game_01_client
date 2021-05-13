@@ -106,6 +106,10 @@ const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameM
       makeGameMachineData.chatData.messageToSendToChannel.clear ();
       process_event (createGameLobbyWaitForServer{});
     }
+  else if (createGameLobby.startGame)
+    {
+      // start game
+    }
 };
 
 #endif /* D734150A_1DCA_4DAA_BA79_A99F78A5BED4 */
