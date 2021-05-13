@@ -9,9 +9,9 @@
 #include <type_traits>
 #include <variant>
 
-void chatScreen (ChatData &chatData, bool shouldLockScreen);
+void chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds const &time);
 void createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData);
-void messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, float windowWidth, float windowHeight, ImFont &biggerFont);
+void messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont);
 void loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont);
 void createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont);
 void lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData &chatData);
@@ -19,7 +19,7 @@ void lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, Chat
 const auto drawLogin = [] (draw const &drawEv, Login &login, MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
-      messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+      messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
     }
   else
     {
@@ -30,7 +30,7 @@ const auto drawLogin = [] (draw const &drawEv, Login &login, MessageBoxPopup &me
 const auto drawCreateAccount = [] (draw const &drawEv, CreateAccount &createAccount, std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup) {
   if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
-      messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+      messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
     }
   else
     {
@@ -41,7 +41,7 @@ const auto drawCreateAccount = [] (draw const &drawEv, CreateAccount &createAcco
 const auto drawLobby = [] (draw const &drawEv, Lobby &lobby, std::optional<WaitForServer> &waitForServer, MakeGameMachineData &makeGameMachineData, MessageBoxPopup &messageBoxPopup) {
   if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
-      messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+      messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
     }
   else
     {
@@ -52,14 +52,12 @@ const auto drawLobby = [] (draw const &drawEv, Lobby &lobby, std::optional<WaitF
 const auto drawCreateGameLobby = [] (draw const &drawEv, std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {
   if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
-      messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+      messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
     }
   else
     {
       createGameLobbyScreen (createGameLobby, waitForServer, makeGameMachineData.accountName, makeGameMachineData.chatData);
     }
 };
-
-const auto showMessageBoxPopup = [] (draw const &drawEv, MessageBoxPopup &messageBoxPopup) { messageBoxPopupScreen (messageBoxPopup, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont); };
 
 #endif /* B7441788_8126_4373_8FB3_72A5D223C8CB */

@@ -31,19 +31,32 @@ const auto reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &u
   createGameLobby.maxUserInGameLobby = static_cast<int> (usersInGameLobby.maxUserSize);
 };
 
-const auto evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobbyWaitForServer> process_event) {
+const auto evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendToServer, MakeGameMachineData &makeGameMachineData, sml::back::process<lobbyWaitForServer> process_event) {
   if (lobby.logoutButtonClicked)
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LogoutAccount{});
+      process_event (lobbyWaitForServer{});
     }
-  if (lobby.createCreateGameLobbyClicked && not lobby.createGameLobbyName.empty ())
+  else if (lobby.createCreateGameLobbyClicked && not lobby.createGameLobbyName.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::CreateGameLobby{ .name = lobby.createGameLobbyName, .password = lobby.createGameLobbyPassword });
       process_event (lobbyWaitForServer{});
     }
-  if (lobby.createJoinGameLobbyClicked && not lobby.joinGameLobbyName.empty ())
+  else if (lobby.createJoinGameLobbyClicked && not lobby.joinGameLobbyName.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinGameLobby{ .name = lobby.joinGameLobbyName, .password = lobby.joinGameLobbyPassword });
+      process_event (lobbyWaitForServer{});
+    }
+  else if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
+    {
+      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinChannel{ .channel = makeGameMachineData.chatData.channelToJoin });
+      makeGameMachineData.chatData.channelToJoin.clear ();
+      process_event (lobbyWaitForServer{});
+    }
+  else if (makeGameMachineData.chatData.sendMessageClicked && makeGameMachineData.chatData.selectedChannelName && not makeGameMachineData.chatData.selectedChannelName->empty () && not makeGameMachineData.chatData.messageToSendToChannel.empty ())
+    {
+      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::BroadCastMessage{ .channel = makeGameMachineData.chatData.selectedChannelName.value (), .message = makeGameMachineData.chatData.messageToSendToChannel });
+      makeGameMachineData.chatData.messageToSendToChannel.clear ();
       process_event (lobbyWaitForServer{});
     }
 };
@@ -70,43 +83,24 @@ const auto reactToMessage = [] (shared_class::Message const &message, MakeGameMa
     }
 };
 
-const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobby, createGameLobbyWaitForServer> process_event) {
+const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobby, createGameLobbyWaitForServer> process_event) {
   if (createGameLobby.leaveGameLobby)
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LeaveGameLobby{});
       process_event (lobby{});
     }
-  if (createGameLobby.sendMaxUserCountClicked)
+  else if (createGameLobby.sendMaxUserCountClicked)
     {
       process_event (createGameLobbyWaitForServer{});
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::SetMaxUserSizeInCreateGameLobby{ .createGameLobbyName = createGameLobby.gameLobbyName, .maxUserSize = static_cast<size_t> (createGameLobby.maxUserInGameLobby) });
     }
-};
-
-// TODO evalChatLobby and evalChatCreateGameLobby are very close maybe its possible to refactor here
-const auto evalChatLobby = [] (MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobbyWaitForServer> process_event) {
-  if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
-    {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinChannel{ .channel = makeGameMachineData.chatData.channelToJoin });
-      makeGameMachineData.chatData.channelToJoin.clear ();
-      process_event (lobbyWaitForServer{});
-    }
-  if (makeGameMachineData.chatData.sendMessageClicked && makeGameMachineData.chatData.selectedChannelName && not makeGameMachineData.chatData.selectedChannelName->empty () && not makeGameMachineData.chatData.messageToSendToChannel.empty ())
-    {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::BroadCastMessage{ .channel = makeGameMachineData.chatData.selectedChannelName.value (), .message = makeGameMachineData.chatData.messageToSendToChannel });
-      makeGameMachineData.chatData.messageToSendToChannel.clear ();
-      process_event (lobbyWaitForServer{});
-    }
-};
-
-const auto evalChatCreateGameLobby = [] (MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createGameLobbyWaitForServer> process_event) {
-  if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
+  else if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinChannel{ .channel = makeGameMachineData.chatData.channelToJoin });
       makeGameMachineData.chatData.channelToJoin.clear ();
       process_event (createGameLobbyWaitForServer{});
     }
-  if (makeGameMachineData.chatData.sendMessageClicked && makeGameMachineData.chatData.selectedChannelName && not makeGameMachineData.chatData.selectedChannelName->empty () && not makeGameMachineData.chatData.messageToSendToChannel.empty ())
+  else if (makeGameMachineData.chatData.sendMessageClicked && makeGameMachineData.chatData.selectedChannelName && not makeGameMachineData.chatData.selectedChannelName->empty () && not makeGameMachineData.chatData.messageToSendToChannel.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::BroadCastMessage{ .channel = makeGameMachineData.chatData.selectedChannelName.value (), .message = makeGameMachineData.chatData.messageToSendToChannel });
       makeGameMachineData.chatData.messageToSendToChannel.clear ();

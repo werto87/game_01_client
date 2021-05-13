@@ -1,6 +1,7 @@
 #include "src/ui/screen.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
+#include <chrono>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
@@ -8,24 +9,37 @@
 namespace ImGui
 {
 inline void
-PushDisabled (bool enabled)
+PushDisabled (bool enabled, std::chrono::milliseconds const &time)
 {
   if (enabled)
     {
       extern void PushItemFlag (int option, bool enabled);
       PushItemFlag (1 << 2 /*ImGuiItemFlags_Disabled*/, !false);
-      PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * (false ? 1.0f : 0.5f));
+      using namespace std::chrono_literals;
+
+      if (time > 5s)
+        {
+          PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * (false ? 1.0f : 0.8f));
+        }
+      else if (time > 200ms)
+        {
+          PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * (false ? 1.0f : 0.9f));
+        }
     }
 }
 
 inline void
-PopDisabled (bool enabled)
+PopDisabled (bool enabled, std::chrono::milliseconds const &time)
 {
   if (enabled)
     {
       extern void PopItemFlag ();
       PopItemFlag ();
-      PopStyleVar ();
+      using namespace std::chrono_literals;
+      if (time > 200ms)
+        {
+          PopStyleVar ();
+        }
     }
 }
 
@@ -74,13 +88,14 @@ PopDisabled (bool enabled)
 // }
 
 void
-chatScreen (ChatData &chatData, bool shouldLockScreen)
+chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds const &time)
 {
-  ImGui::PushDisabled (shouldLockScreen);
+  ImGui::PushItemWidth (-1);
+  ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::Text ("Join Channel");
   ImGui::InputText ("##JoinChannel", &chatData.channelToJoin);
   chatData.joinChannelClicked = ImGui::Button ("Join Channel", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen);
+  ImGui::PopDisabled (shouldLockScreen, time);
   auto channelNames = chatData.channelNames ();
   if (ImGui::BeginCombo ("##combo 1", chatData.selectChannelComboBoxName ().c_str ()))
     {
@@ -106,28 +121,35 @@ chatScreen (ChatData &chatData, bool shouldLockScreen)
       if (ImGui::GetScrollY () >= ImGui::GetScrollMaxY ()) ImGui::SetScrollHereY (1.0f);
     }
   ImGui::EndChild ();
-  ImGui::PushDisabled (shouldLockScreen);
+  ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::Text ("Send to Channel");
   ImGui::InputText ("##SendToChannel", &chatData.messageToSendToChannel);
   chatData.sendMessageClicked = ImGui::Button ("Send to Channel", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen);
+  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopItemWidth ();
 }
 
 void
 createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData)
 {
   // TODO allow joinin a game
+  ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
-  chatScreen (chatData, shouldLockScreen);
+  auto time = std::chrono::milliseconds{};
+  if (waitForServer)
+    {
+      time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
+    }
+  chatScreen (chatData, shouldLockScreen, time);
   if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
       ImGui::Text ("set max user count: ");
-      ImGui::PushDisabled (shouldLockScreen);
+      ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
-      ImGui::PopDisabled (shouldLockScreen);
-      ImGui::PushDisabled (shouldLockScreen);
+      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PushDisabled (shouldLockScreen, time);
       createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
-      ImGui::PopDisabled (shouldLockScreen);
+      ImGui::PopDisabled (shouldLockScreen, time);
     }
   else
     {
@@ -138,15 +160,22 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
     {
       ImGui::Text (lobbyMemberAccountName.c_str ());
     }
-  ImGui::PushDisabled (shouldLockScreen);
+  ImGui::PushDisabled (shouldLockScreen, time);
   createGameLobby.startGame = ImGui::Button ("Start Game", ImVec2 (-1, 0));
   createGameLobby.leaveGameLobby = ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen);
+  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopItemWidth ();
 }
 
 void
-messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, float windowWidth, float windowHeight, ImFont &biggerFont)
+messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont)
 {
+  ImGui::PushItemWidth (-1);
+  auto time = std::chrono::milliseconds{};
+  if (waitForServer)
+    {
+      time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
+    }
   ImGui::Dummy (ImVec2 (0.0f, (windowHeight - ((ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
@@ -169,17 +198,25 @@ messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, float windowWidth, floa
   for (auto &button : messageBoxPopup.buttons)
     {
       ImGui::SameLine ();
-      ImGui::PushDisabled (button.disabled);
+      ImGui::PushDisabled (button.disabled, time);
       button.pressed = ImGui::Button (button.name.c_str ());
-      ImGui::PopDisabled (button.disabled);
+      ImGui::PopDisabled (button.disabled, time);
     }
   ImGui::PopStyleVar ();
+  ImGui::PopItemWidth ();
 }
 
 void
 loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont)
 {
+  ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
+  auto time = std::chrono::milliseconds{};
+  if (waitForServer)
+    {
+      time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
+    }
+  ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
   ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to XYZ").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
   ImGui::SameLine ();
@@ -198,13 +235,10 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
   ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 30), false, window_flags);
   ImGui::PushItemWidth (-1.0f);
   ImGui::Text ("Username");
-  ImGui::PushDisabled (shouldLockScreen);
   ImGui::InputText ("##username", &data.accountName);
-  ImGui::PopDisabled (shouldLockScreen);
   ImGui::Text ("Password");
-  ImGui::PushDisabled (shouldLockScreen);
   ImGui::InputText ("##password", &data.password, ImGuiInputTextFlags_Password);
-  ImGui::PopDisabled (shouldLockScreen);
+  ImGui::PopDisabled (shouldLockScreen, time);
   if (shouldLockScreen)
     {
       auto &button = waitForServer->buttons.front ();
@@ -215,15 +249,16 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
         }
       else
         {
-          ImGui::PushDisabled (shouldLockScreen);
-          ImGui::Button (button.name.c_str (), ImVec2 (-1, 0));
-          ImGui::PopDisabled (shouldLockScreen);
+          ImGui::PushDisabled (shouldLockScreen, time);
+          ImGui::Button ("Sign in", ImVec2 (-1, 0));
+          ImGui::PopDisabled (shouldLockScreen, time);
         }
     }
   else
     {
       data.loginClicked = ImGui::Button ("Sign in", ImVec2 (-1, 0));
     }
+  ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::PopItemWidth ();
   ImGui::EndChild ();
   ImGui::EndChild ();
@@ -235,17 +270,24 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
   ImGui::SameLine ();
   ImGui::Text ("New to XYZ?");
   ImGui::SameLine ();
-  ImGui::PushDisabled (shouldLockScreen);
   data.createAccountClicked = ImGui::SmallButton ("Create an Account");
-  ImGui::PopDisabled (shouldLockScreen);
+  ImGui::PopDisabled (shouldLockScreen, time);
   ImGui::PopStyleVar ();
   ImGui::EndChild ();
+  ImGui::PopItemWidth ();
 }
 
 void
 createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont)
 {
+  ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
+  auto time = std::chrono::milliseconds{};
+  if (waitForServer)
+    {
+      time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
+    }
+  ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
@@ -265,36 +307,24 @@ createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForS
   ImGui::PopStyleVar ();
   ImGui::PushItemWidth (-1.0f);
   ImGui::Text ("Username");
-  ImGui::PushDisabled (shouldLockScreen);
   ImGui::InputText ("##account-username", &data.accountName);
-  ImGui::PopDisabled (shouldLockScreen);
   ImGui::Text ("Password");
-  ImGui::PushDisabled (shouldLockScreen);
   ImGui::InputText ("##account-password", &data.password, ImGuiInputTextFlags_Password);
-  ImGui::PopDisabled (shouldLockScreen);
-  if (shouldLockScreen)
+  data.backToLoginClicked = ImGui::Button ("Back");
+  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::SameLine ();
+  using namespace std::chrono_literals;
+  if (shouldLockScreen && time > 5s)
     {
       auto &button = waitForServer->buttons.front ();
-      using namespace std::chrono_literals;
-      if (waitForServer->elapsedTime () >= 5s)
-        {
-          button.pressed = ImGui::Button (button.name.c_str (), ImVec2 (-1, 0));
-        }
-      else
-        {
-          ImGui::PushDisabled (shouldLockScreen);
-          ImGui::Button (button.name.c_str (), ImVec2 (-1, 0));
-          ImGui::PopDisabled (shouldLockScreen);
-        }
+      button.pressed = ImGui::Button (button.name.c_str (), ImVec2 (-1, 0));
     }
   else
     {
-      data.backToLoginClicked = ImGui::Button ("Back");
+      ImGui::PushDisabled (shouldLockScreen, time);
+      data.createAccountClicked = ImGui::Button ("Create Account and Sign in", ImVec2 (-1, 0));
+      ImGui::PopDisabled (shouldLockScreen, time);
     }
-  ImGui::SameLine ();
-  ImGui::PushDisabled (shouldLockScreen);
-  data.createAccountClicked = ImGui::Button ("Create Account and Sign in");
-  ImGui::PopDisabled (shouldLockScreen);
   ImGui::PopItemWidth ();
   ImGui::EndChild ();
   ImGui::EndChild ();
@@ -304,9 +334,15 @@ createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForS
 void
 lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData &chatData)
 {
+  ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
-  chatScreen (chatData, shouldLockScreen);
-  ImGui::PushDisabled (shouldLockScreen);
+  auto time = std::chrono::milliseconds{};
+  if (waitForServer)
+    {
+      time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
+    }
+  chatScreen (chatData, shouldLockScreen, time);
+  ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::Text ("Create Game Lobby");
   ImGui::Text ("Game Lobby Name");
   ImGui::InputText ("##CreateGameLobbyName", &data.createGameLobbyName);
@@ -320,5 +356,6 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
   ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword);
   data.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
   data.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen);
+  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopItemWidth ();
 }
