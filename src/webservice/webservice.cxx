@@ -248,6 +248,42 @@ Webservice::relogToSuccess (std::string const &objectAsString)
 }
 
 void
+Webservice::startGame (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::StartGame> (objectAsString));
+}
+
+void
+Webservice::gameData (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<durak::GameData> (objectAsString));
+}
+
+void
+Webservice::durakAttackSuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::DurakAttackSuccess> (objectAsString));
+}
+
+void
+Webservice::durakAttackError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::DurakAttackError> (objectAsString));
+}
+
+void
+Webservice::durakDefendError (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::DurakDefendError> (objectAsString));
+}
+
+void
+Webservice::durakDefendSuccess (std::string const &objectAsString)
+{
+  _stateMachine.process_event (confu_boost::toObject<shared_class::DurakDefendSuccess> (objectAsString));
+}
+
+void
 Webservice::relogToError (std::string const &objectAsString)
 {
   _stateMachine.process_event (confu_boost::toObject<shared_class::RelogToError> (objectAsString));
@@ -261,8 +297,10 @@ Webservice::handleMessage (std::string const &msg)
   boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
   if (splitMesssage.size () == 2)
     {
-      auto typeToSearch = splitMesssage.at (0);
-      auto objectAsString = splitMesssage.at (1);
+      // TODO if we make a map from std::string to shared_class we can get the type for string than we can use the type and call
+      // TODO _stateMachine.process_event (confu_boost::toObject<shared_class::TYPE_FROM_MAP> (objectAsString));
+      auto const &typeToSearch = splitMesssage.at (0);
+      auto const &objectAsString = splitMesssage.at (1);
       if (typeToSearch == "CreateAccountSuccess")
         {
           createAccountSuccess (objectAsString);
@@ -346,6 +384,30 @@ Webservice::handleMessage (std::string const &msg)
       else if (typeToSearch == "RelogToSuccess")
         {
           relogToSuccess (objectAsString);
+        }
+      else if (typeToSearch == "StartGame")
+        {
+          startGame (objectAsString);
+        }
+      else if (typeToSearch == "GameData")
+        {
+          gameData (objectAsString);
+        }
+      else if (typeToSearch == "DurakAttackSuccess")
+        {
+          durakAttackSuccess (objectAsString);
+        }
+      else if (typeToSearch == "DurakAttackError")
+        {
+          durakAttackError (objectAsString);
+        }
+      else if (typeToSearch == "DurakDefendSuccess")
+        {
+          durakDefendSuccess (objectAsString);
+        }
+      else if (typeToSearch == "DurakDefendError")
+        {
+          durakDefendError (objectAsString);
         }
       else
         {

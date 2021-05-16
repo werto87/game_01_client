@@ -13,13 +13,13 @@
 
 namespace sml = boost::sml;
 
-const auto showWantToRelog = [] (shared_class::WantToRelog const &wantToRelog, MessageBoxPopup &messageBoxPopup) {
+auto const showWantToRelog = [] (shared_class::WantToRelog const &wantToRelog, MessageBoxPopup &messageBoxPopup) {
   messageBoxPopup.event = wantToRelog;
   messageBoxPopup.buttons = std::vector<Button>{ { .name = "Lobby", .pressed = false, .disabled = false }, { .name = "Back to Create Game Lobby", .pressed = false, .disabled = false } };
   messageBoxPopup.message = "Do you want to go back to " + wantToRelog.destination;
 };
 
-const auto evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendToServer, sml::back::process<loginWaitForServer, createAccount> process_event) {
+auto const evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendToServer, sml::back::process<loginWaitForServer, createAccount> process_event) {
   if (login.loginClicked && not login.accountName.empty () && not login.password.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LoginAccount{ .accountName = login.accountName, .password = login.password });
@@ -28,7 +28,7 @@ const auto evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendT
   if (login.createAccountClicked) process_event (createAccount{});
 };
 
-const auto evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForServer, MessagesToSendToServer &messagesToSendToServer, MessageBoxPopup &messageBoxPopup, sml::back::process<login, shared_class::LoginAccountSuccess> process_event) {
+auto const evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForServer, MessagesToSendToServer &messagesToSendToServer, MessageBoxPopup &messageBoxPopup, sml::back::process<login, shared_class::LoginAccountSuccess> process_event) {
   if (std::holds_alternative<shared_class::WantToRelog> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed)
@@ -62,7 +62,7 @@ const auto evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForSer
     }
 };
 
-const auto evalCreateAccount = [] (CreateAccount &createAccount, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccountWaitForServer, login> process_event) {
+auto const evalCreateAccount = [] (CreateAccount &createAccount, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccountWaitForServer, login> process_event) {
   if (createAccount.createAccountClicked && not createAccount.accountName.empty () && not createAccount.password.empty ())
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::CreateAccount{ .accountName = createAccount.accountName, .password = createAccount.password });
@@ -71,7 +71,7 @@ const auto evalCreateAccount = [] (CreateAccount &createAccount, MessagesToSendT
   if (createAccount.backToLoginClicked) process_event (login{});
 };
 
-const auto evalCreateAccountWaitForServer = [] (std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccount> process_event) {
+auto const evalCreateAccountWaitForServer = [] (std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccount> process_event) {
   if (std::holds_alternative<shared_class::CreateAccountError> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed)
@@ -89,16 +89,16 @@ const auto evalCreateAccountWaitForServer = [] (std::optional<WaitForServer> &wa
     }
 };
 
-const auto setAccountName = [] (auto const &loginSuccessEv, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.accountName = loginSuccessEv.accountName; };
+auto const setAccountName = [] (auto const &loginSuccessEv, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.accountName = loginSuccessEv.accountName; };
 
-const auto setLoginWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setLoginWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
   waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Sign in", .pressed = false, .disabled = false } };
   waitForServer->clock_wait = timer::now ();
 };
-const auto setCreateAccountWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setCreateAccountWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;

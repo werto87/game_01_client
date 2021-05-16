@@ -13,10 +13,10 @@ struct LoginStateMachine
     return make_transition_table (
         // clang-format off
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
-* state<Login>                        + event<loginWaitForServer>                                                                       = state<LoginWaitForServer>
+* state<Login>                        + on_entry<_>                               / resetPopupAndWaitForServer
+, state<Login>                        + event<loginWaitForServer>                                                                       = state<LoginWaitForServer>
 , state<Login>                        + event<createAccount>                                                                            = state<CreateAccount>
 , state<Login>                        + event<draw>                               / (drawLogin,evalLogin)         
-, state<Login>                        + on_entry<_>                               / resetPopupAndWaitForServer
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 , state<LoginWaitForServer>           + on_entry<_>                               / setLoginWaitForServer
 , state<LoginWaitForServer>           + event<shared_class::LoginAccountError>    / setErrorEvent
@@ -26,10 +26,10 @@ struct LoginStateMachine
 , state<LoginWaitForServer>           + event<login>                                                                                    = state<Login>
 , state<LoginWaitForServer>           + event<draw>                               / (drawLogin,evalLoginWaitForServer)         
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<CreateAccount>                + on_entry<_>                               / resetPopupAndWaitForServer
 , state<CreateAccount>                + event<createAccountWaitForServer>                                                               = state<CreateAccountWaitForServer>
 , state<CreateAccount>                + event<login>                                                                                    = state<Login>
 , state<CreateAccount>                + event<draw>                               / (drawCreateAccount,evalCreateAccount)  
-, state<CreateAccount>                + on_entry<_>                               / resetPopupAndWaitForServer
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 , state<CreateAccountWaitForServer>   + on_entry<_>                               / setCreateAccountWaitForServer
 , state<CreateAccountWaitForServer>   + event<shared_class::CreateAccountError>   / setErrorEvent                                                  

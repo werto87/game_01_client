@@ -4,13 +4,15 @@
 
 #include "src/controller/loginStateMachine.hxx"
 #include "src/controller/makeGameMachine.hxx"
+#include "src/controller/playTheGame.hxx"
 #include <boost/sml.hpp>
 #include <queue>
 
-const auto reset = [] (Lobby &lobby, Login &login, CreateAccount &createAccount) {
+const auto reset = [] (Lobby &lobby, Login &login, CreateAccount &createAccount, Game &game) {
   lobby = Lobby{};
   login = Login{};
   createAccount = CreateAccount{};
+  game = Game{};
 };
 const auto resetGameMachineData = [] (MakeGameMachineData &makeGameMachineData) { makeGameMachineData = MakeGameMachineData{}; };
 struct WrapperMachine
@@ -22,11 +24,13 @@ struct WrapperMachine
     return make_transition_table (
         // clang-format off
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
-* state<LoginStateMachine>            + event<makeGameMachine>                                                                                                              = state<MakeGameMachine>
-, state<MakeGameMachine>              + event<shared_class::LogoutAccountSuccess> / reset                                                                                   = state<LoginStateMachine>
-, state<LoginStateMachine>            + event<goToCreateGameLobby>                                                                                                          = state<MakeGameMachine>
-, state<MakeGameMachine>              + sml::on_exit<_>                           / resetGameMachineData
-, state<MakeGameMachine>              + sml::on_entry<goToCreateGameLobby>        / (process(lobbyWaitForServer{}),process(shared_class::JoinGameLobbySuccess{}))
+* state<LoginStateMachine>  + event<makeGameMachine>                                                                                                    = state<MakeGameMachine>
+, state<MakeGameMachine>    + event<shared_class::LogoutAccountSuccess> / (reset, resetGameMachineData)                                                 = state<LoginStateMachine>
+, state<LoginStateMachine>  + event<goToCreateGameLobby>                                                                                                = state<MakeGameMachine>
+, state<MakeGameMachine>    + sml::on_entry<goToCreateGameLobby>        / (process(lobbyWaitForServer{}),process(shared_class::JoinGameLobbySuccess{}))
+, state<MakeGameMachine>    + event<startGame>                                                                                                          = state<PlayTheGame>
+, state<PlayTheGame>        + sml::on_entry<_>                          / reset
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 // clang-format on   
     );

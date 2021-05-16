@@ -1,11 +1,18 @@
 #include "src/ui/screen.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
+#include <bits/ranges_algo.h>
 #include <chrono>
+#include <cstddef>
+#include <durak/gameData.hxx>
+#include <durak/print.hxx>
+#include <fmt/core.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <ranges>
+#include <sstream>
+#include <string>
 namespace ImGui
 {
 inline void
@@ -132,7 +139,6 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
 void
 createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData)
 {
-  // TODO allow joinin a game
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
   auto time = std::chrono::milliseconds{};
@@ -357,5 +363,96 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
   data.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
   data.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
   ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopItemWidth ();
+}
+
+void
+gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
+{
+  // TODO game screen
+  ImGui::PushItemWidth (-1);
+  auto const shouldLockScreen = waitForServer.has_value ();
+  auto time = std::chrono::milliseconds{};
+  if (waitForServer)
+    {
+      time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
+    }
+  chatScreen (chatData, shouldLockScreen, time);
+  ImGui::Text ("Table");
+  // TODO add combobox if card is not beaten and player defends
+  std::vector<bool> selectedCardsToBeat (game.gameData.table.size ());
+  if (game.selectedCardFromTable)
+    {
+      selectedCardsToBeat.at (game.selectedCardFromTable.value ()) = true;
+    }
+  auto currentPlayer = std::ranges::find_if (game.gameData.players, [&accountName] (auto const &_player) { return accountName == _player.name; });
+  auto currentPlayerRole = durak::PlayerRole::waiting;
+  if (currentPlayer != game.gameData.players.end ())
+    {
+      currentPlayerRole = currentPlayer->playerRole;
+    }
+  for (size_t i = 0; game.gameData.table.size () > i; i++)
+    {
+      auto const &[card, optionalCard] = game.gameData.table.at (i);
+      auto cardsOnTable = std::stringstream{};
+      cardsOnTable << card << " | ";
+      if (optionalCard)
+        {
+          cardsOnTable << optionalCard.value () << std::endl;
+        }
+      else
+        {
+          cardsOnTable << "Card: {? ,?}" << std::endl;
+        }
+      ImGui::Text (cardsOnTable.str ().c_str ());
+      if (currentPlayerRole == durak::PlayerRole::defend && not optionalCard)
+        {
+          ImGui::SameLine ();
+          bool tempBool = selectedCardsToBeat.at (i);
+          ImGui::Checkbox (std::string{ "##defend" + std::to_string (i) }.c_str (), &tempBool);
+          if (tempBool)
+            {
+              game.selectedCardFromTable = i;
+            }
+          else if (game.selectedCardFromTable && game.selectedCardFromTable == i)
+            {
+              game.selectedCardFromTable = {};
+            }
+        }
+    }
+  std::cout << game.selectedCardFromTable << std::endl;
+  if (game.gameData.table.size ())
+    {
+      ImGui::Text ("Empty Table");
+    }
+  for (auto const &player : game.gameData.players)
+    {
+      auto playerName = player.name;
+      ImGui::Text (playerName.c_str ());
+
+      // for (auto const &cardOptional : player.cards)
+      for (size_t i = 0; i < player.cards.size (); i++)
+        {
+          auto const &cardOptional = player.cards.at (i);
+          if (playerName == accountName)
+            {
+              bool tempBool = game.selectedCards.at (i);
+              ImGui::Checkbox (std::string{ "##" + std::to_string (i) }.c_str (), &tempBool);
+              game.selectedCards.at (i) = tempBool;
+            }
+          auto card = std::string{};
+          if (cardOptional)
+            {
+              card = fmt::format ("{}, {}", cardOptional.value ().value, magic_enum::enum_name (cardOptional.value ().type));
+            }
+          else
+            {
+              card = "Card: {? ,?}";
+            }
+          ImGui::SameLine ();
+          ImGui::Text (card.c_str ());
+        }
+    }
+  game.placeSelectedCardsOnTable = ImGui::Button ("Place selected Cards on Table", ImVec2 (-1, 0));
   ImGui::PopItemWidth ();
 }

@@ -4,6 +4,7 @@
 #include "src/controller/commonEvent.hxx"
 #include "src/controller/loginStateMachineState.hxx"
 #include "src/controller/makeGameMachineState.hxx"
+#include "src/controller/playTheGameState.hxx"
 #include "src/controller/stateMachineData.hxx"
 #include <algorithm>
 #include <type_traits>
@@ -15,8 +16,9 @@ void messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<Wait
 void loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont);
 void createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont);
 void lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData &chatData);
+void gameScreen (Game &data, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData);
 
-const auto drawLogin = [] (draw const &drawEv, Login &login, MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const drawLogin = [] (draw const &drawEv, Login &login, MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
       messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
@@ -27,7 +29,7 @@ const auto drawLogin = [] (draw const &drawEv, Login &login, MessageBoxPopup &me
     }
 };
 
-const auto drawCreateAccount = [] (draw const &drawEv, CreateAccount &createAccount, std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup) {
+auto const drawCreateAccount = [] (draw const &drawEv, CreateAccount &createAccount, std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup) {
   if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
       messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
@@ -38,7 +40,7 @@ const auto drawCreateAccount = [] (draw const &drawEv, CreateAccount &createAcco
     }
 };
 
-const auto drawLobby = [] (draw const &drawEv, Lobby &lobby, std::optional<WaitForServer> &waitForServer, MakeGameMachineData &makeGameMachineData, MessageBoxPopup &messageBoxPopup) {
+auto const drawLobby = [] (draw const &drawEv, Lobby &lobby, std::optional<WaitForServer> &waitForServer, MakeGameMachineData &makeGameMachineData, MessageBoxPopup &messageBoxPopup) {
   if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
       messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
@@ -49,7 +51,7 @@ const auto drawLobby = [] (draw const &drawEv, Lobby &lobby, std::optional<WaitF
     }
 };
 
-const auto drawCreateGameLobby = [] (draw const &drawEv, std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {
+auto const drawCreateGameLobby = [] (draw const &drawEv, std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup, CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData) {
   if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
     {
       messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
@@ -57,6 +59,17 @@ const auto drawCreateGameLobby = [] (draw const &drawEv, std::optional<WaitForSe
   else
     {
       createGameLobbyScreen (createGameLobby, waitForServer, makeGameMachineData.accountName, makeGameMachineData.chatData);
+    }
+};
+
+auto const drawGame = [] (draw const &drawEv, Game &game, MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, MakeGameMachineData &makeGameMachineData) {
+  if (not std::holds_alternative<std::monostate> (messageBoxPopup.event))
+    {
+      messageBoxPopupScreen (messageBoxPopup, waitForServer, drawEv.windowSizeX, drawEv.windowSizeY, *drawEv.biggerFont);
+    }
+  else
+    {
+      gameScreen (game, waitForServer, makeGameMachineData.accountName, makeGameMachineData.chatData);
     }
 };
 

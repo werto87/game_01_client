@@ -15,8 +15,11 @@ struct createGameLobbyWaitForServer
 struct createGameLobby
 {
 };
-
 struct lobbyWaitForServer
+{
+};
+
+struct startGame
 {
 };
 struct Lobby

@@ -12,4 +12,7 @@
  loginStateMachineState.hxx
  makeGameMachineState.hxx
  commonEvent.hxx
+ playTheGame.hxx
+ playTheGameState.hxx
+ playTheGameAction.hxx
  )

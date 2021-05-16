@@ -49,6 +49,12 @@ private:
   void wantToRelog (std::string const &objectAsString);
   void relogToError (std::string const &objectAsString);
   void relogToSuccess (std::string const &objectAsString);
+  void startGame (std::string const &objectAsString);
+  void gameData (std::string const &objectAsString);
+  void durakAttackSuccess (std::string const &objectAsString);
+  void durakAttackError (std::string const &objectAsString);
+  void durakDefendSuccess (std::string const &objectAsString);
+  void durakDefendError (std::string const &objectAsString);
   // END: handle messages from network-----------------------------------------------
 };
 #endif /* C5B152C0_B968_4BBC_B1F9_5823AA8FAD87 */

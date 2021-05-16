@@ -10,28 +10,28 @@
 #include <vector>
 namespace sml = boost::sml;
 
-const auto setLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
   waitForServer->clock_wait = timer::now ();
 };
 
-const auto setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
   waitForServer->clock_wait = timer::now ();
 };
 
-const auto reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &usersInGameLobby, CreateGameLobby &createGameLobby) {
+auto const reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &usersInGameLobby, CreateGameLobby &createGameLobby) {
   createGameLobby.accountNamesInGameLobby.clear ();
   std::ranges::transform (usersInGameLobby.users, std::back_inserter (createGameLobby.accountNamesInGameLobby), [] (shared_class::UserInGameLobby const &user) { return user.accountName; });
   createGameLobby.gameLobbyName = usersInGameLobby.name;
   createGameLobby.maxUserInGameLobby = static_cast<int> (usersInGameLobby.maxUserSize);
 };
 
-const auto evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendToServer, MakeGameMachineData &makeGameMachineData, sml::back::process<lobbyWaitForServer> process_event) {
+auto const evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendToServer, MakeGameMachineData &makeGameMachineData, sml::back::process<lobbyWaitForServer> process_event) {
   if (lobby.logoutButtonClicked)
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LogoutAccount{});
@@ -61,29 +61,29 @@ const auto evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendT
     }
 };
 
-const auto evalLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<lobby> process_event) {
+auto const evalLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<lobby> process_event) {
   if (std::holds_alternative<shared_class::JoinGameLobbyError> (messageBoxPopup.event) || std::holds_alternative<shared_class::CreateGameLobbyError> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (lobby{});
     }
 };
 
-const auto evalCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<lobby> process_event) {
+auto const evalCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<lobby> process_event) {
   if (std::holds_alternative<shared_class::SetMaxUserSizeInCreateGameLobbyError> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (lobby{});
     }
 };
 
-const auto reactToJoinChannelSuccess = [] (shared_class::JoinChannelSuccess const &joinChannelSuccess, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.chatData.channelMessages.insert_or_assign (joinChannelSuccess.channel, std::vector<std::string>{}); };
-const auto reactToMessage = [] (shared_class::Message const &message, MakeGameMachineData &makeGameMachineData) {
+auto const reactToJoinChannelSuccess = [] (shared_class::JoinChannelSuccess const &joinChannelSuccess, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.chatData.channelMessages.insert_or_assign (joinChannelSuccess.channel, std::vector<std::string>{}); };
+auto const reactToMessage = [] (shared_class::Message const &message, MakeGameMachineData &makeGameMachineData) {
   if (makeGameMachineData.chatData.channelMessages.count (message.channel) == 1)
     {
       makeGameMachineData.chatData.channelMessages.at (message.channel).push_back (message.fromAccount + ": " + message.message);
     }
 };
 
-const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobby, createGameLobbyWaitForServer> process_event) {
+auto const evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<lobby, createGameLobbyWaitForServer> process_event) {
   if (createGameLobby.leaveGameLobby)
     {
       sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LeaveGameLobby{});
@@ -108,7 +108,8 @@ const auto evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameM
     }
   else if (createGameLobby.startGame)
     {
-      // start game
+      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::CreateGame{});
+      process_event (createGameLobbyWaitForServer{});
     }
 };
 
