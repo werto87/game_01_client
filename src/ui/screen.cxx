@@ -420,7 +420,6 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
             }
         }
     }
-  std::cout << game.selectedCardFromTable << std::endl;
   if (game.gameData.table.size ())
     {
       ImGui::Text ("Empty Table");

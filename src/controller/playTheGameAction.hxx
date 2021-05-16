@@ -70,7 +70,7 @@ auto const evalGame = [] (Game &game, MakeGameMachineData &makeGameMachineData, 
 };
 
 auto const evalGameWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<game> process_event) {
-  if (std::holds_alternative<shared_class::DurakAttackError> (messageBoxPopup.event))
+  if (std::holds_alternative<shared_class::DurakAttackError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendError> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (game{});
     }
