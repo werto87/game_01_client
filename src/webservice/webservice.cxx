@@ -66,8 +66,7 @@ Webservice::read ()
     {
       for (;;)
         {
-          auto msgs = handleMessage (co_await my_read ());
-          _messagesToSendToServer.messagesToSendToServer.insert (_messagesToSendToServer.messagesToSendToServer.end (), std::make_move_iterator (msgs.begin ()), std::make_move_iterator (msgs.end ()));
+          handleMessage (co_await my_read ());
         }
     }
   catch (std::exception &e)
@@ -122,297 +121,23 @@ Webservice::closeSocket ()
 }
 
 void
-Webservice::createAccountSuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::CreateAccountSuccess> (objectAsString));
-}
-
-void
-Webservice::createAccountError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::CreateAccountError> (objectAsString));
-}
-
-void
-Webservice::loginAccountSuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::LoginAccountSuccess> (objectAsString));
-}
-
-void
-Webservice::loginAccountError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::LoginAccountError> (objectAsString));
-}
-
-void
-Webservice::logoutAccountSuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::LogoutAccountSuccess> (objectAsString));
-}
-
-void
-Webservice::joinChannelSuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::JoinChannelSuccess> (objectAsString));
-}
-
-void
-Webservice::joinChannelError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::JoinChannelError> (objectAsString));
-}
-
-void
-Webservice::message (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::Message> (objectAsString));
-}
-
-void
-Webservice::broadCastMessageSuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::BroadCastMessageSuccess> (objectAsString));
-}
-
-void
-Webservice::broadCastMessageError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::BroadCastMessageError> (objectAsString));
-}
-
-void
-Webservice::createGameLobbySuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::CreateGameLobbySuccess> (objectAsString));
-}
-
-void
-Webservice::createGameLobbyError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::CreateGameLobbyError> (objectAsString));
-}
-
-void
-Webservice::joinGameLobbySuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::JoinGameLobbySuccess> (objectAsString));
-}
-
-void
-Webservice::joinGameLobbyError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::JoinGameLobbyError> (objectAsString));
-}
-
-void
-Webservice::usersInGameLobby (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::UsersInGameLobby> (objectAsString));
-}
-
-void
-Webservice::maxUserSizeInCreateGameLobby (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::MaxUserSizeInCreateGameLobby> (objectAsString));
-}
-
-void
-Webservice::setMaxUserSizeInCreateGameLobbyError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::SetMaxUserSizeInCreateGameLobbyError> (objectAsString));
-}
-
-void
-Webservice::leaveGameLobbySuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::LeaveGameLobbySuccess> (objectAsString));
-}
-
-void
-Webservice::leaveGameLobbyError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::LeaveGameLobbyError> (objectAsString));
-}
-
-void
-Webservice::wantToRelog (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::WantToRelog> (objectAsString));
-}
-
-void
-Webservice::relogToSuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::RelogToSuccess> (objectAsString));
-}
-
-void
-Webservice::startGame (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::StartGame> (objectAsString));
-}
-
-void
-Webservice::gameData (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<durak::GameData> (objectAsString));
-}
-
-void
-Webservice::durakAttackSuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::DurakAttackSuccess> (objectAsString));
-}
-
-void
-Webservice::durakAttackError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::DurakAttackError> (objectAsString));
-}
-
-void
-Webservice::durakDefendError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::DurakDefendError> (objectAsString));
-}
-
-void
-Webservice::durakDefendSuccess (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::DurakDefendSuccess> (objectAsString));
-}
-
-void
-Webservice::relogToError (std::string const &objectAsString)
-{
-  _stateMachine.process_event (confu_boost::toObject<shared_class::RelogToError> (objectAsString));
-}
-
-std::vector<std::string>
 Webservice::handleMessage (std::string const &msg)
 {
-  auto result = std::vector<std::string>{};
   std::vector<std::string> splitMesssage{};
   boost::algorithm::split (splitMesssage, msg, boost::is_any_of ("|"));
   if (splitMesssage.size () == 2)
     {
-      // TODO if we make a map from std::string to shared_class we can get the type for string than we can use the type and call
-      // TODO _stateMachine.process_event (confu_boost::toObject<shared_class::TYPE_FROM_MAP> (objectAsString));
       auto const &typeToSearch = splitMesssage.at (0);
       auto const &objectAsString = splitMesssage.at (1);
-      if (typeToSearch == "CreateAccountSuccess")
-        {
-          createAccountSuccess (objectAsString);
-        }
-      else if (typeToSearch == "CreateAccountError")
-        {
-          createAccountError (objectAsString);
-        }
-      else if (typeToSearch == "LoginAccountSuccess")
-        {
-          loginAccountSuccess (objectAsString);
-        }
-      else if (typeToSearch == "LoginAccountError")
-        {
-          loginAccountError (objectAsString);
-        }
-      else if (typeToSearch == "LogoutAccountSuccess")
-        {
-          logoutAccountSuccess (objectAsString);
-        }
-      else if (typeToSearch == "JoinChannelSuccess")
-        {
-          joinChannelSuccess (objectAsString);
-        }
-      else if (typeToSearch == "JoinChannelError")
-        {
-          joinChannelError (objectAsString);
-        }
-      else if (typeToSearch == "Message")
-        {
-          message (objectAsString);
-        }
-      else if (typeToSearch == "BroadCastMessageSuccess")
-        {
-          broadCastMessageSuccess (objectAsString);
-        }
-      else if (typeToSearch == "BroadCastMessageError")
-        {
-          broadCastMessageError (objectAsString);
-        }
-      else if (typeToSearch == "CreateGameLobbySuccess")
-        {
-          createGameLobbySuccess (objectAsString);
-        }
-      else if (typeToSearch == "CreateGameLobbyError")
-        {
-          createGameLobbyError (objectAsString);
-        }
-      else if (typeToSearch == "JoinGameLobbySuccess")
-        {
-          joinGameLobbySuccess (objectAsString);
-        }
-      else if (typeToSearch == "JoinGameLobbyError")
-        {
-          joinGameLobbyError (objectAsString);
-        }
-      else if (typeToSearch == "UsersInGameLobby")
-        {
-          usersInGameLobby (objectAsString);
-        }
-      else if (typeToSearch == "MaxUserSizeInCreateGameLobby")
-        {
-          maxUserSizeInCreateGameLobby (objectAsString);
-        }
-      else if (typeToSearch == "SetMaxUserSizeInCreateGameLobbyError")
-        {
-          setMaxUserSizeInCreateGameLobbyError (objectAsString);
-        }
-      else if (typeToSearch == "LeaveGameLobbySuccess")
-        {
-          leaveGameLobbySuccess (objectAsString);
-        }
-      else if (typeToSearch == "LeaveGameLobbyError")
-        {
-          leaveGameLobbyError (objectAsString);
-        }
-      else if (typeToSearch == "WantToRelog")
-        {
-          wantToRelog (objectAsString);
-        }
-      else if (typeToSearch == "RelogToSuccess")
-        {
-          relogToSuccess (objectAsString);
-        }
-      else if (typeToSearch == "StartGame")
-        {
-          startGame (objectAsString);
-        }
-      else if (typeToSearch == "GameData")
-        {
-          gameData (objectAsString);
-        }
-      else if (typeToSearch == "DurakAttackSuccess")
-        {
-          durakAttackSuccess (objectAsString);
-        }
-      else if (typeToSearch == "DurakAttackError")
-        {
-          durakAttackError (objectAsString);
-        }
-      else if (typeToSearch == "DurakDefendSuccess")
-        {
-          durakDefendSuccess (objectAsString);
-        }
-      else if (typeToSearch == "DurakDefendError")
-        {
-          durakDefendError (objectAsString);
-        }
-      else
-        {
-          std::cout << "could not find a match for typeToSearch '" << typeToSearch << "'" << std::endl;
-        }
+      bool typeFound = false;
+      boost::hana::for_each (shared_class::sharedClasses, [&] (const auto &x) {
+        if (typeToSearch == confu_soci::typeNameWithOutNamespace (x))
+          {
+            typeFound = true;
+            _stateMachine.process_event (confu_boost::toObject<std::decay_t<decltype (x)>> (objectAsString));
+            return;
+          }
+      });
+      if (not typeFound) std::cout << "could not find a match for typeToSearch '" << typeToSearch << "'" << std::endl;
     }
-  return result;
 }

@@ -1,3 +1,3 @@
  target_sources(${TARGET_NAME} PRIVATE 
- "database.hxx"
+ ${CMAKE_CURRENT_LIST_DIR}/database.hxx
  )

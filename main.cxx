@@ -52,8 +52,11 @@ main (int argc, char **argv)
       my_logger logger;
       auto messageBoxPopup = MessageBoxPopup{};
       auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer, logger, messageBoxPopup, std::optional<WaitForServer>{} };
-      createEmptyDatabase ();
-      createTables ();
+      // TODO uncomment if database is needed
+      // if we reactivate this care: release will try to use the same database which does not work (start the program 2 times and see what happens)
+      // debug will create a new database and keeps the old which is a workaround for starting the program multiple times in parallel
+      // createEmptyDatabase ();
+      // createTables ();
       boost::asio::io_context io_context (1);
       auto webservice = Webservice{ io_context, messagesToSendToServer, stateMachine };
       ImGuiExample app{ { argc, argv }, stateMachine };

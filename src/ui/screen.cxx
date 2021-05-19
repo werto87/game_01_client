@@ -370,7 +370,9 @@ void
 gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
 {
   // TODO game screen
+  // TODO draw card
   ImGui::PushItemWidth (-1);
+
   auto const shouldLockScreen = waitForServer.has_value ();
   auto time = std::chrono::milliseconds{};
   if (waitForServer)
@@ -379,11 +381,22 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
     }
   chatScreen (chatData, shouldLockScreen, time);
   ImGui::Text ("Table");
-  // TODO add combobox if card is not beaten and player defends
+  if (game.gameData.table.empty ())
+    {
+      ImGui::SameLine ();
+      ImGui::Text ("Empty Table");
+    }
   std::vector<bool> selectedCardsToBeat (game.gameData.table.size ());
   if (game.selectedCardFromTable)
     {
-      selectedCardsToBeat.at (game.selectedCardFromTable.value ()) = true;
+      if (selectedCardsToBeat.size () > game.selectedCardFromTable.value ())
+        {
+          selectedCardsToBeat.at (game.selectedCardFromTable.value ()) = true;
+        }
+      else
+        {
+          game.selectedCardFromTable = {};
+        }
     }
   auto currentPlayer = std::ranges::find_if (game.gameData.players, [&accountName] (auto const &_player) { return accountName == _player.name; });
   auto currentPlayerRole = durak::PlayerRole::waiting;
@@ -420,16 +433,11 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
             }
         }
     }
-  if (game.gameData.table.size ())
-    {
-      ImGui::Text ("Empty Table");
-    }
+  ImGui::Text (fmt::format ("Trump: {}", magic_enum::enum_name (game.gameData.trump)).c_str ());
   for (auto const &player : game.gameData.players)
     {
       auto playerName = player.name;
-      ImGui::Text (playerName.c_str ());
-
-      // for (auto const &cardOptional : player.cards)
+      ImGui::Text (fmt::format ("Player Name: {} Player Role: {}", playerName, magic_enum::enum_name (player.playerRole)).c_str ());
       for (size_t i = 0; i < player.cards.size (); i++)
         {
           auto const &cardOptional = player.cards.at (i);
@@ -453,5 +461,13 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
         }
     }
   game.placeSelectedCardsOnTable = ImGui::Button ("Place selected Cards on Table", ImVec2 (-1, 0));
+  if (currentPlayerRole == durak::PlayerRole::defend)
+    {
+      game.pass = ImGui::Button ("Draw Cards from Table", ImVec2 (-1, 0));
+    }
+  else if (currentPlayerRole == durak::PlayerRole::attack || currentPlayerRole == durak::PlayerRole::assistAttacker)
+    {
+      game.pass = ImGui::Button ("Pass", ImVec2 (-1, 0));
+    }
   ImGui::PopItemWidth ();
 }
