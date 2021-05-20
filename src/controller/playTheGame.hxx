@@ -40,7 +40,7 @@ struct PlayTheGame
 , state<GameWaitForServer>            + event<shared_class::DurakAskDefendWantToTakeCardsAnswerError>     / setErrorEvent
 , state<GameWaitForServer>            + event<draw>                               / (drawGame,evalGameWaitForServer)      
 , state<GameWaitForServer>            + event<shared_class::JoinChannelSuccess>   / reactToJoinChannelSuccess                                             = state<Game>   
-, state<GameWaitForServer>            + event<shared_class::Message>              / reactToMessage
+, state<GameWaitForServer>            + event<shared_class::Message>              / reactToMessage                                                        = state<Game>   
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 );
     // clang-format on

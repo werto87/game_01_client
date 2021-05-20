@@ -1,5 +1,6 @@
 #include "src/ui/ui.hxx"
 #include "src/controller/commonEvent.hxx"
+#include "src/util/util.hxx"
 #include <Magnum/GL/Buffer.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Mesh.h>
@@ -28,9 +29,20 @@ ImGuiExample::ImGuiExample (const Arguments &arguments, StateMachine &stateMachi
   static auto iniFile = std::filesystem::path{ PATH_TO_BINARY }.parent_path ().append ("asset").append ("imgui.ini");
   io.IniFilename = iniFile.c_str ();
   std::cout << io.IniFilename << std::endl;
-  io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50.0f * _fontScale);
+
+  // static const ImWchar icons_ranges[] = { 0x2600, 0x26FF, 0 }; // Will not be copied by AddFont* so keep in scope.
+  ImVector<ImWchar> ranges;
+  ImFontGlyphRangesBuilder builder;
+  builder.AddText (from_u8string (std::u8string{ u8"♠♥♦♣" }).c_str ()); // Add a string (here "Hello world" contains 7 unique characters)
+  builder.AddRanges (io.Fonts->GetGlyphRangesDefault ());               // Add one of the default ranges
+  builder.BuildRanges (&ranges);
+  io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/DejaVuSans.ttf", 50.0f * _fontScale, nullptr, ranges.Data);
+  io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/DejaVuSans.ttf", 75.0f * _fontScale, nullptr, ranges.Data);
+  io.Fonts->Build ();
   _imgui = Magnum::ImGuiIntegration::Context (*ImGui::GetCurrentContext (), windowSize ());
-  font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 75 * _fontScale);
+  // font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/Koruri-Regular.ttf", 75 * _fontScale, nullptr, io.Fonts->GetGlyphRangesJapanese ());
+  // font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/fontawesome-webfont.ttf", 75 * _fontScale);
+
   /* Set up proper blending to be used by ImGui. There's a great chance
      you'll need this exact behavior for the rest of your scene. If not, set
      this only for the drawFrame() call. */
@@ -166,8 +178,10 @@ ImGuiExample::updateFontSize ()
 {
   ImGuiIO &io = ImGui::GetIO ();
   io.Fonts->Clear ();
-  auto currentFont = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50 * _fontScale);
-  font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 75 * _fontScale);
+  // auto currentFont = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50 * _fontScale);
+  // font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 75 * _fontScale);
+  auto currentFont = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/DejaVuSerif.ttf", 50 * _fontScale);
+  font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/DejaVuSerif.ttf", 75 * _fontScale);
   _imgui.relayout ({ static_cast<float> (windowSize ().x ()), static_cast<float> (windowSize ().y ()) }, windowSize (), framebufferSize ());
   ImGui::SetCurrentFont (currentFont);
 }

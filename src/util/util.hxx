@@ -36,4 +36,6 @@ vector_to_string (const T &container, const std::string &delimiter) -> std::stri
   return result;
 }
 
+std::string from_u8string (const std::u8string &s);
+
 #endif /* F78F741D_25FD_4094_A575_7ADBC02883C3 */

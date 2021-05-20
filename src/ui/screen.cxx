@@ -1,14 +1,17 @@
 #include "src/ui/screen.hxx"
+#include "src/util/util.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
 #include <bits/ranges_algo.h>
 #include <chrono>
 #include <cstddef>
+#include <durak/card.hxx>
 #include <durak/gameData.hxx>
 #include <durak/print.hxx>
 #include <fmt/core.h>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <iterator>
 #include <misc/cpp/imgui_stdlib.h>
 #include <ranges>
 #include <sstream>
@@ -52,6 +55,20 @@ PopDisabled (bool enabled, std::chrono::milliseconds const &time)
 
 } // namespace ImGui
 
+void
+drawCard (durak::Card const &card)
+{
+  if (card.type == durak::Type::clubs || card.type == durak::Type::spades)
+    {
+      ImGui::Text (fmt::format ("{}, {}", card.value, (card.type) == durak::Type::spades ? from_u8string (std::u8string{ u8"♠" }).c_str () : from_u8string (std::u8string{ u8"♣" }).c_str ()).c_str ());
+    }
+  else
+    {
+      ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
+      ImGui::Text (fmt::format ("{}, {}", card.value, (card.type) == durak::Type::hearts ? from_u8string (std::u8string{ u8"♥" }).c_str () : from_u8string (std::u8string{ u8"♦" }).c_str ()).c_str ());
+      ImGui::PopStyleColor ();
+    }
+}
 // namespace ImGui
 // {
 // void
@@ -372,7 +389,6 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
   // TODO game screen
   // TODO draw card
   ImGui::PushItemWidth (-1);
-
   auto const shouldLockScreen = waitForServer.has_value ();
   auto time = std::chrono::milliseconds{};
   if (waitForServer)
@@ -386,12 +402,12 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
       ImGui::SameLine ();
       ImGui::Text ("Empty Table");
     }
-  std::vector<bool> selectedCardsToBeat (game.gameData.table.size ());
-  if (game.selectedCardFromTable)
+  if (not game.selectedCardFromTable || game.gameData.table.size () <= game.selectedCardFromTable.value () || game.gameData.table.at (game.selectedCardFromTable.value ()).second)
     {
-      if (selectedCardsToBeat.size () > game.selectedCardFromTable.value ())
+      // old selection is not valid because of optional card has value so we try to set the selection to first free element
+      if (auto cardAndOptionalCardItr = std::ranges::find_if (game.gameData.table, [] (auto const &cardAndOptionalCard) { return not cardAndOptionalCard.second.has_value (); }); cardAndOptionalCardItr != game.gameData.table.end ())
         {
-          selectedCardsToBeat.at (game.selectedCardFromTable.value ()) = true;
+          game.selectedCardFromTable = std::distance (game.gameData.table.begin (), cardAndOptionalCardItr);
         }
       else
         {
@@ -407,58 +423,86 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
   for (size_t i = 0; game.gameData.table.size () > i; i++)
     {
       auto const &[card, optionalCard] = game.gameData.table.at (i);
-      auto cardsOnTable = std::stringstream{};
-      cardsOnTable << card << " | ";
+      drawCard (card);
       if (optionalCard)
         {
-          cardsOnTable << optionalCard.value () << std::endl;
-        }
-      else
-        {
-          cardsOnTable << "Card: {? ,?}" << std::endl;
-        }
-      ImGui::Text (cardsOnTable.str ().c_str ());
-      if (currentPlayerRole == durak::PlayerRole::defend && not optionalCard)
-        {
           ImGui::SameLine ();
-          bool tempBool = selectedCardsToBeat.at (i);
-          ImGui::Checkbox (std::string{ "##defend" + std::to_string (i) }.c_str (), &tempBool);
-          if (tempBool)
-            {
-              game.selectedCardFromTable = i;
-            }
-          else if (game.selectedCardFromTable && game.selectedCardFromTable == i)
-            {
-              game.selectedCardFromTable = {};
-            }
+          drawCard (optionalCard.value ());
+        }
+      if (game.selectedCardFromTable && currentPlayerRole == durak::PlayerRole::defend && not optionalCard)
+        {
+          int selectedValue = game.selectedCardFromTable.value ();
+          ImGui::SameLine ();
+          ImGui::RadioButton (std::string{ "##defend" + std::to_string (i) }.c_str (), &selectedValue, i);
+          game.selectedCardFromTable = static_cast<size_t> (selectedValue);
         }
     }
-  ImGui::Text (fmt::format ("Trump: {}", magic_enum::enum_name (game.gameData.trump)).c_str ());
-  for (auto const &player : game.gameData.players)
+  switch (game.gameData.trump)
     {
-      auto playerName = player.name;
-      ImGui::Text (fmt::format ("Player Name: {} Player Role: {}", playerName, magic_enum::enum_name (player.playerRole)).c_str ());
-      for (size_t i = 0; i < player.cards.size (); i++)
+    case durak::Type::clubs:
+      {
+        ImGui::Text (fmt::format ("Trump: {}", from_u8string (std::u8string{ u8"♣" })).c_str ());
+        break;
+      }
+    case durak::Type::spades:
+      {
+        ImGui::Text (fmt::format ("Trump: {}", from_u8string (std::u8string{ u8"♠" })).c_str ());
+        break;
+      }
+    case durak::Type::hearts:
+      {
+        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
+        ImGui::Text (fmt::format ("Trump: {}", from_u8string (std::u8string{ u8"♥" })).c_str ());
+        ImGui::PopStyleColor ();
+        break;
+      }
+    case durak::Type::diamonds:
+      {
+        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
+        ImGui::Text (fmt::format ("Trump: {}", from_u8string (std::u8string{ u8"♦" })).c_str ());
+        ImGui::PopStyleColor ();
+        break;
+      }
+    }
+
+  if (currentPlayer = std::ranges::find_if (game.gameData.players, [&accountName] (durak::PlayerData const &playerData) { return accountName == playerData.name; }); currentPlayer != game.gameData.players.end ())
+    {
+      for (size_t i = 0; i < currentPlayer->cards.size (); i++)
         {
-          auto const &cardOptional = player.cards.at (i);
-          if (playerName == accountName)
+          if (currentPlayer->playerRole == durak::PlayerRole::defend)
+            {
+              int selectedValue = 0;
+              if (auto selectedCardsItr = std::ranges::find_if (game.selectedCards, [] (bool selected) { return selected; }); selectedCardsItr != game.selectedCards.end ())
+                {
+                  selectedValue = std::distance (game.selectedCards.begin (), selectedCardsItr);
+                }
+              ImGui::RadioButton (std::string{ "##" + std::to_string (i) }.c_str (), &selectedValue, i);
+              game.selectedCards = std::vector<bool> (game.selectedCards.size ());
+              game.selectedCards.at (selectedValue) = true;
+            }
+          else if (currentPlayer->playerRole == durak::PlayerRole::attack || currentPlayer->playerRole == durak::PlayerRole::assistAttacker)
             {
               bool tempBool = game.selectedCards.at (i);
               ImGui::Checkbox (std::string{ "##" + std::to_string (i) }.c_str (), &tempBool);
               game.selectedCards.at (i) = tempBool;
             }
-          auto card = std::string{};
+          auto const &cardOptional = currentPlayer->cards.at (i);
           if (cardOptional)
             {
-              card = fmt::format ("{}, {}", cardOptional.value ().value, magic_enum::enum_name (cardOptional.value ().type));
+              ImGui::SameLine ();
+              drawCard (cardOptional.value ());
             }
           else
             {
-              card = "Card: {? ,?}";
+              ImGui::SameLine ();
+              ImGui::Text ("Card: {? ,?}");
             }
-          ImGui::SameLine ();
-          ImGui::Text (card.c_str ());
         }
+    }
+  ImGui::Text ("Other Players:");
+  for (auto const &player : game.gameData.players | std::ranges::views::filter ([&accountName] (durak::PlayerData const &playerData) { return accountName != playerData.name; }))
+    {
+      ImGui::Text (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
     }
   game.placeSelectedCardsOnTable = ImGui::Button ("Place selected Cards on Table", ImVec2 (-1, 0));
   if (currentPlayerRole == durak::PlayerRole::defend)
