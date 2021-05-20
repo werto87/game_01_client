@@ -56,6 +56,38 @@ PopDisabled (bool enabled, std::chrono::milliseconds const &time)
 } // namespace ImGui
 
 void
+drawType (durak::Type type)
+{
+  switch (type)
+    {
+    case durak::Type::clubs:
+      {
+        ImGui::Text (from_u8string (std::u8string{ u8"♣" }).c_str ());
+        break;
+      }
+    case durak::Type::spades:
+      {
+        ImGui::Text (from_u8string (std::u8string{ u8"♠" }).c_str ());
+        break;
+      }
+    case durak::Type::hearts:
+      {
+        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
+        ImGui::Text (from_u8string (std::u8string{ u8"♥" }).c_str ());
+        ImGui::PopStyleColor ();
+        break;
+      }
+    case durak::Type::diamonds:
+      {
+        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
+        ImGui::Text (from_u8string (std::u8string{ u8"♦" }).c_str ());
+        ImGui::PopStyleColor ();
+        break;
+      }
+    }
+}
+
+void
 drawCard (durak::Card const &card)
 {
   if (card.type == durak::Type::clubs || card.type == durak::Type::spades)
@@ -387,7 +419,7 @@ void
 gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
 {
   // TODO game screen
-  // TODO draw card
+  ImGui::Text (std::string{ "Round: " + std::to_string (game.gameData.round) }.c_str ());
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
   auto time = std::chrono::milliseconds{};
@@ -437,34 +469,9 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
           game.selectedCardFromTable = static_cast<size_t> (selectedValue);
         }
     }
-  switch (game.gameData.trump)
-    {
-    case durak::Type::clubs:
-      {
-        ImGui::Text (fmt::format ("Trump: {}", from_u8string (std::u8string{ u8"♣" })).c_str ());
-        break;
-      }
-    case durak::Type::spades:
-      {
-        ImGui::Text (fmt::format ("Trump: {}", from_u8string (std::u8string{ u8"♠" })).c_str ());
-        break;
-      }
-    case durak::Type::hearts:
-      {
-        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
-        ImGui::Text (fmt::format ("Trump: {}", from_u8string (std::u8string{ u8"♥" })).c_str ());
-        ImGui::PopStyleColor ();
-        break;
-      }
-    case durak::Type::diamonds:
-      {
-        ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
-        ImGui::Text (fmt::format ("Trump: {}", from_u8string (std::u8string{ u8"♦" })).c_str ());
-        ImGui::PopStyleColor ();
-        break;
-      }
-    }
-
+  ImGui::Text ("Trump:");
+  ImGui::SameLine ();
+  drawType (game.gameData.trump);
   if (currentPlayer = std::ranges::find_if (game.gameData.players, [&accountName] (durak::PlayerData const &playerData) { return accountName == playerData.name; }); currentPlayer != game.gameData.players.end ())
     {
       for (size_t i = 0; i < currentPlayer->cards.size (); i++)
@@ -474,11 +481,11 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
               int selectedValue = 0;
               if (auto selectedCardsItr = std::ranges::find_if (game.selectedCards, [] (bool selected) { return selected; }); selectedCardsItr != game.selectedCards.end ())
                 {
-                  selectedValue = std::distance (game.selectedCards.begin (), selectedCardsItr);
+                  selectedValue = static_cast<int> (std::distance (game.selectedCards.begin (), selectedCardsItr));
                 }
-              ImGui::RadioButton (std::string{ "##" + std::to_string (i) }.c_str (), &selectedValue, i);
+              ImGui::RadioButton (std::string{ "##" + std::to_string (i) }.c_str (), &selectedValue, static_cast<int> (i));
               game.selectedCards = std::vector<bool> (game.selectedCards.size ());
-              game.selectedCards.at (selectedValue) = true;
+              game.selectedCards.at (static_cast<size_t> (selectedValue)) = true;
             }
           else if (currentPlayer->playerRole == durak::PlayerRole::attack || currentPlayer->playerRole == durak::PlayerRole::assistAttacker)
             {

@@ -1,6 +1,8 @@
 #ifndef BA8536A2_B2AB_41EA_B13C_E0CDE40F8344
 #define BA8536A2_B2AB_41EA_B13C_E0CDE40F8344
 
+#include "src/controller/loginStateMachineState.hxx"
+#include "src/controller/makeGameMachineState.hxx"
 #include "src/controller/playTheGameState.hxx"
 #include "src/controller/stateMachineData.hxx"
 #include <bits/ranges_algo.h>
@@ -34,7 +36,19 @@ auto const setDurakAskDefendWantToTakeCards = [] (MessageBoxPopup &messageBoxPop
   messageBoxPopup.buttons.emplace_back (Button{ .name = "Discard Cards from Table and Attack" });
 };
 
-auto const evalGame = [] (MessageBoxPopup &messageBoxPopup, Game &game, MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<gameWaitForServer> process_event) {
+auto const setDurakGameOverWon = [] (MessageBoxPopup &messageBoxPopup, auto const &event) {
+  messageBoxPopup.event = event;
+  messageBoxPopup.message = "Game over you won!";
+  messageBoxPopup.buttons = { { .name = "Back to Lobby" } };
+};
+
+auto const setDurakGameOverLose = [] (MessageBoxPopup &messageBoxPopup, auto const &event) {
+  messageBoxPopup.event = event;
+  messageBoxPopup.message = "Game over you are DURAK!";
+  messageBoxPopup.buttons = { { .name = "Back to Lobby" } };
+};
+
+auto const evalGame = [] (MessageBoxPopup &messageBoxPopup, Game &game, MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<gameWaitForServer, goToCreateGameLobby> process_event) {
   auto &chatData = makeGameMachineData.chatData;
   if (chatData.joinChannelClicked && not chatData.channelToJoin.empty ())
     {
@@ -122,12 +136,20 @@ auto const evalGame = [] (MessageBoxPopup &messageBoxPopup, Game &game, MakeGame
           messageBoxPopup = MessageBoxPopup{};
         }
     }
+  else if (std::holds_alternative<shared_class::DurakGameOverWon> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakGameOverLose> (messageBoxPopup.event))
+    {
+      if (messageBoxPopup.buttons.front ().pressed) process_event (goToCreateGameLobby{});
+    }
 };
 
-auto const evalGameWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<game> process_event) {
+auto const evalGameWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<game, goToCreateGameLobby> process_event) {
   if (std::holds_alternative<shared_class::DurakAttackError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendPassError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendWantsToTakeCardsFromTableDoYouWantToAddCards> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (game{});
+    }
+  else if (std::holds_alternative<shared_class::DurakGameOverWon> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakGameOverLose> (messageBoxPopup.event))
+    {
+      if (messageBoxPopup.buttons.front ().pressed) process_event (goToCreateGameLobby{});
     }
 };
 
