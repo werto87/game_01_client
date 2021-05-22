@@ -1,19 +1,12 @@
+#include "src/controller/stateMachine.hxx"
 #include <catch2/catch.hpp>
-
 namespace test
 {
 
-SCENARIO ("SCENARIO")
+TEST_CASE ("draw", "[game]")
 {
-  GIVEN ("GIVEN")
-  {
-
-    WHEN ("WHEN")
-    {
-
-      THEN ("THEN") {}
-    }
-  }
+  //
+  // auto stateMachine = StateMachine{ MakeGameMachineData{}, messagesToSendToServer, logger, messageBoxPopup, std::optional<WaitForServer>{} };
 }
 
 }

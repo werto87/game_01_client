@@ -48,6 +48,12 @@ auto const setDurakGameOverLose = [] (MessageBoxPopup &messageBoxPopup, auto con
   messageBoxPopup.buttons = { { .name = "Back to Lobby" } };
 };
 
+auto const setDurakGameOverDraw = [] (MessageBoxPopup &messageBoxPopup, auto const &event) {
+  messageBoxPopup.event = event;
+  messageBoxPopup.message = "There is no winner and no loser because of a draw.";
+  messageBoxPopup.buttons = { { .name = "Back to Lobby" } };
+};
+
 auto const evalGame = [] (MessageBoxPopup &messageBoxPopup, Game &game, MakeGameMachineData &makeGameMachineData, MessagesToSendToServer &messagesToSendToServer, sml::back::process<gameWaitForServer, goToCreateGameLobby> process_event) {
   auto &chatData = makeGameMachineData.chatData;
   if (chatData.joinChannelClicked && not chatData.channelToJoin.empty ())
@@ -136,7 +142,7 @@ auto const evalGame = [] (MessageBoxPopup &messageBoxPopup, Game &game, MakeGame
           messageBoxPopup = MessageBoxPopup{};
         }
     }
-  else if (std::holds_alternative<shared_class::DurakGameOverWon> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakGameOverLose> (messageBoxPopup.event))
+  else if (std::holds_alternative<shared_class::DurakGameOverWon> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakGameOverLose> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakGameOverDraw> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (goToCreateGameLobby{});
     }
@@ -147,7 +153,7 @@ auto const evalGameWaitForServer = [] (MessageBoxPopup &messageBoxPopup, Message
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (game{});
     }
-  else if (std::holds_alternative<shared_class::DurakGameOverWon> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakGameOverLose> (messageBoxPopup.event))
+  else if (std::holds_alternative<shared_class::DurakGameOverWon> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakGameOverLose> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakGameOverDraw> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (goToCreateGameLobby{});
     }
