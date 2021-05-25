@@ -1,4 +1,3 @@
-#include "src/controller/database.hxx"
 #include "src/controller/stateMachine.hxx"
 #include "src/ui/ui.hxx"
 #include "src/webservice/webservice.hxx"

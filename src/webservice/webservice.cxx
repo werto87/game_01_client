@@ -131,7 +131,7 @@ Webservice::handleMessage (std::string const &msg)
       auto const &objectAsString = splitMesssage.at (1);
       bool typeFound = false;
       boost::hana::for_each (shared_class::sharedClasses, [&] (const auto &x) {
-        if (typeToSearch == confu_soci::typeNameWithOutNamespace (x))
+        if (typeToSearch == typeNameWithOutNamespace (x))
           {
             typeFound = true;
             _stateMachine.process_event (confu_boost::toObject<std::decay_t<decltype (x)>> (objectAsString));
