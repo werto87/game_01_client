@@ -26,7 +26,7 @@ auto const setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopu
 
 auto const reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &usersInGameLobby, CreateGameLobby &createGameLobby) {
   createGameLobby.accountNamesInGameLobby.clear ();
-  std::ranges::transform (usersInGameLobby.users, std::back_inserter (createGameLobby.accountNamesInGameLobby), [] (shared_class::UserInGameLobby const &user) { return user.accountName; });
+  std::transform (usersInGameLobby.users.begin (), usersInGameLobby.users.end (), std::back_inserter (createGameLobby.accountNamesInGameLobby), [] (shared_class::UserInGameLobby const &user) { return user.accountName; });
   createGameLobby.gameLobbyName = usersInGameLobby.name;
   createGameLobby.maxUserInGameLobby = static_cast<int> (usersInGameLobby.maxUserSize);
 };
@@ -39,23 +39,34 @@ auto const evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendT
     }
   else if (lobby.createCreateGameLobbyClicked && not lobby.createGameLobbyName.empty ())
     {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::CreateGameLobby{ .name = lobby.createGameLobbyName, .password = lobby.createGameLobbyPassword });
+      auto createGameLobby = shared_class::CreateGameLobby{};
+      createGameLobby.name = lobby.createGameLobbyName;
+      createGameLobby.password = lobby.createGameLobbyPassword;
+      sendObject (messagesToSendToServer.messagesToSendToServer, createGameLobby);
       process_event (lobbyWaitForServer{});
     }
   else if (lobby.createJoinGameLobbyClicked && not lobby.joinGameLobbyName.empty ())
     {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinGameLobby{ .name = lobby.joinGameLobbyName, .password = lobby.joinGameLobbyPassword });
+      auto joinGameLobby = shared_class::JoinGameLobby{};
+      joinGameLobby.name = lobby.joinGameLobbyName;
+      joinGameLobby.password = lobby.joinGameLobbyPassword;
+      sendObject (messagesToSendToServer.messagesToSendToServer, joinGameLobby);
       process_event (lobbyWaitForServer{});
     }
   else if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
     {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinChannel{ .channel = makeGameMachineData.chatData.channelToJoin });
+      auto joinChannel = shared_class::JoinChannel{};
+      joinChannel.channel = makeGameMachineData.chatData.channelToJoin;
+      sendObject (messagesToSendToServer.messagesToSendToServer, joinChannel);
       makeGameMachineData.chatData.channelToJoin.clear ();
       process_event (lobbyWaitForServer{});
     }
   else if (makeGameMachineData.chatData.sendMessageClicked && makeGameMachineData.chatData.selectedChannelName && not makeGameMachineData.chatData.selectedChannelName->empty () && not makeGameMachineData.chatData.messageToSendToChannel.empty ())
     {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::BroadCastMessage{ .channel = makeGameMachineData.chatData.selectedChannelName.value (), .message = makeGameMachineData.chatData.messageToSendToChannel });
+      auto broadCastMessage = shared_class::BroadCastMessage{};
+      broadCastMessage.channel = makeGameMachineData.chatData.selectedChannelName.value ();
+      broadCastMessage.message = makeGameMachineData.chatData.messageToSendToChannel;
+      sendObject (messagesToSendToServer.messagesToSendToServer, broadCastMessage);
       makeGameMachineData.chatData.messageToSendToChannel.clear ();
       process_event (lobbyWaitForServer{});
     }
@@ -92,17 +103,25 @@ auto const evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameM
   else if (createGameLobby.sendMaxUserCountClicked)
     {
       process_event (createGameLobbyWaitForServer{});
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::SetMaxUserSizeInCreateGameLobby{ .createGameLobbyName = createGameLobby.gameLobbyName, .maxUserSize = static_cast<size_t> (createGameLobby.maxUserInGameLobby) });
+      auto setMaxUserSizeInCreateGameLobby = shared_class::SetMaxUserSizeInCreateGameLobby{};
+      setMaxUserSizeInCreateGameLobby.createGameLobbyName = createGameLobby.gameLobbyName;
+      setMaxUserSizeInCreateGameLobby.maxUserSize = static_cast<size_t> (createGameLobby.maxUserInGameLobby);
+      sendObject (messagesToSendToServer.messagesToSendToServer, setMaxUserSizeInCreateGameLobby);
     }
   else if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
     {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::JoinChannel{ .channel = makeGameMachineData.chatData.channelToJoin });
+      auto joinChannel = shared_class::JoinChannel{};
+      joinChannel.channel = makeGameMachineData.chatData.channelToJoin;
+      sendObject (messagesToSendToServer.messagesToSendToServer, joinChannel);
       makeGameMachineData.chatData.channelToJoin.clear ();
       process_event (createGameLobbyWaitForServer{});
     }
   else if (makeGameMachineData.chatData.sendMessageClicked && makeGameMachineData.chatData.selectedChannelName && not makeGameMachineData.chatData.selectedChannelName->empty () && not makeGameMachineData.chatData.messageToSendToChannel.empty ())
     {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::BroadCastMessage{ .channel = makeGameMachineData.chatData.selectedChannelName.value (), .message = makeGameMachineData.chatData.messageToSendToChannel });
+      auto broadCastMessage = shared_class::BroadCastMessage{};
+      broadCastMessage.channel = makeGameMachineData.chatData.selectedChannelName.value ();
+      broadCastMessage.message = makeGameMachineData.chatData.messageToSendToChannel;
+      sendObject (messagesToSendToServer.messagesToSendToServer, broadCastMessage);
       makeGameMachineData.chatData.messageToSendToChannel.clear ();
       process_event (createGameLobbyWaitForServer{});
     }

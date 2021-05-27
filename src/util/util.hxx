@@ -10,7 +10,6 @@
 #include <exception>
 #include <iostream>
 #include <istream>
-#include <magic_enum.hpp>
 #include <ostream>
 #include <string>
 #include <type_traits>

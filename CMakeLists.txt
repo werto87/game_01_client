@@ -1,6 +1,10 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfatal-errors -fcoroutines")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld -fcoroutines")
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fcoroutines -v")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfatal-errors -fcoroutines")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld -fcoroutines")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -std=c++20 -s WASM=1")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}    -fcoroutines-ts -std=c++20 -s WASM=1" )
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -stdlib=libc++ -lc++abi -fcoroutines-ts -lc++experimental -std=c++20")
+
+#TODO make it build with emscripten
 cmake_minimum_required(VERSION 3.17)
 project(project VERSION 1.0.0
   DESCRIPTION project
@@ -28,7 +32,7 @@ add_library(${PROJECT_OPTIONS} INTERFACE)
 target_compile_features(${PROJECT_OPTIONS} INTERFACE cxx_std_20)
 # target_precompile_headers(${PROJECT_OPTIONS} INTERFACE 
 # )
-
+#set(CMAKE_CXX_STANDARD 20)
 
 # include(cmake/Sanitizers.cmake)
 # enable_sanitizers(${PROJECT_OPTIONS})
@@ -37,6 +41,10 @@ target_compile_features(${PROJECT_OPTIONS} INTERFACE cxx_std_20)
 #include(cmake/StaticAnalyzers.cmake) 
  
 ######## conan setup
+set(BUILD_WASM TRUE)
+IF(BUILD_WASM)
+SET(CONAN_DISABLE_CHECK_COMPILER ON)
+ENDIF(BUILD_WASM)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
@@ -49,22 +57,83 @@ add_subdirectory(src)
 
 
 ####### link
-target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-)
-target_include_directories(${TARGET_NAME} PRIVATE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+
+if(BUILD_WASM)
+  target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  target_include_directories(${TARGET_NAME} PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    /home/walde/projects/durak
+    /home/walde/projects/game_01_shared_class
+    /home/walde/some_boost_test/modular-boost
+    /home/walde/projects/confu_boost/
+    /home/walde/aur/emsdk/upstream/emscripten/system/include
   )
-  
+else()
+  target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  target_include_directories(${TARGET_NAME} PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+endif()
 
-target_link_libraries(${TARGET_NAME} PRIVATE
-${PROJECT_WARNINGS}
-${PROJECT_OPTIONS}
-CONAN_PKG::magnum_integration
-CONAN_PKG::sml
-CONAN_PKG::game_01_shared_class
 
-)
+if(BUILD_WASM)
+  target_link_directories(${TARGET_NAME} PRIVATE
+    /home/walde/wasm_libs/
+    /home/walde/aur/emsdk/upstream/emscripten/system/lib
+    /home/walde/some_boost_test/modular-boost/stage/lib
+  )
+  target_link_libraries(${TARGET_NAME} PRIVATE
+    #${PROJECT_WARNINGS}
+    ${PROJECT_OPTIONS}
+    boost_serialization
+    MagnumAudio
+    Magnum
+    MagnumImGuiIntegration
+    MagnumDebugTools
+    MagnumEmscriptenApplication
+    MagnumGL
+    MagnumMeshTools
+    MagnumPrimitives
+    MagnumSceneGraph
+    MagnumSdl2Application
+    MagnumShaders
+    MagnumShaderTools
+    MagnumText
+    MagnumTextureTools
+    MagnumTrade
+    MagnumWindowlessEglApplication
+    CorradeInterconnect
+    CorradePluginManager
+    CorradeTestSuite
+    CorradeUtility
+
+    CONAN_PKG::sml
+    ##TODO rebuild boost libs rebuild boost confu rebuild durak rebuild shared this libs make problems beacuse they are build with another version of emscripten
+    confuBoost
+    game_01_shared_class
+    CONAN_PKG::range-v3
+    CONAN_PKG::pipes
+    CONAN_PKG::fmt
+    CONAN_PKG::magic_enum
+  )
+else()
+  target_link_libraries(${TARGET_NAME} PRIVATE
+    ${PROJECT_WARNINGS}
+    ${PROJECT_OPTIONS}
+    CONAN_PKG::magnum_integration
+    CONAN_PKG::sml
+    CONAN_PKG::game_01_shared_class
+    CONAN_PKG::magic_enum
+    # CONAN_PKG::range-v3
+    # CONAN_PKG::pipes
+    # CONAN_PKG::fmt
+  )
+endif()
+
+
+
 
 ####### create executable
 OPTION(BUILD_TESTS "enable tests" OFF)

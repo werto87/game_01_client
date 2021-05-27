@@ -2,7 +2,6 @@
 #include "src/util/util.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
-#include <bits/ranges_algo.h>
 #include <chrono>
 #include <cstddef>
 #include <durak/card.hxx>
@@ -12,10 +11,12 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <iterator>
+#include <magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
-#include <ranges>
+#include <range/v3/all.hpp>
 #include <sstream>
 #include <string>
+
 namespace ImGui
 {
 inline void
@@ -155,7 +156,7 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
   auto channelNames = chatData.channelNames ();
   if (ImGui::BeginCombo ("##combo 1", chatData.selectChannelComboBoxName ().c_str ()))
     {
-      if ((not chatData.selectedChannelName && not channelNames.empty ()) || (chatData.selectedChannelName && not channelNames.empty () && std::ranges::find (channelNames, chatData.selectedChannelName) == channelNames.end ()))
+      if ((not chatData.selectedChannelName && not channelNames.empty ()) || (chatData.selectedChannelName && not channelNames.empty () && ranges::find (channelNames, chatData.selectedChannelName) == channelNames.end ()))
         {
           chatData.selectedChannelName = channelNames.front ();
         }
@@ -168,7 +169,7 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
       ImGui::EndCombo ();
     }
   ImGui::BeginChild ("scrolling", ImVec2 (0, 500), false, ImGuiWindowFlags_HorizontalScrollbar);
-  if (chatData.selectedChannelName && std::ranges::find (channelNames, chatData.selectedChannelName) != channelNames.end ())
+  if (chatData.selectedChannelName && ranges::find (channelNames, chatData.selectedChannelName) != channelNames.end ())
     {
       for (auto const &text : chatData.channelMessages.at (chatData.selectedChannelName.value ()))
         {
@@ -437,7 +438,7 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
   if (not game.selectedCardFromTable || game.gameData.table.size () <= game.selectedCardFromTable.value () || game.gameData.table.at (game.selectedCardFromTable.value ()).second)
     {
       // old selection is not valid because of optional card has value so we try to set the selection to first free element
-      if (auto cardAndOptionalCardItr = std::ranges::find_if (game.gameData.table, [] (auto const &cardAndOptionalCard) { return not cardAndOptionalCard.second.has_value (); }); cardAndOptionalCardItr != game.gameData.table.end ())
+      if (auto cardAndOptionalCardItr = ranges::find_if (game.gameData.table, [] (auto const &cardAndOptionalCard) { return not cardAndOptionalCard.second.has_value (); }); cardAndOptionalCardItr != game.gameData.table.end ())
         {
           game.selectedCardFromTable = std::distance (game.gameData.table.begin (), cardAndOptionalCardItr);
         }
@@ -446,7 +447,7 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
           game.selectedCardFromTable = {};
         }
     }
-  auto currentPlayer = std::ranges::find_if (game.gameData.players, [&accountName] (auto const &_player) { return accountName == _player.name; });
+  auto currentPlayer = ranges::find_if (game.gameData.players, [&accountName] (auto const &_player) { return accountName == _player.name; });
   auto currentPlayerRole = durak::PlayerRole::waiting;
   if (currentPlayer != game.gameData.players.end ())
     {
@@ -472,14 +473,14 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
   ImGui::Text ("Trump:");
   ImGui::SameLine ();
   drawType (game.gameData.trump);
-  if (currentPlayer = std::ranges::find_if (game.gameData.players, [&accountName] (durak::PlayerData const &playerData) { return accountName == playerData.name; }); currentPlayer != game.gameData.players.end ())
+  if (currentPlayer = ranges::find_if (game.gameData.players, [&accountName] (durak::PlayerData const &playerData) { return accountName == playerData.name; }); currentPlayer != game.gameData.players.end ())
     {
       for (size_t i = 0; i < currentPlayer->cards.size (); i++)
         {
           if (currentPlayer->playerRole == durak::PlayerRole::defend)
             {
               int selectedValue = 0;
-              if (auto selectedCardsItr = std::ranges::find_if (game.selectedCards, [] (bool selected) { return selected; }); selectedCardsItr != game.selectedCards.end ())
+              if (auto selectedCardsItr = ranges::find_if (game.selectedCards, [] (bool selected) { return selected; }); selectedCardsItr != game.selectedCards.end ())
                 {
                   selectedValue = static_cast<int> (std::distance (game.selectedCards.begin (), selectedCardsItr));
                 }
@@ -507,7 +508,7 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
         }
     }
   ImGui::Text ("Other Players:");
-  for (auto const &player : game.gameData.players | std::ranges::views::filter ([&accountName] (durak::PlayerData const &playerData) { return accountName != playerData.name; }))
+  for (auto const &player : game.gameData.players | ranges::views::filter ([&accountName] (durak::PlayerData const &playerData) { return accountName != playerData.name; }))
     {
       ImGui::Text (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
     }

@@ -22,7 +22,10 @@ auto const showWantToRelog = [] (shared_class::WantToRelog const &wantToRelog, M
 auto const evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendToServer, sml::back::process<loginWaitForServer, createAccount> process_event) {
   if (login.loginClicked && not login.accountName.empty () && not login.password.empty ())
     {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::LoginAccount{ .accountName = login.accountName, .password = login.password });
+      auto account = shared_class::LoginAccount{};
+      account.accountName = login.accountName;
+      account.password = login.password;
+      sendObject (messagesToSendToServer.messagesToSendToServer, account);
       process_event (loginWaitForServer{});
     }
   if (login.createAccountClicked) process_event (createAccount{});
@@ -36,13 +39,17 @@ auto const evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForSer
           messageBoxPopup.buttons.front ().disabled = true;
           messageBoxPopup.buttons.back ().disabled = true;
           process_event (shared_class::LoginAccountSuccess{});
-          sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::RelogTo{ .wantsToRelog = false });
+          auto relogTo = shared_class::RelogTo{};
+          relogTo.wantsToRelog = false;
+          sendObject (messagesToSendToServer.messagesToSendToServer, relogTo);
         }
       else if (messageBoxPopup.buttons.back ().pressed)
         {
           messageBoxPopup.buttons.front ().disabled = true;
           messageBoxPopup.buttons.back ().disabled = true;
-          sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::RelogTo{ .wantsToRelog = true });
+          auto relogTo = shared_class::RelogTo{};
+          relogTo.wantsToRelog = true;
+          sendObject (messagesToSendToServer.messagesToSendToServer, relogTo);
         }
     }
   else if (std::holds_alternative<shared_class::LoginAccountError> (messageBoxPopup.event))
@@ -65,7 +72,10 @@ auto const evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForSer
 auto const evalCreateAccount = [] (CreateAccount &createAccount, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccountWaitForServer, login> process_event) {
   if (createAccount.createAccountClicked && not createAccount.accountName.empty () && not createAccount.password.empty ())
     {
-      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::CreateAccount{ .accountName = createAccount.accountName, .password = createAccount.password });
+      auto createAccount = shared_class::CreateAccount{};
+      createAccount.accountName = createAccount.accountName;
+      createAccount.password = createAccount.password;
+      sendObject (messagesToSendToServer.messagesToSendToServer, createAccount);
       process_event (createAccountWaitForServer{});
     }
   if (createAccount.backToLoginClicked) process_event (login{});

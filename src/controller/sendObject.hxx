@@ -22,14 +22,6 @@ typeName (T const &)
   return boost::typeindex::type_id<T> ().pretty_name ();
 }
 
-template <typename T> concept printable = requires(T t)
-{
-  {
-    std::cout << t
-  }
-  ->std::same_as<std::ostream &>;
-};
-
 template <typename TypeToSend>
 void
 sendObject (std::deque<std::string> &msgToSend, TypeToSend const &typeToSend)
