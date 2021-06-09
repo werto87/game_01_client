@@ -68,7 +68,9 @@ struct my_logger
   void
   log_state_change (const TSrcState &src, const TDstState &dst)
   {
-    printf ("[%s] %s -> %s\n", sml::aux::get_type_name<SM> (), src.c_str (), dst.c_str ());
+    //printf ("[%s] %s -> %s\n", sml::aux::get_type_name<SM> (), src.c_str (), dst.c_str ());
+
+    std::cout<<"["<< sml::aux::get_type_name<SM> ()<<"] "<<src.c_str ()<<" -> "<<dst.c_str ()<<std::endl;
   }
 };
 

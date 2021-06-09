@@ -1,4 +1,5 @@
 #include "src/ui/screen.hxx"
+#include "src/util/imgui_util/imgui_stdlib.h"
 #include "src/util/util.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
@@ -12,7 +13,6 @@
 #include <imgui_internal.h>
 #include <iterator>
 #include <magic_enum.hpp>
-#include <misc/cpp/imgui_stdlib.h>
 #include <range/v3/all.hpp>
 #include <sstream>
 #include <string>
@@ -419,7 +419,6 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
 void
 gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
 {
-  // TODO game screen
   ImGui::Text (std::string{ "Round: " + std::to_string (game.gameData.round) }.c_str ());
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();

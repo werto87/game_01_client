@@ -1,10 +1,9 @@
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfatal-errors -fcoroutines")
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld -fcoroutines")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -std=c++20 -s WASM=1")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}    -fcoroutines-ts -std=c++20 -s WASM=1" )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v --preload-file bin/asset/DejaVuSans.ttf -DCMAKE_EXPORT_COMPILE_COMMANDS=True  -s SOCKET_DEBUG=1 -s USE_PTHREADS  -s ALLOW_MEMORY_GROWTH=1 -fdebug-compilation-dir='../..' -fexceptions -s ASYNCIFY=1  --emit-symbol-map --tracing --bind -g -O0 -std=c++20 -s  -s WASM=1")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v -DCMAKE_EXPORT_COMPILE_COMMANDS=True -lwebsocket.js -s SOCKET_DEBUG=1 -s USE_PTHREADS -s ALLOW_MEMORY_GROWTH=1 -fdebug-compilation-dir='../..' -fexceptions  -s ASYNCIFY=1 --emit-symbol-map --bind --tracing -g -O0  -fcoroutines-ts -std=c++20 -s  -s WASM=1" )
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -stdlib=libc++ -lc++abi -fcoroutines-ts -lc++experimental -std=c++20")
 
-#TODO make it build with emscripten
 cmake_minimum_required(VERSION 3.17)
 project(project VERSION 1.0.0
   DESCRIPTION project
@@ -42,6 +41,7 @@ target_compile_features(${PROJECT_OPTIONS} INTERFACE cxx_std_20)
  
 ######## conan setup
 set(BUILD_WASM TRUE)
+set(CMAKE_EXECUTABLE_SUFFIX ".html")
 IF(BUILD_WASM)
 SET(CONAN_DISABLE_CHECK_COMPILER ON)
 ENDIF(BUILD_WASM)
@@ -52,85 +52,44 @@ conan_basic_setup(TARGETS)
 set(TARGET_NAME project)
 add_executable(${TARGET_NAME})
 
+
+#copy assets into bin so emscripten finds them
+#file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/asset/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/asset)
+
+add_custom_command(
+        TARGET ${TARGET_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/asset/ 
+                ${CMAKE_CURRENT_BINARY_DIR}/bin/asset
+                )
 ######## add sub dir
 add_subdirectory(src) 
 
 
 ####### link
 
-if(BUILD_WASM)
-  target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-  target_include_directories(${TARGET_NAME} PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    /home/walde/projects/durak
-    /home/walde/projects/game_01_shared_class
-    /home/walde/some_boost_test/modular-boost
-    /home/walde/projects/confu_boost/
-    /home/walde/aur/emsdk/upstream/emscripten/system/include
-  )
-else()
-  target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-  target_include_directories(${TARGET_NAME} PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  )
-endif()
+target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${TARGET_NAME} PRIVATE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 
-if(BUILD_WASM)
-  target_link_directories(${TARGET_NAME} PRIVATE
-    /home/walde/wasm_libs/
-    /home/walde/aur/emsdk/upstream/emscripten/system/lib
-    /home/walde/some_boost_test/modular-boost/stage/lib
-  )
-  target_link_libraries(${TARGET_NAME} PRIVATE
-    #${PROJECT_WARNINGS}
-    ${PROJECT_OPTIONS}
-    boost_serialization
-    MagnumAudio
-    Magnum
-    MagnumImGuiIntegration
-    MagnumDebugTools
-    MagnumEmscriptenApplication
-    MagnumGL
-    MagnumMeshTools
-    MagnumPrimitives
-    MagnumSceneGraph
-    MagnumSdl2Application
-    MagnumShaders
-    MagnumShaderTools
-    MagnumText
-    MagnumTextureTools
-    MagnumTrade
-    MagnumWindowlessEglApplication
-    CorradeInterconnect
-    CorradePluginManager
-    CorradeTestSuite
-    CorradeUtility
+target_link_libraries(${TARGET_NAME} PRIVATE
+  #${PROJECT_WARNINGS}
+  ${PROJECT_OPTIONS}
+  CONAN_PKG::sml
+  CONAN_PKG::pipes
+  CONAN_PKG::range-v3
+  CONAN_PKG::fmt
+  CONAN_PKG::magic_enum
+  CONAN_PKG::game_01_shared_class
+  CONAN_PKG::durak
+  CONAN_PKG::confu_json
+  CONAN_PKG::magnum-integration
+  CONAN_PKG::boost
+)
 
-    CONAN_PKG::sml
-    ##TODO rebuild boost libs rebuild boost confu rebuild durak rebuild shared this libs make problems beacuse they are build with another version of emscripten
-    confuBoost
-    game_01_shared_class
-    CONAN_PKG::range-v3
-    CONAN_PKG::pipes
-    CONAN_PKG::fmt
-    CONAN_PKG::magic_enum
-  )
-else()
-  target_link_libraries(${TARGET_NAME} PRIVATE
-    ${PROJECT_WARNINGS}
-    ${PROJECT_OPTIONS}
-    CONAN_PKG::magnum_integration
-    CONAN_PKG::sml
-    CONAN_PKG::game_01_shared_class
-    CONAN_PKG::magic_enum
-    # CONAN_PKG::range-v3
-    # CONAN_PKG::pipes
-    # CONAN_PKG::fmt
-  )
-endif()
 
 
 

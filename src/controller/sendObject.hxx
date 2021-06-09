@@ -1,8 +1,8 @@
 #ifndef EBE26351_4857_4382_9622_DE0400244EE9
 #define EBE26351_4857_4382_9622_DE0400244EE9
 
-#include <confu_boost/confuBoost.hxx>
-
+#include <confu_json/to_json.hxx>
+#include <game_01_shared_class/serialization.hxx>
 template <typename T>
 std::string
 // only use this if your type is a simple user defined type with not template class something like namespace::MyType and you want to get MyType
@@ -26,7 +26,9 @@ template <typename TypeToSend>
 void
 sendObject (std::deque<std::string> &msgToSend, TypeToSend const &typeToSend)
 {
-  msgToSend.push_back (typeNameWithOutNamespace (typeToSend) + '|' + confu_boost::toString (typeToSend));
+  std::stringstream ss{};
+  ss << typeNameWithOutNamespace (typeToSend) << '|' << confu_json::to_json (typeToSend);
+  msgToSend.push_back (ss.str ());
 }
 
 #endif /* EBE26351_4857_4382_9622_DE0400244EE9 */
