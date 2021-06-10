@@ -3,6 +3,7 @@
 
 #include <confu_json/to_json.hxx>
 #include <game_01_shared_class/serialization.hxx>
+#include <iostream>
 template <typename T>
 std::string
 // only use this if your type is a simple user defined type with not template class something like namespace::MyType and you want to get MyType
@@ -28,6 +29,7 @@ sendObject (std::deque<std::string> &msgToSend, TypeToSend const &typeToSend)
 {
   std::stringstream ss{};
   ss << typeNameWithOutNamespace (typeToSend) << '|' << confu_json::to_json (typeToSend);
+  std::cout << ss.str () << std::endl;
   msgToSend.push_back (ss.str ());
 }
 

@@ -7,6 +7,7 @@
 #include <boost/sml.hpp>
 #include <chrono>
 #include <game_01_shared_class/serialization.hxx>
+#include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
@@ -69,16 +70,18 @@ auto const evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForSer
     }
 };
 
-auto const evalCreateAccount = [] (CreateAccount &createAccount, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccountWaitForServer, login> process_event) {
-  if (createAccount.createAccountClicked && not createAccount.accountName.empty () && not createAccount.password.empty ())
+auto const evalCreateAccount = [] (CreateAccount &createAccountState, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccountWaitForServer, login> process_event) {
+  if (createAccountState.createAccountClicked && not createAccountState.accountName.empty () && not createAccountState.password.empty ())
     {
-      auto createAccount = shared_class::CreateAccount{};
-      createAccount.accountName = createAccount.accountName;
-      createAccount.password = createAccount.password;
-      sendObject (messagesToSendToServer.messagesToSendToServer, createAccount);
+      auto createAccountObject = shared_class::CreateAccount{};
+      createAccountObject.accountName = createAccountState.accountName;
+      createAccountObject.password = createAccountState.password;
+      std::cout << "create account: accountName: " << createAccountObject.accountName << std::endl;
+      std::cout << "create account: password: " << createAccountObject.password << std::endl;
+      sendObject (messagesToSendToServer.messagesToSendToServer, createAccountObject);
       process_event (createAccountWaitForServer{});
     }
-  if (createAccount.backToLoginClicked) process_event (login{});
+  if (createAccountState.backToLoginClicked) process_event (login{});
 };
 
 auto const evalCreateAccountWaitForServer = [] (std::optional<WaitForServer> &waitForServer, MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &messagesToSendToServer, sml::back::process<createAccount> process_event) {

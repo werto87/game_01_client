@@ -1,7 +1,7 @@
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfatal-errors -fcoroutines")
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld -fcoroutines")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v --preload-file bin/asset/DejaVuSans.ttf -DCMAKE_EXPORT_COMPILE_COMMANDS=True  -s SOCKET_DEBUG=1 -s USE_PTHREADS  -s ALLOW_MEMORY_GROWTH=1 -fdebug-compilation-dir='../..' -fexceptions -s ASYNCIFY=1  --emit-symbol-map --tracing --bind -g -O0 -std=c++20 -s  -s WASM=1")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v -DCMAKE_EXPORT_COMPILE_COMMANDS=True -lwebsocket.js -s SOCKET_DEBUG=1 -s USE_PTHREADS -s ALLOW_MEMORY_GROWTH=1 -fdebug-compilation-dir='../..' -fexceptions  -s ASYNCIFY=1 --emit-symbol-map --bind --tracing -g -O0  -fcoroutines-ts -std=c++20 -s  -s WASM=1" )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file bin/asset/DejaVuSans.ttf -DCMAKE_EXPORT_COMPILE_COMMANDS=True  -s SOCKET_DEBUG=1 -s USE_PTHREADS  -s ALLOW_MEMORY_GROWTH=1 -fdebug-compilation-dir='../..' -fexceptions -s ASYNCIFY=1  --emit-symbol-map --tracing --bind -g -O0 -std=c++20 -s  -s WASM=1")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -DCMAKE_EXPORT_COMPILE_COMMANDS=True -lwebsocket.js -s SOCKET_DEBUG=1 -s USE_PTHREADS -s ALLOW_MEMORY_GROWTH=1 -fdebug-compilation-dir='../..' -fexceptions  -s ASYNCIFY=1 --emit-symbol-map --bind --tracing -g -O0  -fcoroutines-ts -std=c++20 -s  -s WASM=1" )
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -stdlib=libc++ -lc++abi -fcoroutines-ts -lc++experimental -std=c++20")
 
 cmake_minimum_required(VERSION 3.17)
