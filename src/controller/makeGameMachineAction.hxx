@@ -7,6 +7,7 @@
 #include <boost/sml.hpp>
 #include <game_01_shared_class/serialization.hxx>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 namespace sml = boost::sml;
 
@@ -29,7 +30,11 @@ auto const reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &u
   std::transform (usersInGameLobby.users.begin (), usersInGameLobby.users.end (), std::back_inserter (createGameLobby.accountNamesInGameLobby), [] (shared_class::UserInGameLobby const &user) { return user.accountName; });
   createGameLobby.gameLobbyName = usersInGameLobby.name;
   createGameLobby.maxUserInGameLobby = static_cast<int> (usersInGameLobby.maxUserSize);
+  createGameLobby.maxCardValue = static_cast<u_int16_t> (usersInGameLobby.durakGameOption.maxCardValue);
 };
+
+auto const reactToMaxUserSizeInCreateGameLobby = [] (shared_class::MaxUserSizeInCreateGameLobby const &maxUserSizeInCreateGameLobby, CreateGameLobby &createGameLobby) { createGameLobby.maxUserInGameLobby = static_cast<int> (maxUserSizeInCreateGameLobby.maxUserSize); };
+auto const reactToMaxCardValueInCreateGameLobby = [] (shared_class::MaxCardValueInCreateGameLobby const &maxCardValueInCreateGameLobby, CreateGameLobby &createGameLobby) { createGameLobby.maxCardValue = static_cast<u_int16_t> (maxCardValueInCreateGameLobby.maxCardValue); };
 
 auto const evalLobby = [] (Lobby &lobby, MessagesToSendToServer &messagesToSendToServer, MakeGameMachineData &makeGameMachineData, sml::back::process<lobbyWaitForServer> process_event) {
   if (lobby.logoutButtonClicked)
@@ -80,7 +85,7 @@ auto const evalLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, Messag
 };
 
 auto const evalCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &, sml::back::process<lobby> process_event) {
-  if (std::holds_alternative<shared_class::SetMaxUserSizeInCreateGameLobbyError> (messageBoxPopup.event))
+  if (std::holds_alternative<shared_class::SetMaxUserSizeInCreateGameLobbyError> (messageBoxPopup.event) || std::holds_alternative<shared_class::SetMaxCardValueInCreateGameLobbyError> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (lobby{});
     }
@@ -107,6 +112,14 @@ auto const evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameM
       setMaxUserSizeInCreateGameLobby.createGameLobbyName = createGameLobby.gameLobbyName;
       setMaxUserSizeInCreateGameLobby.maxUserSize = static_cast<size_t> (createGameLobby.maxUserInGameLobby);
       sendObject (messagesToSendToServer.messagesToSendToServer, setMaxUserSizeInCreateGameLobby);
+    }
+  else if (createGameLobby.sendMaxCardValueClicked)
+    {
+      process_event (createGameLobbyWaitForServer{});
+      auto setMaxCardValueInCreateGameLobby = shared_class::SetMaxCardValueInCreateGameLobby{};
+      setMaxCardValueInCreateGameLobby.createGameLobbyName = createGameLobby.gameLobbyName;
+      setMaxCardValueInCreateGameLobby.maxCardValue = static_cast<u_int16_t> (createGameLobby.maxCardValue);
+      sendObject (messagesToSendToServer.messagesToSendToServer, setMaxCardValueInCreateGameLobby);
     }
   else if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
     {

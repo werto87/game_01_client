@@ -206,10 +206,20 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       ImGui::PushDisabled (shouldLockScreen, time);
       createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
       ImGui::PopDisabled (shouldLockScreen, time);
+
+      ImGui::Text ("set max card value: ");
+      ImGui::PushDisabled (shouldLockScreen, time);
+      ImGui::InputInt ("##maxCardValue", &createGameLobby.maxCardValue);
+      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PushDisabled (shouldLockScreen, time);
+      createGameLobby.sendMaxCardValueClicked = ImGui::Button ("set max card value", ImVec2 (-1, 0));
+      ImGui::PopDisabled (shouldLockScreen, time);
     }
   else
     {
+
       ImGui::Text (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobby) }.c_str ());
+      ImGui::Text (std::string{ "max card value: " + std::to_string (createGameLobby.maxCardValue) }.c_str ());
     }
   ImGui::Text ("user in lobby:");
   for (auto &lobbyMemberAccountName : createGameLobby.accountNamesInGameLobby)
@@ -419,6 +429,7 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
 void
 gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
 {
+  // TODO add leave game button
   ImGui::Text (std::string{ "Round: " + std::to_string (game.gameData.round) }.c_str ());
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();

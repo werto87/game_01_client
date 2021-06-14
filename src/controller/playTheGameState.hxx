@@ -17,6 +17,14 @@ struct game
 {
 };
 
+struct goToLobby
+{
+};
+
+struct leaveGame
+{
+};
+
 struct gameWaitForServer
 {
 };

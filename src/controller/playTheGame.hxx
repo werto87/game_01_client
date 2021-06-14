@@ -27,7 +27,7 @@ struct PlayTheGame
 , state<Game>               + event<shared_class::DurakGameOverWon>                                           / setDurakGameOverWon
 , state<Game>               + event<shared_class::DurakGameOverLose>                                          / setDurakGameOverLose
 , state<Game>               + event<shared_class::DurakGameOverDraw>                                          / setDurakGameOverDraw
-, state<Game>               + event<goToCreateGameLobby>                                                      / process(goToCreateGameLobby{})
+, state<Game>               + event<leaveGame>                                                      / process(goToLobby{})                                 = X
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 , state<GameWaitForServer>  + on_entry<_>                                                                     / setMessageBoxPopupAndSetWaitForServer
 , state<GameWaitForServer>  + event<durak::GameData>                                                          / setGameData                                                                                         
@@ -47,7 +47,7 @@ struct PlayTheGame
 , state<GameWaitForServer>  + event<shared_class::DurakGameOverWon>                                           / setDurakGameOverWon
 , state<GameWaitForServer>  + event<shared_class::DurakGameOverLose>                                          / setDurakGameOverLose
 , state<GameWaitForServer>  + event<shared_class::DurakGameOverDraw>                                          / setDurakGameOverDraw
-, state<GameWaitForServer>  + event<goToCreateGameLobby>                                                      / process(goToCreateGameLobby{})
+, state<GameWaitForServer>  + event<leaveGame>                                                      / process(goToLobby{})                                 = X
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 );
     // clang-format on

@@ -49,10 +49,11 @@ struct CreateGameLobby
 {
   std::string gameLobbyName{};
   int maxUserInGameLobby{};
+  int maxCardValue{};
   std::vector<std::string> accountNamesInGameLobby{};
-  int maxUserInGameLobbyToSend{};
   bool startGame = false;
   bool sendMaxUserCountClicked = false;
+  bool sendMaxCardValueClicked = false;
   bool leaveGameLobby = false;
 };
 
