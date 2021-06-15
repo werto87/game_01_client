@@ -429,7 +429,6 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
 void
 gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
 {
-  // TODO add leave game button
   ImGui::Text (std::string{ "Round: " + std::to_string (game.gameData.round) }.c_str ());
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
@@ -531,5 +530,6 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
     {
       game.pass = ImGui::Button ("Pass", ImVec2 (-1, 0));
     }
+  game.surrender = ImGui::Button ("Surrender", ImVec2 (-1, 0));
   ImGui::PopItemWidth ();
 }

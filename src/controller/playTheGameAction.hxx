@@ -130,6 +130,11 @@ auto const evalGame = [] (MessageBoxPopup &messageBoxPopup, Game &game, MakeGame
             }
         }
     }
+  else if (game.surrender)
+    {
+      sendObject (messagesToSendToServer.messagesToSendToServer, shared_class::DurakLeaveGame{});
+      process_event (leaveGame{});
+    }
   else if (std::holds_alternative<shared_class::DurakDefendWantsToTakeCardsFromTableDoYouWantToAddCards> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed)

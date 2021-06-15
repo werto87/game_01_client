@@ -10,6 +10,7 @@ struct Game
   std::vector<bool> selectedCards{};
   boost::optional<size_t> selectedCardFromTable{};
   bool placeSelectedCardsOnTable{};
+  bool surrender{};
   bool pass{};
 };
 
