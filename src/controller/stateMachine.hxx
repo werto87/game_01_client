@@ -30,7 +30,7 @@ struct WrapperMachine
 , state<MakeGameMachine>    + sml::on_entry<goToCreateGameLobby>        / (process(lobbyWaitForServer{}),process(shared_class::JoinGameLobbySuccess{}))
 , state<MakeGameMachine>    + event<startGame>                                                                                                          = state<PlayTheGame>
 , state<PlayTheGame>        + sml::on_entry<_>                          / reset
-, state<PlayTheGame>        + event<goToCreateGameLobby>                                                                                                = state<MakeGameMachine>
+, state<PlayTheGame>        + event<goToLobby>                                                                                                          = state<MakeGameMachine>
 ,*"error_handler"_s         + unexpected_event<_>                       / [](auto const& event){std::cout<<"unhandled event: '"<<typeNameWithOutNamespace(event)<<"'"<<std::endl;}
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 // clang-format on   
@@ -68,7 +68,9 @@ struct my_logger
   void
   log_state_change (const TSrcState &src, const TDstState &dst)
   {
-    printf ("[%s] %s -> %s\n", sml::aux::get_type_name<SM> (), src.c_str (), dst.c_str ());
+    //printf ("[%s] %s -> %s\n", sml::aux::get_type_name<SM> (), src.c_str (), dst.c_str ());
+
+    std::cout<<"["<< sml::aux::get_type_name<SM> ()<<"] "<<src.c_str ()<<" -> "<<dst.c_str ()<<std::endl;
   }
 };
 

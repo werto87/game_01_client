@@ -1,5 +1,6 @@
 #include "src/ui/ui.hxx"
 #include "src/controller/commonEvent.hxx"
+#include "src/util/imgui_util/imgui_stdlib.h"
 #include "src/util/util.hxx"
 #include <Magnum/GL/Buffer.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
@@ -10,42 +11,42 @@
 #include <Magnum/MeshTools/CompressIndices.h>
 #include <Magnum/MeshTools/Interleave.h>
 #include <Magnum/Primitives/Cube.h>
-#include <Magnum/Shaders/Phong.h>
 #include <Magnum/Trade/MeshData.h>
 #include <algorithm>
+#include <emscripten/emscripten.h>
+#include <emscripten/websocket.h>
 #include <filesystem>
 #include <game_01_shared_class/serialization.hxx>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <iostream>
 #include <memory>
-#include <misc/cpp/imgui_stdlib.h>
 
 using namespace Magnum;
-ImGuiExample::ImGuiExample (const Arguments &arguments, StateMachine &stateMachine) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }, Vector2{ 1, 1 }) }, _stateMachine{ stateMachine }
+ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{} } }, webservice{ _stateMachine }
 {
   ImGui::CreateContext ();
+  co_spawn (
+      ioContext, [&] () mutable { return webservice.writeToServer (_messagesToSendToServer.messagesToSendToServer); }, boost::asio::detached);
+  EmscriptenWebSocketCreateAttributes ws_attrs = { "ws://localhost:55555", NULL, EM_TRUE };
+  EMSCRIPTEN_WEBSOCKET_T ws = emscripten_websocket_new (&ws_attrs);
+  emscripten_websocket_set_onopen_callback (ws, &webservice, onopen);
+  emscripten_websocket_set_onerror_callback (ws, &webservice, onerror);
+  emscripten_websocket_set_onclose_callback (ws, &webservice, onclose);
+  emscripten_websocket_set_onmessage_callback (ws, &webservice, onmessage);
   ImGuiIO &io = ImGui::GetIO ();
-  static auto iniFile = std::filesystem::path{ PATH_TO_BINARY }.parent_path ().append ("asset").append ("imgui.ini");
-  io.IniFilename = iniFile.c_str ();
   std::cout << io.IniFilename << std::endl;
-
-  // static const ImWchar icons_ranges[] = { 0x2600, 0x26FF, 0 }; // Will not be copied by AddFont* so keep in scope.
   ImVector<ImWchar> ranges;
   ImFontGlyphRangesBuilder builder;
-  builder.AddText (from_u8string (std::u8string{ u8"♠♥♦♣" }).c_str ()); // Add a string (here "Hello world" contains 7 unique characters)
-  builder.AddRanges (io.Fonts->GetGlyphRangesDefault ());               // Add one of the default ranges
+  builder.AddText (from_u8string (std::u8string{ u8"♠♥♦♣" }).c_str ());
+  builder.AddRanges (io.Fonts->GetGlyphRangesDefault ());
   builder.BuildRanges (&ranges);
-  io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/DejaVuSans.ttf", 50.0f * _fontScale, nullptr, ranges.Data);
-  io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/DejaVuSans.ttf", 75.0f * _fontScale, nullptr, ranges.Data);
+  auto const fontFile = std::filesystem::path{ "bin/asset/DejaVuSans.ttf" };
+  if (std::filesystem::exists (fontFile)) std::cout << "file exists" << std::endl;
+  io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 50.0f * _fontScale, nullptr, ranges.Data);
+  io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 75.0f * _fontScale, nullptr, ranges.Data);
   io.Fonts->Build ();
   _imgui = Magnum::ImGuiIntegration::Context (*ImGui::GetCurrentContext (), windowSize ());
-  // font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/Koruri-Regular.ttf", 75 * _fontScale, nullptr, io.Fonts->GetGlyphRangesJapanese ());
-  // font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/fontawesome-webfont.ttf", 75 * _fontScale);
-
-  /* Set up proper blending to be used by ImGui. There's a great chance
-     you'll need this exact behavior for the rest of your scene. If not, set
-     this only for the drawFrame() call. */
   Magnum::GL::Renderer::setBlendEquation (GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
   Magnum::GL::Renderer::setBlendFunction (GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
   ImGuiStyle &style = ImGui::GetStyle ();
@@ -92,8 +93,9 @@ ImGuiExample::drawEvent ()
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
 
+  ImGui::SetNextWindowPos (ImVec2 (0, 0));
   ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
-  ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+  ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 
   _stateMachine.process_event (draw{ .windowSizeX = windowWidth, .windowSizeY = windowHeight, .biggerFont = font2 });
   // auto shouldUpdateFontSize = false;
@@ -115,8 +117,9 @@ ImGuiExample::drawEvent ()
   GL::Renderer::disable (GL::Renderer::Feature::ScissorTest);
   GL::Renderer::disable (GL::Renderer::Feature::Blending);
   swapBuffers ();
-  redraw ();
   // if (shouldUpdateFontSize) updateFontSize ();
+  ioContext.poll_one ();
+  redraw ();
 }
 
 void
@@ -178,10 +181,9 @@ ImGuiExample::updateFontSize ()
 {
   ImGuiIO &io = ImGui::GetIO ();
   io.Fonts->Clear ();
-  // auto currentFont = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 50 * _fontScale);
-  // font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/SourceSansPro-Regular.ttf", 75 * _fontScale);
-  auto currentFont = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/DejaVuSerif.ttf", 50 * _fontScale);
-  font2 = io.Fonts->AddFontFromFileTTF ("/usr/share/fonts/TTF/DejaVuSerif.ttf", 75 * _fontScale);
+  auto const fontFile = std::filesystem::path{ "bin/asset/DejaVuSans.ttf" };
+  auto currentFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 50 * _fontScale);
+  font2 = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 75 * _fontScale);
   _imgui.relayout ({ static_cast<float> (windowSize ().x ()), static_cast<float> (windowSize ().y ()) }, windowSize (), framebufferSize ());
   ImGui::SetCurrentFont (currentFont);
 }

@@ -1,8 +1,17 @@
 [requires]
-magnum_integration/0.0.2@magnum_integration/0.0.2 #from https://github.com/werto87/conan_magnum_integration.git
 catch2/2.13.1
 sml/1.1.4
-game_01_shared_class/0.0.1@game_01_shared_class/0.0.1 #from https://github.com/werto87/game_01_shared_class.git
+pipes/1.0.0
+range-v3/0.11.0
+fmt/7.1.3
+magic_enum/0.7.2
+game_01_shared_class/0.0.1@werto87/stable
+durak/0.0.2@werto87/stable 
+confu_json/0.0.3@werto87/stable
+magnum-integration/2020.06@werto87/stable
+boost/1.76.0
 [generators]
 cmake
 [options]
+fmt:header_only=True
+boost:header_only=True
