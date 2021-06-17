@@ -18,7 +18,7 @@ cmake_policy(SET CMP0015 NEW)
 ########## enable cache system
 include(cmake/Cache.cmake)
 
-########## link against the libs to apply the configurations to the targe t
+########## link against the libs to apply the configurations to the targ e t
 # compiler warnings
 set(PROJECT_WARNINGS project_warning)
 add_library(${PROJECT_WARNINGS} INTERFACE)
