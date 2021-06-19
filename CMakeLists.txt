@@ -86,7 +86,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
   CONAN_PKG::magic_enum
   CONAN_PKG::game_01_shared_class
   CONAN_PKG::durak
-  CONAN_PKG::confu_json
+  CONAN_PKG::confu-json
   CONAN_PKG::magnum-integration
   CONAN_PKG::boost
 )
