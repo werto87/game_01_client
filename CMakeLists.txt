@@ -1,4 +1,4 @@
-if($<CONFIG:Debug>)
+if(${CMAKE_BUILD_TYPE} STREQUAL  "Debug")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file bin/asset/DejaVuSans.ttf -DCMAKE_EXPORT_COMPILE_COMMANDS=True  -s SOCKET_DEBUG=1 -s USE_PTHREADS  -s ALLOW_MEMORY_GROWTH=1 -fdebug-compilation-dir='../..' -fexceptions -s ASYNCIFY=1  --emit-symbol-map --tracing --bind -g -O0 -std=c++20 -s  -s WASM=1")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -DCMAKE_EXPORT_COMPILE_COMMANDS=True -lwebsocket.js -s SOCKET_DEBUG=1 -s USE_PTHREADS -s ALLOW_MEMORY_GROWTH=1 -fdebug-compilation-dir='../..' -fexceptions  -s ASYNCIFY=1 --emit-symbol-map --bind --tracing -g -O0  -fcoroutines-ts -std=c++20 -s  -s WASM=1" )
 else()
@@ -13,7 +13,7 @@ project(project VERSION 1.0.0
 cmake_policy(SET CMP0015 NEW)
 
 
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 ########## enable cache system
 include(cmake/Cache.cmake)
