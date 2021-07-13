@@ -20,8 +20,6 @@ main (int argc, char **argv)
 #else
   std::cout << "NO DEBUG" << std::endl;
 #endif
-  using namespace boost::asio;
-
   // TODO uncomment if database is needed
   // if we reactivate this care: release will try to use the same database which does not work (start the program 2 times and see what happens)
   // debug will create a new database and keeps the old which is a workaround for starting the program multiple times in parallel
