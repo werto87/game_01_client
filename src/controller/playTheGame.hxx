@@ -19,18 +19,12 @@ struct PlayTheGame
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 * state<Game>               + on_entry<_>                                                                     / resetPopupAndWaitForServer
 , state<Game>               + event<gameWaitForServer>                                                                                                                            = state<GameWaitForServer>
-, state<Game>               + event<durak::GameData>                                                          / setGameData                                                       
 , state<Game>               + event<draw>                                                                     / (drawGame,evalGame)                                               
 , state<Game>               + event<shared_class::Message>                                                    / reactToMessage                                                    
 , state<Game>               + event<shared_class::DurakDefendWantsToTakeCardsFromTableDoYouWantToAddCards>    / setDurakDefendWantsToTakeCardsFromTableDoYouWantToAddCardsEvent   
 , state<Game>               + event<shared_class::DurakAskDefendWantToTakeCards>                              / setDurakAskDefendWantToTakeCards                                  
-, state<Game>               + event<shared_class::DurakGameOverWon>                                           / setDurakGameOverWon                                               
-, state<Game>               + event<shared_class::DurakGameOverLose>                                          / setDurakGameOverLose                                              
-, state<Game>               + event<shared_class::DurakGameOverDraw>                                          / setDurakGameOverDraw                                              
-, state<Game>               + event<leaveGame>                                                                / process(goToLobby{})                                              = X
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 , state<GameWaitForServer>  + on_entry<_>                                                                     / setMessageBoxPopupAndSetWaitForServer
-, state<GameWaitForServer>  + event<durak::GameData>                                                          / setGameData                                                                                         
 , state<GameWaitForServer>  + event<game>                                                                                                                                         = state<Game>
 , state<GameWaitForServer>  + event<shared_class::DurakAttackSuccess>                                                                                                             = state<Game>
 , state<GameWaitForServer>  + event<shared_class::DurakDefendWantsToTakeCardsFromTableDoneAddingCardsSuccess>                                                                     = state<Game>
@@ -45,11 +39,13 @@ struct PlayTheGame
 , state<GameWaitForServer>  + event<draw>                                                                     / (drawGame,evalGameWaitForServer)      
 , state<GameWaitForServer>  + event<shared_class::JoinChannelSuccess>                                         / reactToJoinChannelSuccess                                         = state<Game>   
 , state<GameWaitForServer>  + event<shared_class::Message>                                                    / reactToMessage                                                    = state<Game>   
-, state<GameWaitForServer>  + event<shared_class::DurakGameOverWon>                                           / setDurakGameOverWon
-, state<GameWaitForServer>  + event<shared_class::DurakGameOverLose>                                          / setDurakGameOverLose
-, state<GameWaitForServer>  + event<shared_class::DurakGameOverDraw>                                          / setDurakGameOverDraw
-, state<GameWaitForServer>  + event<leaveGame>                                                                / process(goToLobby{})                                              = X
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+,*"anystate"_s              + event<shared_class::DurakGameOverWon>                                           / setDurakGameOverWon
+, "anystate"_s              + event<shared_class::DurakGameOverLose>                                          / setDurakGameOverLose
+, "anystate"_s              + event<shared_class::DurakGameOverDraw>                                          / setDurakGameOverDraw
+, "anystate"_s              + event<durak::GameData>                                                          / setGameData                                                       
+, "anystate"_s              + event<leaveGame>                                                                / process(goToLobby{})                                              = X
 );
     // clang-format on
   }
