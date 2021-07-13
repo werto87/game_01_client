@@ -1,7 +1,7 @@
 #include "src/webservice/webservice.hxx"
 
 EM_BOOL
-onopen (int eventType, const EmscriptenWebSocketOpenEvent *websocketEvent, void *userData)
+onopen (int /*eventType*/, const EmscriptenWebSocketOpenEvent *websocketEvent, void *userData)
 {
   std::cout << "on_open" << std::endl;
   auto &webservice = *static_cast<Webservice *> (userData);
@@ -9,13 +9,13 @@ onopen (int eventType, const EmscriptenWebSocketOpenEvent *websocketEvent, void 
   return 42;
 }
 EM_BOOL
-onerror (int eventType, const EmscriptenWebSocketErrorEvent *websocketEvent, void *userData)
+onerror (int /*eventType*/, const EmscriptenWebSocketErrorEvent * /*websocketEvent*/, void * /*userData*/)
 {
   std::cout << "on_error" << std::endl;
   return 42;
 }
 EM_BOOL
-onclose (int eventType, const EmscriptenWebSocketCloseEvent *websocketEvent, void *userData)
+onclose (int /*eventType*/, const EmscriptenWebSocketCloseEvent * /*websocketEvent */, void *userData)
 {
   std::cout << "on_close" << std::endl;
   auto &webservice = *static_cast<Webservice *> (userData);
@@ -23,7 +23,7 @@ onclose (int eventType, const EmscriptenWebSocketCloseEvent *websocketEvent, voi
   return 42;
 }
 EM_BOOL
-onmessage (int eventType, const EmscriptenWebSocketMessageEvent *websocketEvent, void *userData)
+onmessage (int /*eventType*/, const EmscriptenWebSocketMessageEvent *websocketEvent, void *userData)
 {
   std::cout << "on_message" << std::endl;
   if (websocketEvent->isText)

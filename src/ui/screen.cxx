@@ -3,6 +3,7 @@
 #include "src/util/util.hxx"
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Platform/Sdl2Application.h>
+#include <boost/numeric/conversion/cast.hpp>
 #include <chrono>
 #include <cstddef>
 #include <durak/card.hxx>
@@ -63,25 +64,25 @@ drawType (durak::Type type)
     {
     case durak::Type::clubs:
       {
-        ImGui::Text (from_u8string (std::u8string{ u8"♣" }).c_str ());
+        ImGui::TextUnformatted (from_u8string (std::u8string{ u8"♣" }).c_str ());
         break;
       }
     case durak::Type::spades:
       {
-        ImGui::Text (from_u8string (std::u8string{ u8"♠" }).c_str ());
+        ImGui::TextUnformatted (from_u8string (std::u8string{ u8"♠" }).c_str ());
         break;
       }
     case durak::Type::hearts:
       {
         ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
-        ImGui::Text (from_u8string (std::u8string{ u8"♥" }).c_str ());
+        ImGui::TextUnformatted (from_u8string (std::u8string{ u8"♥" }).c_str ());
         ImGui::PopStyleColor ();
         break;
       }
     case durak::Type::diamonds:
       {
         ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
-        ImGui::Text (from_u8string (std::u8string{ u8"♦" }).c_str ());
+        ImGui::TextUnformatted (from_u8string (std::u8string{ u8"♦" }).c_str ());
         ImGui::PopStyleColor ();
         break;
       }
@@ -93,12 +94,12 @@ drawCard (durak::Card const &card)
 {
   if (card.type == durak::Type::clubs || card.type == durak::Type::spades)
     {
-      ImGui::Text (fmt::format ("{}, {}", card.value, (card.type) == durak::Type::spades ? from_u8string (std::u8string{ u8"♠" }).c_str () : from_u8string (std::u8string{ u8"♣" }).c_str ()).c_str ());
+      ImGui::TextUnformatted (fmt::format ("{}, {}", card.value, (card.type) == durak::Type::spades ? from_u8string (std::u8string{ u8"♠" }).c_str () : from_u8string (std::u8string{ u8"♣" }).c_str ()).c_str ());
     }
   else
     {
       ImGui::PushStyleColor (ImGuiCol_Text, ImVec4 (ImColor (255, 0, 0)));
-      ImGui::Text (fmt::format ("{}, {}", card.value, (card.type) == durak::Type::hearts ? from_u8string (std::u8string{ u8"♥" }).c_str () : from_u8string (std::u8string{ u8"♦" }).c_str ()).c_str ());
+      ImGui::TextUnformatted (fmt::format ("{}, {}", card.value, (card.type) == durak::Type::hearts ? from_u8string (std::u8string{ u8"♥" }).c_str () : from_u8string (std::u8string{ u8"♦" }).c_str ()).c_str ());
       ImGui::PopStyleColor ();
     }
 }
@@ -149,7 +150,7 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
 {
   ImGui::PushItemWidth (-1);
   ImGui::PushDisabled (shouldLockScreen, time);
-  ImGui::Text ("Join Channel");
+  ImGui::TextUnformatted ("Join Channel");
   ImGui::InputText ("##JoinChannel", &chatData.channelToJoin);
   chatData.joinChannelClicked = ImGui::Button ("Join Channel", ImVec2 (-1, 0));
   ImGui::PopDisabled (shouldLockScreen, time);
@@ -179,7 +180,7 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
     }
   ImGui::EndChild ();
   ImGui::PushDisabled (shouldLockScreen, time);
-  ImGui::Text ("Send to Channel");
+  ImGui::TextUnformatted ("Send to Channel");
   ImGui::InputText ("##SendToChannel", &chatData.messageToSendToChannel);
   chatData.sendMessageClicked = ImGui::Button ("Send to Channel", ImVec2 (-1, 0));
   ImGui::PopDisabled (shouldLockScreen, time);
@@ -199,7 +200,7 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
   chatScreen (chatData, shouldLockScreen, time);
   if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
-      ImGui::Text ("set max user count: ");
+      ImGui::TextUnformatted ("set max user count: ");
       ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
       ImGui::PopDisabled (shouldLockScreen, time);
@@ -207,7 +208,7 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
       ImGui::PopDisabled (shouldLockScreen, time);
 
-      ImGui::Text ("set max card value: ");
+      ImGui::TextUnformatted ("set max card value: ");
       ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::InputInt ("##maxCardValue", &createGameLobby.maxCardValue);
       ImGui::PopDisabled (shouldLockScreen, time);
@@ -218,13 +219,13 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
   else
     {
 
-      ImGui::Text (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobby) }.c_str ());
-      ImGui::Text (std::string{ "max card value: " + std::to_string (createGameLobby.maxCardValue) }.c_str ());
+      ImGui::TextUnformatted (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobby) }.c_str ());
+      ImGui::TextUnformatted (std::string{ "max card value: " + std::to_string (createGameLobby.maxCardValue) }.c_str ());
     }
-  ImGui::Text ("user in lobby:");
+  ImGui::TextUnformatted ("user in lobby:");
   for (auto &lobbyMemberAccountName : createGameLobby.accountNamesInGameLobby)
     {
-      ImGui::Text (lobbyMemberAccountName.c_str ());
+      ImGui::TextUnformatted (lobbyMemberAccountName.c_str ());
     }
   ImGui::PushDisabled (shouldLockScreen, time);
   createGameLobby.startGame = ImGui::Button ("Start Game", ImVec2 (-1, 0));
@@ -257,7 +258,7 @@ messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForSe
   ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
   ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
   ImGui::PopStyleVar ();
-  ImGui::Text (messageBoxPopup.message.c_str ());
+  ImGui::TextUnformatted (messageBoxPopup.message.c_str ());
   ImGui::EndChild ();
   ImGui::EndChild ();
   ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
@@ -287,7 +288,7 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
   ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to XYZ").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
   ImGui::SameLine ();
   ImGui::PushFont (&biggerFont);
-  ImGui::Text ("Sign in to XYZ");
+  ImGui::TextUnformatted ("Sign in to XYZ");
   ImGui::PopFont ();
   ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
   ImGui::SameLine ();
@@ -300,9 +301,9 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
   ImGui::SameLine ();
   ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 30), false, window_flags);
   ImGui::PushItemWidth (-1.0f);
-  ImGui::Text ("Username");
+  ImGui::TextUnformatted ("Username");
   ImGui::InputText ("##username", &data.accountName);
-  ImGui::Text ("Password");
+  ImGui::TextUnformatted ("Password");
   ImGui::InputText ("##password", &data.password, ImGuiInputTextFlags_Password);
   ImGui::PopDisabled (shouldLockScreen, time);
   if (shouldLockScreen)
@@ -334,7 +335,7 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
   ImGui::BeginChild ("ChildR123", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 20), true, window_flags);
   ImGui::Dummy (ImVec2 (((windowWidth / 2) - (ImGui::CalcTextSize ("New to XYZ?").x + ImGui::CalcTextSize ("create an account").x + (ImGui::GetStyle ().ItemSpacing.x * 6))) / 2, 0.0f));
   ImGui::SameLine ();
-  ImGui::Text ("New to XYZ?");
+  ImGui::TextUnformatted ("New to XYZ?");
   ImGui::SameLine ();
   data.createAccountClicked = ImGui::SmallButton ("Create an Account");
   ImGui::PopDisabled (shouldLockScreen, time);
@@ -360,7 +361,7 @@ createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForS
   ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Create your Account").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
   ImGui::SameLine ();
   ImGui::PushFont (&biggerFont);
-  ImGui::Text ("Create your Account");
+  ImGui::TextUnformatted ("Create your Account");
   ImGui::PopFont ();
   ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
   ImGui::SameLine ();
@@ -372,9 +373,9 @@ createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForS
   ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
   ImGui::PopStyleVar ();
   ImGui::PushItemWidth (-1.0f);
-  ImGui::Text ("Username");
+  ImGui::TextUnformatted ("Username");
   ImGui::InputText ("##account-username", &data.accountName);
-  ImGui::Text ("Password");
+  ImGui::TextUnformatted ("Password");
   ImGui::InputText ("##account-password", &data.password, ImGuiInputTextFlags_Password);
   data.backToLoginClicked = ImGui::Button ("Back");
   ImGui::PopDisabled (shouldLockScreen, time);
@@ -409,16 +410,16 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
     }
   chatScreen (chatData, shouldLockScreen, time);
   ImGui::PushDisabled (shouldLockScreen, time);
-  ImGui::Text ("Create Game Lobby");
-  ImGui::Text ("Game Lobby Name");
+  ImGui::TextUnformatted ("Create Game Lobby");
+  ImGui::TextUnformatted ("Game Lobby Name");
   ImGui::InputText ("##CreateGameLobbyName", &data.createGameLobbyName);
-  ImGui::Text ("Game Lobby Password");
+  ImGui::TextUnformatted ("Game Lobby Password");
   ImGui::InputText ("##CreateGameLobbyPassword", &data.createGameLobbyPassword);
   data.createCreateGameLobbyClicked = ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0));
-  ImGui::Text ("Join Game Lobby");
-  ImGui::Text ("Game Lobby Name");
+  ImGui::TextUnformatted ("Join Game Lobby");
+  ImGui::TextUnformatted ("Game Lobby Name");
   ImGui::InputText ("##JoinGameLobbyName", &data.joinGameLobbyName);
-  ImGui::Text ("Game Lobby Password");
+  ImGui::TextUnformatted ("Game Lobby Password");
   ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword);
   data.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
   data.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
@@ -429,7 +430,7 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
 void
 gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
 {
-  ImGui::Text (std::string{ "Round: " + std::to_string (game.gameData.round) }.c_str ());
+  ImGui::TextUnformatted (std::string{ "Round: " + std::to_string (game.gameData.round) }.c_str ());
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
   auto time = std::chrono::milliseconds{};
@@ -438,11 +439,11 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
   chatScreen (chatData, shouldLockScreen, time);
-  ImGui::Text ("Table");
+  ImGui::TextUnformatted ("Table");
   if (game.gameData.table.empty ())
     {
       ImGui::SameLine ();
-      ImGui::Text ("Empty Table");
+      ImGui::TextUnformatted ("Empty Table");
     }
   if (not game.selectedCardFromTable || game.gameData.table.size () <= game.selectedCardFromTable.value () || game.gameData.table.at (game.selectedCardFromTable.value ()).second)
     {
@@ -462,9 +463,9 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
     {
       currentPlayerRole = currentPlayer->playerRole;
     }
-  for (size_t i = 0; game.gameData.table.size () > i; i++)
+  for (int i = 0; game.gameData.table.size () > boost::numeric_cast<size_t> (i); i++)
     {
-      auto const &[card, optionalCard] = game.gameData.table.at (i);
+      auto const &[card, optionalCard] = game.gameData.table.at (boost::numeric_cast<size_t> (i));
       drawCard (card);
       if (optionalCard)
         {
@@ -473,13 +474,13 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
         }
       if (game.selectedCardFromTable && currentPlayerRole == durak::PlayerRole::defend && not optionalCard)
         {
-          int selectedValue = game.selectedCardFromTable.value ();
+          int selectedValue = boost::numeric_cast<int> (game.selectedCardFromTable.value ());
           ImGui::SameLine ();
           ImGui::RadioButton (std::string{ "##defend" + std::to_string (i) }.c_str (), &selectedValue, i);
-          game.selectedCardFromTable = static_cast<size_t> (selectedValue);
+          game.selectedCardFromTable = boost::numeric_cast<size_t> (selectedValue);
         }
     }
-  ImGui::Text ("Trump:");
+  ImGui::TextUnformatted ("Trump:");
   ImGui::SameLine ();
   drawType (game.gameData.trump);
   if (currentPlayer = ranges::find_if (game.gameData.players, [&accountName] (durak::PlayerData const &playerData) { return accountName == playerData.name; }); currentPlayer != game.gameData.players.end ())
@@ -512,14 +513,14 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
           else
             {
               ImGui::SameLine ();
-              ImGui::Text ("Card: {? ,?}");
+              ImGui::TextUnformatted ("Card: {? ,?}");
             }
         }
     }
-  ImGui::Text ("Other Players:");
+  ImGui::TextUnformatted ("Other Players:");
   for (auto const &player : game.gameData.players | ranges::views::filter ([&accountName] (durak::PlayerData const &playerData) { return accountName != playerData.name; }))
     {
-      ImGui::Text (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
+      ImGui::TextUnformatted (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
     }
   game.placeSelectedCardsOnTable = ImGui::Button ("Place selected Cards on Table", ImVec2 (-1, 0));
   if (currentPlayerRole == durak::PlayerRole::defend)
