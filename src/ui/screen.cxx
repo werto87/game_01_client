@@ -481,6 +481,13 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
           game.selectedCardFromTable = boost::numeric_cast<size_t> (selectedValue);
         }
     }
+  ImGui::TextUnformatted (fmt::format ("Cards in Deck: {}", game.gameData.cardsInDeck).c_str ());
+  if (game.gameData.lastCardInDeck)
+    {
+      ImGui::TextUnformatted ("Last Card:");
+      ImGui::SameLine ();
+      drawCard (game.gameData.lastCardInDeck.value ());
+    }
   ImGui::TextUnformatted ("Trump:");
   ImGui::SameLine ();
   drawType (game.gameData.trump);
