@@ -207,7 +207,6 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       ImGui::PushDisabled (shouldLockScreen, time);
       createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
       ImGui::PopDisabled (shouldLockScreen, time);
-
       ImGui::TextUnformatted ("set max card value: ");
       ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::InputInt ("##maxCardValue", &createGameLobby.maxCardValue);
@@ -218,7 +217,6 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
     }
   else
     {
-
       ImGui::TextUnformatted (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobby) }.c_str ());
       ImGui::TextUnformatted (std::string{ "max card value: " + std::to_string (createGameLobby.maxCardValue) }.c_str ());
     }
@@ -228,7 +226,10 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       ImGui::TextUnformatted (lobbyMemberAccountName.c_str ());
     }
   ImGui::PushDisabled (shouldLockScreen, time);
-  createGameLobby.startGame = ImGui::Button ("Start Game", ImVec2 (-1, 0));
+  if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
+    {
+      createGameLobby.startGame = ImGui::Button ("Start Game", ImVec2 (-1, 0));
+    }
   createGameLobby.leaveGameLobby = ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0));
   ImGui::PopDisabled (shouldLockScreen, time);
   ImGui::PopItemWidth ();
