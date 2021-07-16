@@ -22,7 +22,8 @@ struct LoginStateMachine
 , state<LoginWaitForServer>           + event<shared_class::LoginAccountError>    / setErrorEvent
 , state<LoginWaitForServer>           + event<shared_class::WantToRelog>          / (setAccountName,showWantToRelog)
 , state<LoginWaitForServer>           + event<shared_class::LoginAccountSuccess>  / (setAccountName,process(makeGameMachine{}))         = X      
-, state<LoginWaitForServer>           + event<shared_class::RelogToSuccess>       / process(goToCreateGameLobby{})                      = X
+, state<LoginWaitForServer>           + event<shared_class::RelogToCreateGameLobbySuccess>       / process(goToCreateGameLobby{})                      = X
+, state<LoginWaitForServer>           + event<shared_class::RelogToGameSuccess>      / process(goToGame{})                      = X
 , state<LoginWaitForServer>           + event<login>                                                                                    = state<Login>
 , state<LoginWaitForServer>           + event<draw>                               / (drawLogin,evalLoginWaitForServer)         
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      

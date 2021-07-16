@@ -16,6 +16,10 @@ struct goToCreateGameLobby
 {
 };
 
+struct goToGame
+{
+};
+
 struct login
 {
 };

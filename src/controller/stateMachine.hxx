@@ -25,10 +25,13 @@ struct WrapperMachine
         // clang-format off
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 * state<LoginStateMachine>  + event<makeGameMachine>                                                                                                    = state<MakeGameMachine>
-, state<MakeGameMachine>    + event<shared_class::LogoutAccountSuccess> / (reset, resetGameMachineData)                                                 = state<LoginStateMachine>
 , state<LoginStateMachine>  + event<goToCreateGameLobby>                                                                                                = state<MakeGameMachine>
+, state<LoginStateMachine>  + event<goToGame>                                                                                                           = state<PlayTheGame>
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
+, state<MakeGameMachine>    + event<shared_class::LogoutAccountSuccess> / (reset, resetGameMachineData)                                                 = state<LoginStateMachine>
 , state<MakeGameMachine>    + sml::on_entry<goToCreateGameLobby>        / (process(lobbyWaitForServer{}),process(shared_class::JoinGameLobbySuccess{}))
 , state<MakeGameMachine>    + event<startGame>                                                                                                          = state<PlayTheGame>
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/      
 , state<PlayTheGame>        + sml::on_entry<_>                          / reset
 , state<PlayTheGame>        + event<goToLobby>                                                                                                          = state<MakeGameMachine>
 ,*"error_handler"_s         + unexpected_event<_>                       / [](auto const& event){std::cout<<"unhandled event: '"<<typeNameWithOutNamespace(event)<<"'"<<std::endl;}

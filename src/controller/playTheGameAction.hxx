@@ -170,7 +170,7 @@ auto const evalGame = [] (MessageBoxPopup &messageBoxPopup, Game &game, MakeGame
 };
 
 auto const evalGameWaitForServer = [] (MessageBoxPopup &messageBoxPopup, MessagesToSendToServer &messagesToSendToServer, sml::back::process<game, leaveGame> process_event) {
-  if (std::holds_alternative<shared_class::DurakAttackError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendPassError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendWantsToTakeCardsFromTableDoYouWantToAddCards> (messageBoxPopup.event))
+  if (std::holds_alternative<shared_class::DurakAttackError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendPassError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakDefendWantsToTakeCardsFromTableDoYouWantToAddCards> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakAttackPassError> (messageBoxPopup.event) || std::holds_alternative<shared_class::DurakAssistPassError> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed) process_event (game{});
     }
