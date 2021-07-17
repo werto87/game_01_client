@@ -16,7 +16,7 @@ namespace sml = boost::sml;
 
 auto const showWantToRelog = [] (shared_class::WantToRelog const &wantToRelog, MessageBoxPopup &messageBoxPopup) {
   messageBoxPopup.event = wantToRelog;
-  messageBoxPopup.buttons = std::vector<Button>{ { .name = "Lobby", .pressed = false, .disabled = false }, { .name = "Back to Create Game Lobby", .pressed = false, .disabled = false } };
+  messageBoxPopup.buttons = std::vector<Button>{ { .name = "Lobby", .pressed = false, .disabled = false }, { .name = "Back to " + wantToRelog.destination, .pressed = false, .disabled = false } };
   messageBoxPopup.message = "Do you want to go back to " + wantToRelog.destination;
 };
 
