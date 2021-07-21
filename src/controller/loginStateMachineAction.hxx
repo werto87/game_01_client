@@ -32,14 +32,14 @@ auto const evalLogin = [] (Login &login, MessagesToSendToServer &messagesToSendT
   if (login.createAccountClicked) process_event (createAccount{});
 };
 
-auto const evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForServer, MessagesToSendToServer &messagesToSendToServer, MessageBoxPopup &messageBoxPopup, sml::back::process<login, shared_class::LoginAccountSuccess> process_event) {
+auto const evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForServer, MessagesToSendToServer &messagesToSendToServer, MessageBoxPopup &messageBoxPopup, MakeGameMachineData &makeGameMachineData, sml::back::process<login, shared_class::LoginAccountSuccess> process_event) {
   if (std::holds_alternative<shared_class::WantToRelog> (messageBoxPopup.event))
     {
       if (messageBoxPopup.buttons.front ().pressed)
         {
           messageBoxPopup.buttons.front ().disabled = true;
           messageBoxPopup.buttons.back ().disabled = true;
-          process_event (shared_class::LoginAccountSuccess{});
+          process_event (shared_class::LoginAccountSuccess{ makeGameMachineData.accountName });
           auto relogTo = shared_class::RelogTo{};
           relogTo.wantsToRelog = false;
           sendObject (messagesToSendToServer.messagesToSendToServer, relogTo);

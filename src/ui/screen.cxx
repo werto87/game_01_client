@@ -19,6 +19,7 @@
 #include <range/v3/all.hpp>
 #include <sstream>
 #include <string>
+#include <type_traits>
 
 namespace ImGui
 {
@@ -54,6 +55,26 @@ PopDisabled (bool enabled, std::chrono::milliseconds const &time)
         {
           PopStyleVar ();
         }
+    }
+}
+
+template <IsEnum E>
+void
+EnumCombo (E &myEnum)
+{
+  auto item = std::string{ magic_enum::enum_name (myEnum) };
+  auto current_item = item.c_str ();
+  if (ImGui::BeginCombo ("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
+    {
+      for (auto n = 0UL; n < magic_enum::enum_count<E> (); n++)
+        {
+          auto tmpItem = std::string{ magic_enum::enum_name (static_cast<E> (n)) };
+          auto tmp_current_item = tmpItem.c_str ();
+          bool is_selected = (current_item == tmp_current_item); // You can store your selection however you want, outside or inside your objects
+          if (ImGui::Selectable (tmp_current_item, is_selected)) myEnum = static_cast<E> (n);
+          if (is_selected) ImGui::SetItemDefaultFocus (); // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+        }
+      ImGui::EndCombo ();
     }
 }
 
@@ -190,30 +211,6 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
 }
 
 void
-combo (shared_class::TimerType &timerType)
-{
-  auto item = std::string{ magic_enum::enum_name (timerType) };
-  auto current_item = item.c_str ();
-  // TODO fix this sad c mess
-  // TODO hide controlls if not admin
-  // TODO hide timers when noTimer is selected
-  // TODO add button to send
-
-  if (ImGui::BeginCombo ("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
-    {
-      for (auto n = 0UL; n < magic_enum::enum_count<shared_class::TimerType> (); n++)
-        {
-          auto tmpItem = std::string{ magic_enum::enum_name (static_cast<shared_class::TimerType> (n)) };
-          auto tmp_current_item = tmpItem.c_str ();
-          bool is_selected = (current_item == tmp_current_item); // You can store your selection however you want, outside or inside your objects
-          if (ImGui::Selectable (tmp_current_item, is_selected)) timerType = static_cast<shared_class::TimerType> (n);
-          if (is_selected) ImGui::SetItemDefaultFocus (); // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
-        }
-      ImGui::EndCombo ();
-    }
-}
-
-void
 createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData)
 {
   ImGui::PushItemWidth (-1);
@@ -224,7 +221,6 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
   chatScreen (chatData, shouldLockScreen, time);
-
   if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
       ImGui::TextUnformatted ("set max user count: ");
@@ -246,7 +242,7 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       ImGui::TextUnformatted ("Timer Type: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
-      combo (createGameLobby.timerOption.timerType);
+      ImGui::EnumCombo (createGameLobby.timerOption.timerType);
       ImGui::PopDisabled (shouldLockScreen, time);
       if (createGameLobby.timerOption.timerType != shared_class::TimerType::noTimer)
         {
@@ -485,6 +481,31 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
 }
 
 void
+timeLeft (shared_class::DurakTimers const &timers, std::string const &playerNameToLookFor)
+{
+  using namespace std::chrono;
+  if (auto pausedTimer = ranges::find_if (timers.pausedTimeUserDurationMilliseconds,
+                                          [playerNameToLookFor] (auto const &playerNameAndTimer) {
+                                            auto [playerName, timer] = playerNameAndTimer;
+                                            return playerName == playerNameToLookFor;
+                                          });
+      pausedTimer != timers.pausedTimeUserDurationMilliseconds.end ())
+    {
+      ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (milliseconds (pausedTimer->second)).count ()).c_str ());
+    }
+  else if (auto runningTimer = ranges::find_if (timers.runningTimeUserTimePointMilliseconds,
+                                                [playerNameToLookFor] (auto const &playerNameAndTimer) {
+                                                  auto [playerName, timer] = playerNameAndTimer;
+                                                  return playerName == playerNameToLookFor;
+                                                });
+           runningTimer != timers.runningTimeUserTimePointMilliseconds.end ())
+    {
+      auto const timeOutTimePoint = time_point<system_clock, milliseconds>{ milliseconds{ runningTimer->second } };
+      ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (timeOutTimePoint - system_clock::now ()).count ()).c_str ());
+    }
+}
+
+void
 gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
 {
   ImGui::TextUnformatted (std::string{ "Round: " + std::to_string (game.gameData.round) }.c_str ());
@@ -581,50 +602,12 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
             }
         }
     }
-  using namespace std::chrono;
-  if (auto pausedTimer = ranges::find_if (game.timers.pausedTimeUserDurationMilliseconds,
-                                          [playerNameToLookFor = currentPlayer->name] (auto const &playerNameAndTimer) {
-                                            auto [playerName, timer] = playerNameAndTimer;
-                                            return playerName == playerNameToLookFor;
-                                          });
-      pausedTimer != game.timers.pausedTimeUserDurationMilliseconds.end ())
-    {
-      ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (milliseconds (pausedTimer->second)).count ()).c_str ());
-    }
-  else if (auto runningTimer = ranges::find_if (game.timers.runningTimeUserTimePointMilliseconds,
-                                                [playerNameToLookFor = currentPlayer->name] (auto const &playerNameAndTimer) {
-                                                  auto [playerName, timer] = playerNameAndTimer;
-                                                  return playerName == playerNameToLookFor;
-                                                });
-           runningTimer != game.timers.runningTimeUserTimePointMilliseconds.end ())
-    {
-      auto const timeOutTimePoint = time_point<system_clock, milliseconds>{ milliseconds{ runningTimer->second } };
-      ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (timeOutTimePoint - system_clock::now ()).count ()).c_str ());
-    }
+  timeLeft (game.timers, currentPlayer->name);
   ImGui::TextUnformatted ("Other Players:");
   for (auto const &player : game.gameData.players | ranges::views::filter ([&accountName] (durak::PlayerData const &playerData) { return accountName != playerData.name; }))
     {
       ImGui::TextUnformatted (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
-      using namespace std::chrono;
-      if (auto pausedTimer = ranges::find_if (game.timers.pausedTimeUserDurationMilliseconds,
-                                              [playerNameToLookFor = player.name] (auto const &playerNameAndTimer) {
-                                                auto [playerName, timer] = playerNameAndTimer;
-                                                return playerName == playerNameToLookFor;
-                                              });
-          pausedTimer != game.timers.pausedTimeUserDurationMilliseconds.end ())
-        {
-          ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (milliseconds (pausedTimer->second)).count ()).c_str ());
-        }
-      else if (auto runningTimer = ranges::find_if (game.timers.runningTimeUserTimePointMilliseconds,
-                                                    [playerNameToLookFor = player.name] (auto const &playerNameAndTimer) {
-                                                      auto [playerName, timer] = playerNameAndTimer;
-                                                      return playerName == playerNameToLookFor;
-                                                    });
-               runningTimer != game.timers.runningTimeUserTimePointMilliseconds.end ())
-        {
-          auto const timeOutTimePoint = time_point<system_clock, milliseconds>{ milliseconds{ runningTimer->second } };
-          ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (timeOutTimePoint - system_clock::now ()).count ()).c_str ());
-        }
+      timeLeft (game.timers, player.name);
     }
   game.placeSelectedCardsOnTable = ImGui::Button ("Place selected Cards on Table", ImVec2 (-1, 0));
   if (currentPlayerRole == durak::PlayerRole::defend)
