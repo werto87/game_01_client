@@ -8,7 +8,6 @@
 Note: 
 - Only tested on linux
 ### Prerequisite
-- Running Modern Durak Server at localhost:55555
 - Conan Package Manager - "https://conan.io/downloads.html"
 - Cmake - "https://cmake.org/download/"
 - Emsdk (version 2.0.10) - "https://emscripten.org/docs/getting_started/downloads.html"
@@ -29,6 +28,9 @@ Follow the instructions in this readme "https://gitlab.com/werto87/conan-the-exa
 - Configure cmake 'emcmake cmake .. -DCMAKE_BUILD_TYPE=Debug'
 - Build Modern Durak Client 'cmake --build .'
 ## How to run Modern Durak Client
+### Prerequisite
+You should have a Modern Durak Server running at localhost:55555
+### Run Modern Durak Client
 You need to run projects.html in the build folder with something which can run WebAssembly.
 Tested way of running Modern Durak Client:
 - Change into bin 'cd bin'
