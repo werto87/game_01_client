@@ -1,8 +1,5 @@
 # Modern Durak Client
-## Client which allows connecting to a Modern Durak Server
-- Create an account
-- Create a game in the lobby
-- Play the game
+Client which allows connecting to a Modern Durak Server
 
 ## How to build the Mordern Durak Client 
 Note: 
