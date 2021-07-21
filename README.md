@@ -20,7 +20,7 @@ Test the installation by running the following commands:
 
 If you get something like "command not found" please check your installation.
 ### Setup Conan Package Manager
-Follow the instructions in this readme "https://gitlab.com/werto87/conan-the-example"
+Follow the instructions in this README "https://gitlab.com/werto87/conan-the-example"
 ### Build the Modern Durak Client
 - Clone the repo 'git clone https://github.com/werto87/game_01_client.git'
 - Change into cloned repo 'cd game_01_client/'
