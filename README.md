@@ -33,7 +33,6 @@ You should have a Modern Durak Server running at localhost:55555
 ### Run Modern Durak Client
 You need to run projects.html in the build folder with something which can run WebAssembly.
 Tested way of running Modern Durak Client:
-- Change into bin 'cd bin'
 - Serve the bin folder, for example with 'python -m http.server' (Python 3.9.5)
 - Use a browser to open project.html (tested with Google Chrome 91.0.4472.77)
 
