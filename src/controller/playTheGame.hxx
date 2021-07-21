@@ -47,6 +47,7 @@ struct PlayTheGame
 , "anystate"_s              + event<shared_class::DurakGameOverLose>                                          / setDurakGameOverLose
 , "anystate"_s              + event<shared_class::DurakGameOverDraw>                                          / setDurakGameOverDraw
 , "anystate"_s              + event<durak::GameData>                                                          / setGameData                                                       
+, "anystate"_s              + event<shared_class::DurakTimers>                                                / setTimers                                                       
 , "anystate"_s              + event<leaveGame>                                                                / process(goToLobby{})                                              = X
 );
     // clang-format on

@@ -3,10 +3,11 @@
 
 #include <cstddef>
 #include <durak/gameData.hxx>
-
+#include <game_01_shared_class/serialization.hxx>
 struct Game
 {
   durak::GameData gameData{};
+  shared_class::DurakTimers timers{};
   std::vector<bool> selectedCards{};
   boost::optional<size_t> selectedCardFromTable{};
   bool placeSelectedCardsOnTable{};

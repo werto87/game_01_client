@@ -37,6 +37,7 @@ struct MakeGameMachine
 , state<CreateGameLobby>              + event<shared_class::MaxUserSizeInCreateGameLobby>         /reactToMaxUserSizeInCreateGameLobby                    
 , state<CreateGameLobby>              + event<shared_class::MaxCardValueInCreateGameLobby>        /reactToMaxCardValueInCreateGameLobby                   
 , state<CreateGameLobby>              + event<draw>                                               / (drawCreateGameLobby,evalCreateGameLobby)  
+, state<CreateGameLobby>              + event<shared_class::SetTimerOption>                       / setTimerOption  
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 , state<CreateGameLobbyWaitForServer> + on_entry<_>                                               / setCreateGameLobbyWaitForServer
 , state<CreateGameLobbyWaitForServer> + event<shared_class::Message>                              / reactToMessage                                         = state<CreateGameLobby>
@@ -48,6 +49,7 @@ struct MakeGameMachine
 , state<CreateGameLobbyWaitForServer> + event<lobby>                                                                                                       = state<Lobby>
 , state<CreateGameLobbyWaitForServer> + event<shared_class::StartGame>                            / process(startGame{})                                   = X
 , state<CreateGameLobbyWaitForServer> + event<draw>                                               / (drawCreateGameLobby,evalCreateGameLobbyWaitForServer)         
+, state<CreateGameLobbyWaitForServer> + event<shared_class::SetTimerOption>                       / setTimerOption                                         = state<CreateGameLobby> 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 );
     // clang-format on 

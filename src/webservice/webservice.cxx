@@ -25,7 +25,6 @@ onclose (int /*eventType*/, const EmscriptenWebSocketCloseEvent * /*websocketEve
 EM_BOOL
 onmessage (int /*eventType*/, const EmscriptenWebSocketMessageEvent *websocketEvent, void *userData)
 {
-  std::cout << "on_message" << std::endl;
   if (websocketEvent->isText)
     {
       std::stringstream ss{};

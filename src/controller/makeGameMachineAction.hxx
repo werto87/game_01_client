@@ -25,6 +25,8 @@ auto const setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopu
   waitForServer->clock_wait = timer::now ();
 };
 
+auto const setTimerOption = [] (shared_class::SetTimerOption const &setTimerOptionEv, CreateGameLobby &createGameLobby) { createGameLobby.timerOption = setTimerOptionEv; };
+
 auto const reactToUsersInGameLobby = [] (shared_class::UsersInGameLobby const &usersInGameLobby, CreateGameLobby &createGameLobby) {
   createGameLobby.accountNamesInGameLobby.clear ();
   std::transform (usersInGameLobby.users.begin (), usersInGameLobby.users.end (), std::back_inserter (createGameLobby.accountNamesInGameLobby), [] (shared_class::UserInGameLobby const &user) { return user.accountName; });
@@ -120,6 +122,11 @@ auto const evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameM
       setMaxCardValueInCreateGameLobby.createGameLobbyName = createGameLobby.gameLobbyName;
       setMaxCardValueInCreateGameLobby.maxCardValue = static_cast<u_int16_t> (createGameLobby.maxCardValue);
       sendObject (messagesToSendToServer.messagesToSendToServer, setMaxCardValueInCreateGameLobby);
+    }
+  else if (createGameLobby.sendTimerOptionClicked)
+    {
+      process_event (createGameLobbyWaitForServer{});
+      sendObject (messagesToSendToServer.messagesToSendToServer, createGameLobby.timerOption);
     }
   else if (makeGameMachineData.chatData.joinChannelClicked && not makeGameMachineData.chatData.channelToJoin.empty ())
     {

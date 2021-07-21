@@ -10,10 +10,12 @@
 #include <durak/gameData.hxx>
 #include <durak/print.hxx>
 #include <fmt/core.h>
+#include <game_01_shared_class/serialization.hxx>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <iterator>
 #include <magic_enum.hpp>
+#include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/all.hpp>
 #include <sstream>
 #include <string>
@@ -188,6 +190,30 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
 }
 
 void
+combo (shared_class::TimerType &timerType)
+{
+  auto item = std::string{ magic_enum::enum_name (timerType) };
+  auto current_item = item.c_str ();
+  // TODO fix this sad c mess
+  // TODO hide controlls if not admin
+  // TODO hide timers when noTimer is selected
+  // TODO add button to send
+
+  if (ImGui::BeginCombo ("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
+    {
+      for (auto n = 0UL; n < magic_enum::enum_count<shared_class::TimerType> (); n++)
+        {
+          auto tmpItem = std::string{ magic_enum::enum_name (static_cast<shared_class::TimerType> (n)) };
+          auto tmp_current_item = tmpItem.c_str ();
+          bool is_selected = (current_item == tmp_current_item); // You can store your selection however you want, outside or inside your objects
+          if (ImGui::Selectable (tmp_current_item, is_selected)) timerType = static_cast<shared_class::TimerType> (n);
+          if (is_selected) ImGui::SetItemDefaultFocus (); // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+        }
+      ImGui::EndCombo ();
+    }
+}
+
+void
 createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData)
 {
   ImGui::PushItemWidth (-1);
@@ -198,9 +224,32 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
   chatScreen (chatData, shouldLockScreen, time);
+
   if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
+      ImGui::TextUnformatted ("Timer Type: ");
+      ImGui::SameLine ();
+      ImGui::PushDisabled (shouldLockScreen, time);
+      combo (createGameLobby.timerOption.timerType);
+      ImGui::PopDisabled (shouldLockScreen, time);
+      if (createGameLobby.timerOption.timerType != shared_class::TimerType::noTimer)
+        {
+          ImGui::TextUnformatted ("Time at Start in Seconds: ");
+          ImGui::SameLine ();
+          ImGui::PushDisabled (shouldLockScreen, time);
+          ImGui::InputInt ("##MaxUserCount", &createGameLobby.timerOption.timeAtStartInSeconds);
+          ImGui::PopDisabled (shouldLockScreen, time);
+          ImGui::TextUnformatted ("Time for each Round in Seconds: ");
+          ImGui::SameLine ();
+          ImGui::PushDisabled (shouldLockScreen, time);
+          ImGui::InputInt ("##MaxUserCount", &createGameLobby.timerOption.timeForEachRoundInSeconds);
+          ImGui::PopDisabled (shouldLockScreen, time);
+        }
+      ImGui::PushDisabled (shouldLockScreen, time);
+      createGameLobby.sendTimerOptionClicked = ImGui::Button ("set timer", ImVec2 (-1, 0));
+      ImGui::PopDisabled (shouldLockScreen, time);
       ImGui::TextUnformatted ("set max user count: ");
+      ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
       ImGui::PopDisabled (shouldLockScreen, time);
@@ -208,6 +257,7 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
       ImGui::PopDisabled (shouldLockScreen, time);
       ImGui::TextUnformatted ("set max card value: ");
+      ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::InputInt ("##maxCardValue", &createGameLobby.maxCardValue);
       ImGui::PopDisabled (shouldLockScreen, time);
@@ -217,6 +267,12 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
     }
   else
     {
+      ImGui::TextUnformatted (std::string{ "Timer Type: " + std::string{ magic_enum::enum_name (createGameLobby.timerOption.timerType) } }.c_str ());
+      if (createGameLobby.timerOption.timerType != shared_class::TimerType::noTimer)
+        {
+          ImGui::TextUnformatted (fmt::format ("Time at Start in Seconds:  {}", createGameLobby.timerOption.timeAtStartInSeconds).c_str ());
+          ImGui::TextUnformatted (fmt::format ("Time for each Round in Seconds: {}", createGameLobby.timerOption.timeForEachRoundInSeconds).c_str ());
+        }
       ImGui::TextUnformatted (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobby) }.c_str ());
       ImGui::TextUnformatted (std::string{ "max card value: " + std::to_string (createGameLobby.maxCardValue) }.c_str ());
     }
@@ -491,7 +547,7 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
   ImGui::TextUnformatted ("Trump:");
   ImGui::SameLine ();
   drawType (game.gameData.trump);
-  if (currentPlayer = ranges::find_if (game.gameData.players, [&accountName] (durak::PlayerData const &playerData) { return accountName == playerData.name; }); currentPlayer != game.gameData.players.end ())
+  if (currentPlayer != game.gameData.players.end ())
     {
       for (size_t i = 0; i < currentPlayer->cards.size (); i++)
         {
@@ -525,10 +581,50 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
             }
         }
     }
+  using namespace std::chrono;
+  if (auto pausedTimer = ranges::find_if (game.timers.pausedTimeUserDurationMilliseconds,
+                                          [playerNameToLookFor = currentPlayer->name] (auto const &playerNameAndTimer) {
+                                            auto [playerName, timer] = playerNameAndTimer;
+                                            return playerName == playerNameToLookFor;
+                                          });
+      pausedTimer != game.timers.pausedTimeUserDurationMilliseconds.end ())
+    {
+      ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (milliseconds (pausedTimer->second)).count ()).c_str ());
+    }
+  else if (auto runningTimer = ranges::find_if (game.timers.runningTimeUserTimePointMilliseconds,
+                                                [playerNameToLookFor = currentPlayer->name] (auto const &playerNameAndTimer) {
+                                                  auto [playerName, timer] = playerNameAndTimer;
+                                                  return playerName == playerNameToLookFor;
+                                                });
+           runningTimer != game.timers.runningTimeUserTimePointMilliseconds.end ())
+    {
+      auto const timeOutTimePoint = time_point<system_clock, milliseconds>{ milliseconds{ runningTimer->second } };
+      ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (timeOutTimePoint - system_clock::now ()).count ()).c_str ());
+    }
   ImGui::TextUnformatted ("Other Players:");
   for (auto const &player : game.gameData.players | ranges::views::filter ([&accountName] (durak::PlayerData const &playerData) { return accountName != playerData.name; }))
     {
       ImGui::TextUnformatted (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
+      using namespace std::chrono;
+      if (auto pausedTimer = ranges::find_if (game.timers.pausedTimeUserDurationMilliseconds,
+                                              [playerNameToLookFor = player.name] (auto const &playerNameAndTimer) {
+                                                auto [playerName, timer] = playerNameAndTimer;
+                                                return playerName == playerNameToLookFor;
+                                              });
+          pausedTimer != game.timers.pausedTimeUserDurationMilliseconds.end ())
+        {
+          ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (milliseconds (pausedTimer->second)).count ()).c_str ());
+        }
+      else if (auto runningTimer = ranges::find_if (game.timers.runningTimeUserTimePointMilliseconds,
+                                                    [playerNameToLookFor = player.name] (auto const &playerNameAndTimer) {
+                                                      auto [playerName, timer] = playerNameAndTimer;
+                                                      return playerName == playerNameToLookFor;
+                                                    });
+               runningTimer != game.timers.runningTimeUserTimePointMilliseconds.end ())
+        {
+          auto const timeOutTimePoint = time_point<system_clock, milliseconds>{ milliseconds{ runningTimer->second } };
+          ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (timeOutTimePoint - system_clock::now ()).count ()).c_str ());
+        }
     }
   game.placeSelectedCardsOnTable = ImGui::Button ("Place selected Cards on Table", ImVec2 (-1, 0));
   if (currentPlayerRole == durak::PlayerRole::defend)

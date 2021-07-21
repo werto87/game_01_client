@@ -23,6 +23,8 @@ auto const setGameData = [] (durak::GameData const &gameDataEv, Game &game, Make
       }
 };
 
+auto const setTimers = [] (shared_class::DurakTimers durakTimers, Game &game) { game.timers = durakTimers; };
+
 auto const setDurakDefendWantsToTakeCardsFromTableDoYouWantToAddCardsEvent = [] (MessageBoxPopup &messageBoxPopup, auto const &event) {
   messageBoxPopup.event = event;
   messageBoxPopup.message = "Defend wants to take Cards. You can add cards. Pass if you are done";
