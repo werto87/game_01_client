@@ -227,27 +227,6 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
 
   if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
-      ImGui::TextUnformatted ("Timer Type: ");
-      ImGui::SameLine ();
-      ImGui::PushDisabled (shouldLockScreen, time);
-      combo (createGameLobby.timerOption.timerType);
-      ImGui::PopDisabled (shouldLockScreen, time);
-      if (createGameLobby.timerOption.timerType != shared_class::TimerType::noTimer)
-        {
-          ImGui::TextUnformatted ("Time at Start in Seconds: ");
-          ImGui::SameLine ();
-          ImGui::PushDisabled (shouldLockScreen, time);
-          ImGui::InputInt ("##MaxUserCount", &createGameLobby.timerOption.timeAtStartInSeconds);
-          ImGui::PopDisabled (shouldLockScreen, time);
-          ImGui::TextUnformatted ("Time for each Round in Seconds: ");
-          ImGui::SameLine ();
-          ImGui::PushDisabled (shouldLockScreen, time);
-          ImGui::InputInt ("##MaxUserCount", &createGameLobby.timerOption.timeForEachRoundInSeconds);
-          ImGui::PopDisabled (shouldLockScreen, time);
-        }
-      ImGui::PushDisabled (shouldLockScreen, time);
-      createGameLobby.sendTimerOptionClicked = ImGui::Button ("set timer", ImVec2 (-1, 0));
-      ImGui::PopDisabled (shouldLockScreen, time);
       ImGui::TextUnformatted ("set max user count: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
@@ -264,17 +243,38 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       ImGui::PushDisabled (shouldLockScreen, time);
       createGameLobby.sendMaxCardValueClicked = ImGui::Button ("set max card value", ImVec2 (-1, 0));
       ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::TextUnformatted ("Timer Type: ");
+      ImGui::SameLine ();
+      ImGui::PushDisabled (shouldLockScreen, time);
+      combo (createGameLobby.timerOption.timerType);
+      ImGui::PopDisabled (shouldLockScreen, time);
+      if (createGameLobby.timerOption.timerType != shared_class::TimerType::noTimer)
+        {
+          ImGui::TextUnformatted ("Time at Start in Seconds: ");
+          ImGui::SameLine ();
+          ImGui::PushDisabled (shouldLockScreen, time);
+          ImGui::InputInt ("##timeAtStartInSeconds", &createGameLobby.timerOption.timeAtStartInSeconds);
+          ImGui::PopDisabled (shouldLockScreen, time);
+          ImGui::TextUnformatted ("Time for each Round in Seconds: ");
+          ImGui::SameLine ();
+          ImGui::PushDisabled (shouldLockScreen, time);
+          ImGui::InputInt ("##timeForEachRoundInSeconds", &createGameLobby.timerOption.timeForEachRoundInSeconds);
+          ImGui::PopDisabled (shouldLockScreen, time);
+        }
+      ImGui::PushDisabled (shouldLockScreen, time);
+      createGameLobby.sendTimerOptionClicked = ImGui::Button ("set timer", ImVec2 (-1, 0));
+      ImGui::PopDisabled (shouldLockScreen, time);
     }
   else
     {
+      ImGui::TextUnformatted (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobby) }.c_str ());
+      ImGui::TextUnformatted (std::string{ "max card value: " + std::to_string (createGameLobby.maxCardValue) }.c_str ());
       ImGui::TextUnformatted (std::string{ "Timer Type: " + std::string{ magic_enum::enum_name (createGameLobby.timerOption.timerType) } }.c_str ());
       if (createGameLobby.timerOption.timerType != shared_class::TimerType::noTimer)
         {
           ImGui::TextUnformatted (fmt::format ("Time at Start in Seconds:  {}", createGameLobby.timerOption.timeAtStartInSeconds).c_str ());
           ImGui::TextUnformatted (fmt::format ("Time for each Round in Seconds: {}", createGameLobby.timerOption.timeForEachRoundInSeconds).c_str ());
         }
-      ImGui::TextUnformatted (std::string{ "max user count: " + std::to_string (createGameLobby.maxUserInGameLobby) }.c_str ());
-      ImGui::TextUnformatted (std::string{ "max card value: " + std::to_string (createGameLobby.maxCardValue) }.c_str ());
     }
   ImGui::TextUnformatted ("user in lobby:");
   for (auto &lobbyMemberAccountName : createGameLobby.accountNamesInGameLobby)
@@ -342,10 +342,10 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
     }
   ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-  ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to XYZ").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
+  ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to Modern Durak").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
   ImGui::SameLine ();
   ImGui::PushFont (&biggerFont);
-  ImGui::TextUnformatted ("Sign in to XYZ");
+  ImGui::TextUnformatted ("Sign in to Modern Durak");
   ImGui::PopFont ();
   ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
   ImGui::SameLine ();
@@ -390,9 +390,9 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
   ImGui::SameLine ();
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
   ImGui::BeginChild ("ChildR123", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 20), true, window_flags);
-  ImGui::Dummy (ImVec2 (((windowWidth / 2) - (ImGui::CalcTextSize ("New to XYZ?").x + ImGui::CalcTextSize ("create an account").x + (ImGui::GetStyle ().ItemSpacing.x * 6))) / 2, 0.0f));
+  ImGui::Dummy (ImVec2 (((windowWidth / 2) - (ImGui::CalcTextSize ("New to MD?").x + ImGui::CalcTextSize ("create an account").x + (ImGui::GetStyle ().ItemSpacing.x * 6))) / 2, 0.0f));
   ImGui::SameLine ();
-  ImGui::TextUnformatted ("New to XYZ?");
+  ImGui::TextUnformatted ("New to MD?");
   ImGui::SameLine ();
   data.createAccountClicked = ImGui::SmallButton ("Create an Account");
   ImGui::PopDisabled (shouldLockScreen, time);
