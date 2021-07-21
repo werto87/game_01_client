@@ -56,4 +56,4 @@ struct MakeGameMachine
   }
 };
 
-#endif /* FC97C1F6_192C_4811_97B2_0968FBE2E707 */
+#endif /* FC97C1F6_192C_4811_97B2_0968FBE2E707  */
