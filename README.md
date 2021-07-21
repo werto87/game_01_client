@@ -5,8 +5,10 @@
 - Play the game
 
 ## How to build the Mordern Durak Client 
-Note: only tested on linux
+Note: 
+- Only tested on linux
 ### Prerequisite
+- Running Modern Durak Server at localhost:55555
 - Conan Package Manager - "https://conan.io/downloads.html"
 - Cmake - "https://cmake.org/download/"
 - Emsdk (version 2.0.10) - "https://emscripten.org/docs/getting_started/downloads.html"
