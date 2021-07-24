@@ -1,6 +1,7 @@
 #ifndef C5C45508_B6C7_4102_BF47_8EE62A24216E
 #define C5C45508_B6C7_4102_BF47_8EE62A24216E
 
+#include "src/controller/makeGameMachineState.hxx"
 #include "src/controller/stateMachineData.hxx"
 
 class ImFont;
@@ -18,7 +19,7 @@ auto const setErrorEvent = [] (auto const &error, MessageBoxPopup &messageBoxPop
   messageBoxPopup.buttons = { { .name = "Back", .pressed = false } };
 };
 
-auto const resetPopupAndWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const resetPopupAndWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, CreateGameLobby &createGameLobby) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = std::optional<WaitForServer>{};
 };

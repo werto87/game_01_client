@@ -30,10 +30,10 @@ struct MakeGameMachine
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 , state<CreateGameLobby>              + on_entry<_>                                               / resetPopupAndWaitForServer
 , state<CreateGameLobby>              + event<createGameLobbyWaitForServer>                                                                               = state<CreateGameLobbyWaitForServer>
-, state<CreateGameLobby>              + event<lobby>                                                                                                      = state<Lobby>
+, state<CreateGameLobby>              + event<lobby>                                              / resetCreateGameLobby                                                       = state<Lobby>
 , state<CreateGameLobby>              + event<shared_class::Message>                              / reactToMessage
 , state<CreateGameLobby>              + event<shared_class::UsersInGameLobby>                     / reactToUsersInGameLobby
-, state<CreateGameLobby>              + event<shared_class::StartGame>                            / process(startGame{})                                   = X
+, state<CreateGameLobby>              + event<shared_class::StartGame>                            / (resetCreateGameLobby,process(startGame{}))                                   = X
 , state<CreateGameLobby>              + event<shared_class::MaxUserSizeInCreateGameLobby>         /reactToMaxUserSizeInCreateGameLobby                    
 , state<CreateGameLobby>              + event<shared_class::MaxCardValueInCreateGameLobby>        /reactToMaxCardValueInCreateGameLobby                   
 , state<CreateGameLobby>              + event<draw>                                               / (drawCreateGameLobby,evalCreateGameLobby)  
@@ -47,7 +47,7 @@ struct MakeGameMachine
 , state<CreateGameLobbyWaitForServer> + event<shared_class::MaxUserSizeInCreateGameLobby>          /reactToMaxUserSizeInCreateGameLobby                    = state<CreateGameLobby>
 , state<CreateGameLobbyWaitForServer> + event<shared_class::MaxCardValueInCreateGameLobby>         /reactToMaxCardValueInCreateGameLobby                   = state<CreateGameLobby>
 , state<CreateGameLobbyWaitForServer> + event<lobby>                                                                                                       = state<Lobby>
-, state<CreateGameLobbyWaitForServer> + event<shared_class::StartGame>                            / process(startGame{})                                   = X
+, state<CreateGameLobbyWaitForServer> + event<shared_class::StartGame>                            / (resetCreateGameLobby,process(startGame{}))                                   = X
 , state<CreateGameLobbyWaitForServer> + event<draw>                                               / (drawCreateGameLobby,evalCreateGameLobbyWaitForServer)         
 , state<CreateGameLobbyWaitForServer> + event<shared_class::SetTimerOption>                       / setTimerOption                                         = state<CreateGameLobby> 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

@@ -18,6 +18,8 @@ auto const setLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::op
   waitForServer->clock_wait = timer::now ();
 };
 
+auto const resetCreateGameLobby = [] (CreateGameLobby &createGameLobby) { createGameLobby = {}; };
+
 auto const setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
