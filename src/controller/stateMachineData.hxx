@@ -33,7 +33,7 @@ struct Button
   bool disabled = false;
 };
 
-typedef std::variant<std::monostate, shared_class::DurakAttackPassError, shared_class::DurakAssistPassError, shared_class::DurakLeaveGameError, shared_class::DurakGameOverDraw, shared_class::DurakGameOverWon, shared_class::DurakGameOverLose, shared_class::DurakAskDefendWantToTakeCards, shared_class::DurakAskDefendWantToTakeCardsAnswerError, shared_class::DurakDefendWantsToTakeCardsFromTableDoYouWantToAddCards, shared_class::DurakDefendPassError, shared_class::DurakDefendError, shared_class::DurakAttackError, shared_class::CreateGameLobbyError, shared_class::JoinGameLobbyError, shared_class::LoginAccountError, shared_class::WantToRelog, shared_class::CreateAccountError, shared_class::SetMaxUserSizeInCreateGameLobbyError, shared_class::SetMaxCardValueInCreateGameLobbyError> MessageBoxEvent;
+typedef std::variant<std::monostate, shared_class::RelogToError, shared_class::DurakAttackPassError, shared_class::DurakAssistPassError, shared_class::DurakLeaveGameError, shared_class::DurakGameOverDraw, shared_class::DurakGameOverWon, shared_class::DurakGameOverLose, shared_class::DurakAskDefendWantToTakeCards, shared_class::DurakAskDefendWantToTakeCardsAnswerError, shared_class::DurakDefendWantsToTakeCardsFromTableDoYouWantToAddCards, shared_class::DurakDefendPassError, shared_class::DurakDefendError, shared_class::DurakAttackError, shared_class::CreateGameLobbyError, shared_class::JoinGameLobbyError, shared_class::LoginAccountError, shared_class::WantToRelog, shared_class::CreateAccountError, shared_class::SetMaxUserSizeInCreateGameLobbyError, shared_class::SetMaxCardValueInCreateGameLobbyError> MessageBoxEvent;
 struct MessageBoxPopup
 {
   MessageBoxEvent event{};

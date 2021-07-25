@@ -60,6 +60,13 @@ auto const evalLoginWaitForServer = [] (std::optional<WaitForServer> &waitForSer
           process_event (login{});
         }
     }
+  else if (std::holds_alternative<shared_class::RelogToError> (messageBoxPopup.event))
+    {
+      if (messageBoxPopup.buttons.front ().pressed)
+        {
+          process_event (shared_class::LoginAccountSuccess{ makeGameMachineData.accountName });
+        }
+    }
   else
     {
       if (waitForServer->buttons.front ().pressed)

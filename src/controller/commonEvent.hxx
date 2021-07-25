@@ -19,6 +19,12 @@ auto const setErrorEvent = [] (auto const &error, MessageBoxPopup &messageBoxPop
   messageBoxPopup.buttons = { { .name = "Back", .pressed = false } };
 };
 
+auto const setRelogToError = [] (shared_class::RelogToError const &relogToLobby, MessageBoxPopup &messageBoxPopup) {
+  messageBoxPopup.event = relogToLobby;
+  messageBoxPopup.message = relogToLobby.error;
+  messageBoxPopup.buttons = { { .name = "Lobby", .pressed = false } };
+};
+
 auto const resetPopupAndWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, CreateGameLobby &createGameLobby) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = std::optional<WaitForServer>{};
