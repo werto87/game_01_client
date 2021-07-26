@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstddef>
 #include <durak/card.hxx>
+#include <durak/game.hxx>
 #include <durak/gameData.hxx>
 #include <durak/print.hxx>
 #include <fmt/core.h>
@@ -23,39 +24,65 @@
 
 namespace ImGui
 {
-inline void
-PushDisabled (bool enabled, std::chrono::milliseconds const &time)
+void
+PushDisabled (float alphaScale = 1.0f, bool disabled = true)
 {
-  if (enabled)
+  if (disabled)
     {
-      extern void PushItemFlag (int option, bool enabled);
-      PushItemFlag (1 << 2 /*ImGuiItemFlags_Disabled*/, !false);
+      PushItemFlag (1 << 2 /*ImGuiItemFlags_Disabled*/, true);
+      PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * alphaScale);
+    }
+}
+void
+PushDisabled (bool disabled, std::chrono::milliseconds const &time)
+{
+  if (disabled)
+    {
       using namespace std::chrono_literals;
-
       if (time > 5s)
         {
-          PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * (false ? 1.0f : 0.8f));
+          PushDisabled (0.8f);
         }
       else if (time > 200ms)
         {
-          PushStyleVar (ImGuiStyleVar_Alpha, ImGui::GetStyle ().Alpha * (false ? 1.0f : 0.9f));
+          PushDisabled (0.9f);
+        }
+      else
+        {
+          PushDisabled ();
         }
     }
 }
 
-inline void
-PopDisabled (bool enabled, std::chrono::milliseconds const &time)
+void
+PopDisabled (bool disabled)
 {
-  if (enabled)
+  if (disabled)
     {
-      extern void PopItemFlag ();
       PopItemFlag ();
-      using namespace std::chrono_literals;
-      if (time > 200ms)
-        {
-          PopStyleVar ();
-        }
+      PopStyleVar ();
     }
+}
+
+bool
+DisableAndDimButtonOnTimeAndCondition (std::string const &label, bool disabled, ImVec2 const &size = ImVec2 (-1, 0), std::chrono::milliseconds const &timer = {})
+{
+  PushDisabled (disabled, timer);
+  auto result = false;
+  ImGui::Button (label.c_str (), size);
+  PopDisabled (disabled);
+  return result;
+}
+
+bool
+DisableAndDimButtonOnCondition (std::string const &label, bool disabled, float alpha, ImVec2 const &size = ImVec2 (-1, 0))
+{
+
+  PushDisabled (alpha, disabled);
+  auto result = false;
+  result = ImGui::Button (label.c_str (), size);
+  PopDisabled (disabled);
+  return result;
 }
 
 template <IsEnum E>
@@ -176,7 +203,7 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
   ImGui::TextUnformatted ("Join Channel");
   ImGui::InputText ("##JoinChannel", &chatData.channelToJoin);
   chatData.joinChannelClicked = ImGui::Button ("Join Channel", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopDisabled (shouldLockScreen);
   auto channelNames = chatData.channelNames ();
   if (ImGui::BeginCombo ("##combo 1", chatData.selectChannelComboBoxName ().c_str ()))
     {
@@ -206,7 +233,7 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
   ImGui::TextUnformatted ("Send to Channel");
   ImGui::InputText ("##SendToChannel", &chatData.messageToSendToChannel);
   chatData.sendMessageClicked = ImGui::Button ("Send to Channel", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopDisabled (shouldLockScreen);
   ImGui::PopItemWidth ();
 }
 
@@ -227,39 +254,39 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
-      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PopDisabled (shouldLockScreen);
       ImGui::PushDisabled (shouldLockScreen, time);
       createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
-      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PopDisabled (shouldLockScreen);
       ImGui::TextUnformatted ("set max card value: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::InputInt ("##maxCardValue", &createGameLobby.maxCardValue);
-      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PopDisabled (shouldLockScreen);
       ImGui::PushDisabled (shouldLockScreen, time);
       createGameLobby.sendMaxCardValueClicked = ImGui::Button ("set max card value", ImVec2 (-1, 0));
-      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PopDisabled (shouldLockScreen);
       ImGui::TextUnformatted ("Timer Type: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
       ImGui::EnumCombo (createGameLobby.timerOption.timerType);
-      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PopDisabled (shouldLockScreen);
       if (createGameLobby.timerOption.timerType != shared_class::TimerType::noTimer)
         {
           ImGui::TextUnformatted ("Time at Start in Seconds: ");
           ImGui::SameLine ();
           ImGui::PushDisabled (shouldLockScreen, time);
           ImGui::InputInt ("##timeAtStartInSeconds", &createGameLobby.timerOption.timeAtStartInSeconds);
-          ImGui::PopDisabled (shouldLockScreen, time);
+          ImGui::PopDisabled (shouldLockScreen);
           ImGui::TextUnformatted ("Time for each Round in Seconds: ");
           ImGui::SameLine ();
           ImGui::PushDisabled (shouldLockScreen, time);
           ImGui::InputInt ("##timeForEachRoundInSeconds", &createGameLobby.timerOption.timeForEachRoundInSeconds);
-          ImGui::PopDisabled (shouldLockScreen, time);
+          ImGui::PopDisabled (shouldLockScreen);
         }
       ImGui::PushDisabled (shouldLockScreen, time);
       createGameLobby.sendTimerOptionClicked = ImGui::Button ("set timer", ImVec2 (-1, 0));
-      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PopDisabled (shouldLockScreen);
     }
   else
     {
@@ -283,7 +310,7 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       createGameLobby.startGame = ImGui::Button ("Start Game", ImVec2 (-1, 0));
     }
   createGameLobby.leaveGameLobby = ImGui::Button ("Leave Game Lobby", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopDisabled (shouldLockScreen);
   ImGui::PopItemWidth ();
 }
 
@@ -320,7 +347,7 @@ messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForSe
       ImGui::SameLine ();
       ImGui::PushDisabled (button.disabled, time);
       button.pressed = ImGui::Button (button.name.c_str ());
-      ImGui::PopDisabled (button.disabled, time);
+      ImGui::PopDisabled (button.disabled);
     }
   ImGui::PopStyleVar ();
   ImGui::PopItemWidth ();
@@ -358,7 +385,7 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
   ImGui::InputText ("##username", &data.accountName);
   ImGui::TextUnformatted ("Password");
   ImGui::InputText ("##password", &data.password, ImGuiInputTextFlags_Password);
-  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopDisabled (shouldLockScreen);
   if (shouldLockScreen)
     {
       auto &button = waitForServer->buttons.front ();
@@ -371,7 +398,7 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
         {
           ImGui::PushDisabled (shouldLockScreen, time);
           ImGui::Button ("Sign in", ImVec2 (-1, 0));
-          ImGui::PopDisabled (shouldLockScreen, time);
+          ImGui::PopDisabled (shouldLockScreen);
         }
     }
   else
@@ -391,7 +418,7 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
   ImGui::TextUnformatted ("New to MD?");
   ImGui::SameLine ();
   data.createAccountClicked = ImGui::SmallButton ("Create an Account");
-  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopDisabled (shouldLockScreen);
   ImGui::PopStyleVar ();
   ImGui::EndChild ();
   ImGui::PopItemWidth ();
@@ -431,7 +458,7 @@ createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForS
   ImGui::TextUnformatted ("Password");
   ImGui::InputText ("##account-password", &data.password, ImGuiInputTextFlags_Password);
   data.backToLoginClicked = ImGui::Button ("Back");
-  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopDisabled (shouldLockScreen);
   ImGui::SameLine ();
   using namespace std::chrono_literals;
   if (shouldLockScreen && time > 5s)
@@ -443,7 +470,7 @@ createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForS
     {
       ImGui::PushDisabled (shouldLockScreen, time);
       data.createAccountClicked = ImGui::Button ("Create Account and Sign in", ImVec2 (-1, 0));
-      ImGui::PopDisabled (shouldLockScreen, time);
+      ImGui::PopDisabled (shouldLockScreen);
     }
   ImGui::PopItemWidth ();
   ImGui::EndChild ();
@@ -476,7 +503,7 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
   ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword);
   data.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
   data.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
-  ImGui::PopDisabled (shouldLockScreen, time);
+  ImGui::PopDisabled (shouldLockScreen);
   ImGui::PopItemWidth ();
 }
 
@@ -503,6 +530,12 @@ timeLeft (shared_class::DurakTimers const &timers, std::string const &playerName
       auto const timeOutTimePoint = time_point<system_clock, milliseconds>{ milliseconds{ runningTimer->second } };
       ImGui::TextUnformatted (fmt::format ("Time left: {}", duration_cast<seconds> (timeOutTimePoint - system_clock::now ()).count ()).c_str ());
     }
+}
+
+bool
+notAllowedMove (std::vector<durak::Move> allowedMoves, durak::Move moveToCheck)
+{
+  return ranges::find (allowedMoves, moveToCheck) == allowedMoves.end ();
 }
 
 void
@@ -609,14 +642,15 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
       ImGui::TextUnformatted (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
       timeLeft (game.timers, player.name);
     }
-  game.placeSelectedCardsOnTable = ImGui::Button ("Place selected Cards on Table", ImVec2 (-1, 0));
+  auto const disabled = notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::addCard) && notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::startAttack) && notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::defend);
+  game.placeSelectedCardsOnTable = ImGui::DisableAndDimButtonOnCondition ("Place selected Cards on Table", disabled, 0.8f);
   if (currentPlayerRole == durak::PlayerRole::defend)
     {
-      game.pass = ImGui::Button ("Draw Cards from Table", ImVec2 (-1, 0));
+      game.pass = ImGui::DisableAndDimButtonOnCondition ("Draw Cards from Table", notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::takeCards), 0.8f);
     }
   else if (currentPlayerRole == durak::PlayerRole::attack || currentPlayerRole == durak::PlayerRole::assistAttacker)
     {
-      game.pass = ImGui::Button ("Pass", ImVec2 (-1, 0));
+      game.pass = ImGui::DisableAndDimButtonOnCondition ("Pass", notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::pass), 0.8f);
     }
   game.surrender = ImGui::Button ("Surrender", ImVec2 (-1, 0));
   ImGui::PopItemWidth ();

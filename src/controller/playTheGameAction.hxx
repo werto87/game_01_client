@@ -7,6 +7,7 @@
 #include "src/controller/stateMachineData.hxx"
 #include <durak/gameData.hxx>
 #include <game_01_shared_class/serialization.hxx>
+#include <magic_enum.hpp>
 #include <numeric>
 #include <pipes/filter.hpp>
 #include <pipes/mux.hpp>
@@ -22,6 +23,8 @@ auto const setGameData = [] (durak::GameData const &gameDataEv, Game &game, Make
         game.selectedCards = std::vector<bool> (player->cards.size ());
       }
 };
+
+auto const setAllowedMoves = [] (shared_class::DurakAllowedMoves const &allowedMoves, Game &game) { game.allowedMoves = allowedMoves; };
 
 auto const setTimers = [] (shared_class::DurakTimers durakTimers, Game &game) { game.timers = durakTimers; };
 

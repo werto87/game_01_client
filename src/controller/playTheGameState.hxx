@@ -7,6 +7,7 @@
 struct Game
 {
   durak::GameData gameData{};
+  shared_class::DurakAllowedMoves allowedMoves{};
   shared_class::DurakTimers timers{};
   std::vector<bool> selectedCards{};
   boost::optional<size_t> selectedCardFromTable{};
