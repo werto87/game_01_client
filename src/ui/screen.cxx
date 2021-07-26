@@ -642,8 +642,17 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
       ImGui::TextUnformatted (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
       timeLeft (game.timers, player.name);
     }
-  auto const disabled = notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::addCard) && notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::startAttack) && notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::defend);
-  game.placeSelectedCardsOnTable = ImGui::DisableAndDimButtonOnCondition ("Place selected Cards on Table", disabled, 0.8f);
+
+  if (currentPlayerRole == durak::PlayerRole::attack || currentPlayerRole == durak::PlayerRole::assistAttacker)
+    {
+      auto const disabled = notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::addCard) && notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::startAttack);
+      game.placeSelectedCardsOnTable = ImGui::DisableAndDimButtonOnCondition ("Place selected Cards on Table", disabled, 0.8f);
+    }
+  else if (currentPlayerRole == durak::PlayerRole::defend)
+    {
+      game.placeSelectedCardsOnTable = ImGui::DisableAndDimButtonOnCondition ("Place selected Card on Table to defend", notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::defend), 0.8f);
+    }
+
   if (currentPlayerRole == durak::PlayerRole::defend)
     {
       game.pass = ImGui::DisableAndDimButtonOnCondition ("Draw Cards from Table", notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::takeCards), 0.8f);
