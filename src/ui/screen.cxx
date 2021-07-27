@@ -86,9 +86,10 @@ DisableAndDimButtonOnCondition (std::string const &label, bool disabled, float a
 }
 
 template <IsEnum E>
-void
+bool
 EnumCombo (E &myEnum)
 {
+  auto const oldValue = myEnum;
   auto item = std::string{ magic_enum::enum_name (myEnum) };
   auto current_item = item.c_str ();
   if (ImGui::BeginCombo ("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
@@ -103,6 +104,7 @@ EnumCombo (E &myEnum)
         }
       ImGui::EndCombo ();
     }
+  return oldValue != myEnum;
 }
 
 } // namespace ImGui
@@ -253,40 +255,31 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       ImGui::TextUnformatted ("set max user count: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
-      ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
-      ImGui::PopDisabled (shouldLockScreen);
-      ImGui::PushDisabled (shouldLockScreen, time);
-      createGameLobby.sendMaxUserCountClicked = ImGui::Button ("set max user count", ImVec2 (-1, 0));
+      createGameLobby.sendMaxUserCountClicked = ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
       ImGui::PopDisabled (shouldLockScreen);
       ImGui::TextUnformatted ("set max card value: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
-      ImGui::InputInt ("##maxCardValue", &createGameLobby.maxCardValue);
-      ImGui::PopDisabled (shouldLockScreen);
-      ImGui::PushDisabled (shouldLockScreen, time);
-      createGameLobby.sendMaxCardValueClicked = ImGui::Button ("set max card value", ImVec2 (-1, 0));
+      createGameLobby.sendMaxCardValueClicked = ImGui::InputInt ("##maxCardValue", &createGameLobby.maxCardValue);
       ImGui::PopDisabled (shouldLockScreen);
       ImGui::TextUnformatted ("Timer Type: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
-      ImGui::EnumCombo (createGameLobby.timerOption.timerType);
+      createGameLobby.sendTimerOptionClicked = ImGui::EnumCombo (createGameLobby.timerOption.timerType);
       ImGui::PopDisabled (shouldLockScreen);
       if (createGameLobby.timerOption.timerType != shared_class::TimerType::noTimer)
         {
           ImGui::TextUnformatted ("Time at Start in Seconds: ");
           ImGui::SameLine ();
           ImGui::PushDisabled (shouldLockScreen, time);
-          ImGui::InputInt ("##timeAtStartInSeconds", &createGameLobby.timerOption.timeAtStartInSeconds);
+          createGameLobby.sendTimerOptionClicked |= ImGui::InputInt ("##timeAtStartInSeconds", &createGameLobby.timerOption.timeAtStartInSeconds);
           ImGui::PopDisabled (shouldLockScreen);
           ImGui::TextUnformatted ("Time for each Round in Seconds: ");
           ImGui::SameLine ();
           ImGui::PushDisabled (shouldLockScreen, time);
-          ImGui::InputInt ("##timeForEachRoundInSeconds", &createGameLobby.timerOption.timeForEachRoundInSeconds);
+          createGameLobby.sendTimerOptionClicked |= ImGui::InputInt ("##timeForEachRoundInSeconds", &createGameLobby.timerOption.timeForEachRoundInSeconds);
           ImGui::PopDisabled (shouldLockScreen);
         }
-      ImGui::PushDisabled (shouldLockScreen, time);
-      createGameLobby.sendTimerOptionClicked = ImGui::Button ("set timer", ImVec2 (-1, 0));
-      ImGui::PopDisabled (shouldLockScreen);
     }
   else
     {
