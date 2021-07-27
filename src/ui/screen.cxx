@@ -24,6 +24,22 @@
 
 namespace ImGui
 {
+
+bool
+InputIntLimit (std::string const &label, int &value, std::array<int, 2> const &limit)
+{
+  ImGui::InputInt (label.c_str (), &value);
+  if (value < limit.front ())
+    {
+      value = limit.front ();
+    }
+  else if (value > limit.back ())
+    {
+      value = limit.back ();
+    }
+  return ImGui::IsItemDeactivatedAfterEdit ();
+}
+
 void
 PushDisabled (float alphaScale = 1.0f, bool disabled = true)
 {
@@ -255,12 +271,12 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
       ImGui::TextUnformatted ("set max user count: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
-      createGameLobby.sendMaxUserCountClicked = ImGui::InputInt ("##MaxUserCount", &createGameLobby.maxUserInGameLobby);
+      createGameLobby.sendMaxUserCountClicked = ImGui::InputIntLimit ("##MaxUserCount", createGameLobby.maxUserInGameLobby, { boost::numeric_cast<int> (createGameLobby.accountNamesInGameLobby.size ()), std::numeric_limits<int>::max () });
       ImGui::PopDisabled (shouldLockScreen);
       ImGui::TextUnformatted ("set max card value: ");
       ImGui::SameLine ();
       ImGui::PushDisabled (shouldLockScreen, time);
-      createGameLobby.sendMaxCardValueClicked = ImGui::InputInt ("##maxCardValue", &createGameLobby.maxCardValue);
+      createGameLobby.sendMaxCardValueClicked = ImGui::InputIntLimit ("##maxCardValue", createGameLobby.maxCardValue, { 1, std::numeric_limits<int>::max () });
       ImGui::PopDisabled (shouldLockScreen);
       ImGui::TextUnformatted ("Timer Type: ");
       ImGui::SameLine ();
@@ -272,12 +288,12 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
           ImGui::TextUnformatted ("Time at Start in Seconds: ");
           ImGui::SameLine ();
           ImGui::PushDisabled (shouldLockScreen, time);
-          createGameLobby.sendTimerOptionClicked |= ImGui::InputInt ("##timeAtStartInSeconds", &createGameLobby.timerOption.timeAtStartInSeconds);
+          createGameLobby.sendTimerOptionClicked |= ImGui::InputIntLimit ("##timeAtStartInSeconds", createGameLobby.timerOption.timeAtStartInSeconds, { 0, std::numeric_limits<int>::max () });
           ImGui::PopDisabled (shouldLockScreen);
           ImGui::TextUnformatted ("Time for each Round in Seconds: ");
           ImGui::SameLine ();
           ImGui::PushDisabled (shouldLockScreen, time);
-          createGameLobby.sendTimerOptionClicked |= ImGui::InputInt ("##timeForEachRoundInSeconds", &createGameLobby.timerOption.timeForEachRoundInSeconds);
+          createGameLobby.sendTimerOptionClicked |= ImGui::InputIntLimit ("##timeForEachRoundInSeconds", createGameLobby.timerOption.timeForEachRoundInSeconds, { 0, std::numeric_limits<int>::max () });
           ImGui::PopDisabled (shouldLockScreen);
         }
     }
@@ -635,7 +651,6 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
       ImGui::TextUnformatted (fmt::format ("Name: {} Role: {} Cards: {}", player.name, magic_enum::enum_name (player.playerRole), std::to_string (player.cards.size ())).c_str ());
       timeLeft (game.timers, player.name);
     }
-
   if (currentPlayerRole == durak::PlayerRole::attack || currentPlayerRole == durak::PlayerRole::assistAttacker)
     {
       auto const disabled = notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::addCard) && notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::startAttack);
@@ -645,7 +660,6 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
     {
       game.placeSelectedCardsOnTable = ImGui::DisableAndDimButtonOnCondition ("Place selected Card on Table to defend", notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::defend), 0.8f);
     }
-
   if (currentPlayerRole == durak::PlayerRole::defend)
     {
       game.pass = ImGui::DisableAndDimButtonOnCondition ("Draw Cards from Table", notAllowedMove (game.allowedMoves.allowedMoves, durak::Move::takeCards), 0.8f);
