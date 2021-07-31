@@ -25,7 +25,7 @@ auto const setRelogToError = [] (shared_class::RelogToError const &relogToLobby,
   messageBoxPopup.buttons = { { .name = "Lobby", .pressed = false } };
 };
 
-auto const resetPopupAndWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, CreateGameLobby &createGameLobby) {
+auto const resetPopupAndWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = std::optional<WaitForServer>{};
 };

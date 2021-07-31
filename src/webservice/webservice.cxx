@@ -9,14 +9,18 @@ onopen (int /*eventType*/, const EmscriptenWebSocketOpenEvent *websocketEvent, v
   return 42;
 }
 EM_BOOL
-onerror (int /*eventType*/, const EmscriptenWebSocketErrorEvent * /*websocketEvent*/, void * /*userData*/)
+onerror (int eventType, const EmscriptenWebSocketErrorEvent *websocketEvent, void *userData)
 {
+  printf ("error(eventType=%d, userData=%d)\n", eventType, (int)userData);
+  std::cout << "'" << websocketEvent << "'" << std::endl;
   std::cout << "on_error" << std::endl;
   return 42;
 }
 EM_BOOL
-onclose (int /*eventType*/, const EmscriptenWebSocketCloseEvent * /*websocketEvent */, void *userData)
+onclose (int /*eventType*/, const EmscriptenWebSocketCloseEvent *websocketEvent, void *userData)
 {
+  std::cout << "reason: " << websocketEvent->reason << std::endl;
+  std::cout << "code: " << websocketEvent->code << std::endl;
   std::cout << "on_close" << std::endl;
   auto &webservice = *static_cast<Webservice *> (userData);
   webservice.ws = {};

@@ -28,7 +28,9 @@ ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Appl
   ImGui::CreateContext ();
   co_spawn (
       ioContext, [&] () mutable { return webservice.writeToServer (_messagesToSendToServer.messagesToSendToServer); }, boost::asio::detached);
-  EmscriptenWebSocketCreateAttributes ws_attrs = { "ws://localhost:55555", NULL, EM_TRUE };
+  auto websocketAddress = std::string{ "wss://modern-durak.com/wss/" };
+  EmscriptenWebSocketCreateAttributes ws_attrs = { websocketAddress.c_str (), NULL, EM_TRUE };
+  std::cout << "websocketAddress: " << websocketAddress << std::endl;
   EMSCRIPTEN_WEBSOCKET_T ws = emscripten_websocket_new (&ws_attrs);
   emscripten_websocket_set_onopen_callback (ws, &webservice, onopen);
   emscripten_websocket_set_onerror_callback (ws, &webservice, onerror);
