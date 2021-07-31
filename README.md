@@ -1,5 +1,5 @@
 # Modern Durak Client
-Client which allows connecting to a Modern Durak Server
+Client which allows connecting to a [Modern Durak Server](https://github.com/werto87/game_01_server)
 
 ## How to build the Mordern Durak Client 
 Note: 
