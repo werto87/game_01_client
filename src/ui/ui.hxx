@@ -36,6 +36,9 @@ public:
 
   Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
 
+  float windowWidth{};
+  float windowHeight{};
+
 private:
   ImFont *font2{};
   my_logger logger{};

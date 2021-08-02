@@ -14,6 +14,7 @@
 #include <Magnum/Trade/MeshData.h>
 #include <algorithm>
 #include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
 #include <emscripten/websocket.h>
 #include <filesystem>
 #include <game_01_shared_class/serialization.hxx>
@@ -23,12 +24,37 @@
 #include <memory>
 
 using namespace Magnum;
+EM_BOOL
+emscripten_window_resized_callback (int /*eventType*/, const void * /*reserved*/, void *userData)
+{
+  double width{};
+  double height{};
+  emscripten_get_element_css_size ("canvas", &width, &height);
+  ImGuiExample *imGuiExample = (ImGuiExample *)userData;
+  imGuiExample->windowWidth = boost::numeric_cast<float> (width);
+  imGuiExample->windowHeight = boost::numeric_cast<float> (height);
+  ImGui::SetWindowSize ({ imGuiExample->windowWidth, imGuiExample->windowHeight });
+  return true;
+}
+
 ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{} } }, webservice{ _stateMachine }
 {
   ImGui::CreateContext ();
   co_spawn (
       ioContext, [&] () mutable { return webservice.writeToServer (_messagesToSendToServer.messagesToSendToServer); }, boost::asio::detached);
+#ifdef DEBUG
+  auto websocketAddress = std::string{ "wss://localhost:55555" };
+#else
   auto websocketAddress = std::string{ "wss://modern-durak.com/wss/" };
+#endif
+  windowWidth = boost::numeric_cast<float> (windowSize ().x ());
+  windowHeight = boost::numeric_cast<float> (windowSize ().y ());
+  EmscriptenFullscreenStrategy strategy;
+  strategy.scaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
+  strategy.filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
+  strategy.canvasResizedCallback = emscripten_window_resized_callback;
+  strategy.canvasResizedCallbackUserData = this;
+  emscripten_enter_soft_fullscreen ("canvas", &strategy);
   EmscriptenWebSocketCreateAttributes ws_attrs = { websocketAddress.c_str (), NULL, EM_TRUE };
   std::cout << "websocketAddress: " << websocketAddress << std::endl;
   EMSCRIPTEN_WEBSOCKET_T ws = emscripten_websocket_new (&ws_attrs);
@@ -60,7 +86,7 @@ ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Appl
 void
 ImGuiExample::debug (bool &shouldChangeFontSize)
 {
-  ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowSize ().y ()) / 4));
+  ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowHeight) / 4));
   ImGui::Text ("Message to Send");
   ImGui::InputText ("##sendMessage", &sendMessage);
   if (ImGui::Button ("Send", ImVec2 (-1, 0)))
@@ -87,9 +113,6 @@ ImGuiExample::drawEvent ()
 {
   GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
   _imgui.newFrame ();
-  auto const windowWidth = static_cast<float> (windowSize ().x ());
-  auto const windowHeight = static_cast<float> (windowSize ().y ());
-
   /* Enable text input, if needed  */
   if (ImGui::GetIO ().WantTextInput && !isTextInputActive ()) startTextInput ();
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
@@ -186,6 +209,6 @@ ImGuiExample::updateFontSize ()
   auto const fontFile = std::filesystem::path{ "bin/asset/DejaVuSans.ttf" };
   auto currentFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 50 * _fontScale);
   font2 = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 75 * _fontScale);
-  _imgui.relayout ({ static_cast<float> (windowSize ().x ()), static_cast<float> (windowSize ().y ()) }, windowSize (), framebufferSize ());
+  _imgui.relayout ({ windowWidth, windowHeight }, windowSize (), framebufferSize ());
   ImGui::SetCurrentFont (currentFont);
 }
