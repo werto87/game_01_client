@@ -13,6 +13,7 @@
 #include <Magnum/Primitives/Cube.h>
 #include <Magnum/Trade/MeshData.h>
 #include <algorithm>
+#include <boost/numeric/conversion/cast.hpp>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/websocket.h>
@@ -24,20 +25,8 @@
 #include <memory>
 
 using namespace Magnum;
-EM_BOOL
-emscripten_window_resized_callback (int /*eventType*/, const void * /*reserved*/, void *userData)
-{
-  double width{};
-  double height{};
-  emscripten_get_element_css_size ("canvas", &width, &height);
-  ImGuiExample *imGuiExample = (ImGuiExample *)userData;
-  imGuiExample->windowWidth = boost::numeric_cast<float> (width);
-  imGuiExample->windowHeight = boost::numeric_cast<float> (height);
-  ImGui::SetWindowSize ({ imGuiExample->windowWidth, imGuiExample->windowHeight });
-  return true;
-}
 
-ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable).setSize (Vector2i{ 800, 600 }) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{} } }, webservice{ _stateMachine }
+ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{} } }, webservice{ _stateMachine }
 {
   ImGui::CreateContext ();
   co_spawn (
@@ -47,14 +36,6 @@ ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Appl
 #else
   auto websocketAddress = std::string{ "wss://modern-durak.com/wss/" };
 #endif
-  windowWidth = boost::numeric_cast<float> (windowSize ().x ());
-  windowHeight = boost::numeric_cast<float> (windowSize ().y ());
-  EmscriptenFullscreenStrategy strategy;
-  strategy.scaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
-  strategy.filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
-  strategy.canvasResizedCallback = emscripten_window_resized_callback;
-  strategy.canvasResizedCallbackUserData = this;
-  emscripten_enter_soft_fullscreen ("canvas", &strategy);
   EmscriptenWebSocketCreateAttributes ws_attrs = { websocketAddress.c_str (), NULL, EM_TRUE };
   std::cout << "websocketAddress: " << websocketAddress << std::endl;
   EMSCRIPTEN_WEBSOCKET_T ws = emscripten_websocket_new (&ws_attrs);
@@ -86,7 +67,7 @@ ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Appl
 void
 ImGuiExample::debug (bool &shouldChangeFontSize)
 {
-  ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowHeight) / 4));
+  ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowSize ().y ()) / 4));
   ImGui::Text ("Message to Send");
   ImGui::InputText ("##sendMessage", &sendMessage);
   if (ImGui::Button ("Send", ImVec2 (-1, 0)))
@@ -119,10 +100,10 @@ ImGuiExample::drawEvent ()
     stopTextInput ();
 
   ImGui::SetNextWindowPos (ImVec2 (0, 0));
-  ImGui::SetNextWindowSize (ImVec2 (windowWidth, windowHeight));
-  ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-
-  _stateMachine.process_event (draw{ .windowSizeX = windowWidth, .windowSizeY = windowHeight, .biggerFont = font2 });
+  ImGui::SetNextWindowSize (ImVec2 (windowSize ().x (), windowSize ().y ()));
+  ImGui::PushStyleVar (ImGuiStyleVar_WindowBorderSize, 0.0f);
+  ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoDecoration);
+  _stateMachine.process_event (draw{ .windowSizeX = boost::numeric_cast<float> (windowSize ().x ()), .windowSizeY = boost::numeric_cast<float> (windowSize ().y ()), .biggerFont = font2 });
   // auto shouldUpdateFontSize = false;
   // debug (shouldUpdateFontSize);
   ImGui::End ();
@@ -209,6 +190,7 @@ ImGuiExample::updateFontSize ()
   auto const fontFile = std::filesystem::path{ "bin/asset/DejaVuSans.ttf" };
   auto currentFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 50 * _fontScale);
   font2 = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 75 * _fontScale);
-  _imgui.relayout ({ windowWidth, windowHeight }, windowSize (), framebufferSize ());
+  //_imgui.relayout (Vector2{ _windowSize } / dpiScaling (), windowSizeInt, framebufferSize ());
+  _imgui.relayout (Vector2{ windowSize () } / dpiScaling (), windowSize (), framebufferSize ());
   ImGui::SetCurrentFont (currentFont);
 }

@@ -33,11 +33,9 @@ public:
   void mouseMoveEvent (MouseMoveEvent &event) override;
   void mouseScrollEvent (MouseScrollEvent &event) override;
   void textInputEvent (TextInputEvent &event) override;
+  void updateFontSize ();
 
   Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
-
-  float windowWidth{};
-  float windowHeight{};
 
 private:
   ImFont *font2{};
@@ -50,7 +48,7 @@ private:
   // debug--------------------------------------------
   void debug (bool &shouldChangeFontSize);
   void createAccountErrorPopup ();
-  void updateFontSize ();
+
   bool _showDemoWindow = false;
   float _fontScale = 0.5f;
   std::string sendMessage{};
