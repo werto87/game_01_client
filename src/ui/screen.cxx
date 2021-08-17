@@ -25,239 +25,6 @@
 namespace ImGui
 {
 
-static std::map<const char *, int> g_KeypadApplyMap; // map of labels to return values
-static char *g_KeypadCurrentLabel;                   // only one instance of Keypad is open at any one time
-static std::string *g_KeypadEditStrPtr;              // pointer to string to edit
-static std::string g_KeypadEditStrRestore;           // stored value for undo
-
-// Draw a 4x5 button matrix entry keypad edits a *value std::string,
-// scaled to the current content region height with square buttons
-int
-InputKeypad (const char *label, bool *p_visible, std::string *value)
-{
-  int ret = 0;
-
-  if (p_visible && !*p_visible) return ret;
-  if (!value || !label) return ret;
-
-  ImVec2 csize = GetContentRegionAvail ();
-  int n = (csize.y / 5); // height / 5 button rows
-
-  ImGuiStyle &style = GetStyle ();
-
-  if (BeginChild (label, ImVec2 ((n * 4) + style.WindowPadding.x, n * 5), true))
-    {
-
-      csize = GetContentRegionAvail ();        // now inside this child
-      n = (csize.y / 5) - style.ItemSpacing.y; // button size
-      ImVec2 bsize (n, n);                     // buttons are square
-
-      PushStyleVar (ImGuiStyleVar_FrameRounding, 6);
-      static std::string k = "";
-      if (Button ("ESC", bsize))
-        {
-          k = "X";
-        }
-      SameLine ();
-      if (Button ("/", bsize))
-        {
-          k = "/";
-        }
-      SameLine ();
-      if (Button ("*", bsize))
-        {
-          k = "*";
-        }
-      SameLine ();
-      if (Button ("-", bsize))
-        {
-          k = "-";
-        }
-      if (Button ("7", bsize))
-        {
-          k = "7";
-        }
-      SameLine ();
-      if (Button ("8", bsize))
-        {
-          k = "8";
-        }
-      SameLine ();
-      if (Button ("9", bsize))
-        {
-          k = "9";
-        }
-      SameLine ();
-      if (Button ("+", bsize))
-        {
-          k = "+";
-        }
-      if (Button ("4", bsize))
-        {
-          k = "4";
-        }
-      SameLine ();
-      if (Button ("5", bsize))
-        {
-          k = "5";
-        }
-      SameLine ();
-      if (Button ("6", bsize))
-        {
-          k = "6";
-        }
-      SameLine ();
-      if (Button ("<-", bsize))
-        {
-          k = "B";
-        }
-      if (Button ("1", bsize))
-        {
-          k = "1";
-        }
-      SameLine ();
-      if (Button ("2", bsize))
-        {
-          k = "2";
-        }
-      SameLine ();
-      if (Button ("3", bsize))
-        {
-          k = "3";
-        }
-      SameLine ();
-      if (Button ("CLR", bsize))
-        {
-          k = "C";
-        }
-      if (Button ("0", bsize))
-        {
-          k = "0";
-        }
-      SameLine ();
-      if (Button ("0", bsize))
-        {
-          k = "0";
-        }
-      SameLine ();
-      if (Button (".", bsize))
-        {
-          k = ".";
-        }
-      SameLine ();
-      if (Button ("=", bsize))
-        {
-          k = "E";
-        }
-      PopStyleVar ();
-
-      // logic
-      if (k != "")
-        {
-          if (k != "E" && k != "X" && k != "B" && k != "C")
-            {
-              value->append (k); // add k to the string
-            }
-          else
-            {
-              if (k == "E")
-                {          // enter
-                  ret = 1; // value has been accepted
-                }
-              else if (k == "B")
-                { // remove one char from the string
-                  std::string tvalue = value->substr (0, value->length () - 1);
-                  value->swap (tvalue);
-                }
-              else if (k == "C")
-                {
-                  value->clear ();
-                }
-              else if (k == "X")
-                {           // cancel
-                  ret = -1; //  restore old value
-                }
-            }
-          if (ret) *p_visible = false;
-        }
-      k = "";
-      EndChild ();
-    }
-  g_KeypadApplyMap[label] = ret; // store results in map
-  return ret;
-}
-
-// The widget takes a label, and a *std::string
-// returns 1 if the new value should accepted, enter pressed
-// returns 0 if nothing happened
-// return -1 if cancel pressed, previous value has been restored
-int
-KeypadEditString (const char *label, std::string *value)
-{
-  if (!label || !value) return 0;
-
-  Text (label);
-  SameLine ();
-  InputText (label, value->data (), value->capacity ());
-
-  if (IsItemHovered () && IsMouseClicked (ImGuiMouseButton_Left))
-    {
-      if (value != g_KeypadEditStrPtr)
-        {
-          g_KeypadEditStrRestore = value->c_str ();
-          g_KeypadEditStrPtr = value;
-          g_KeypadApplyMap[label] = 0;
-          g_KeypadCurrentLabel = (char *)label;
-        }
-      OpenPopup ("KeypadX");
-    }
-
-  if (g_KeypadApplyMap[label] == 1)
-    {
-      g_KeypadApplyMap[label] = 0;
-      return 1;
-    }
-  else if (g_KeypadApplyMap[label] == -1)
-    {
-      g_KeypadApplyMap[label] = 0;
-      return -1;
-    }
-  return 0;
-}
-
-// Show the popup keypad box as required.
-void
-PopupKeypad (void)
-{
-  // Always center this window when appearing
-  ImVec2 center = GetMainViewport ()->GetCenter ();
-  SetNextWindowPos (center, ImGuiCond_Appearing, ImVec2 (0.5f, 0.5f));
-  SetNextWindowSize (ImVec2 (300, 400));
-
-  if (BeginPopupModal ("KeypadX", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-      if (g_KeypadEditStrPtr != nullptr)
-        {
-          bool gShowKeypad = true;
-          Text (g_KeypadEditStrPtr->c_str ());
-          int r = InputKeypad ("Keypad Input", &gShowKeypad, g_KeypadEditStrPtr);
-          if (r == -1)
-            {
-              // undo - restore previous value
-              g_KeypadEditStrPtr->swap (g_KeypadEditStrRestore);
-              g_KeypadApplyMap[g_KeypadCurrentLabel] = -1;
-            }
-          else if (r == 1)
-            {
-              // set - we should apply the new value
-              g_KeypadApplyMap[g_KeypadCurrentLabel] = 1;
-            }
-          if (!gShowKeypad) CloseCurrentPopup ();
-        }
-      EndPopup ();
-    }
-}
-
 bool
 InputIntLimit (std::string const &label, int &value, std::array<int, 2> const &limit)
 {
@@ -447,12 +214,12 @@ drawCard (durak::Card const &card)
 // }
 
 void
-chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds const &time)
+chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds const &time, draw const &drawEv, boost::optional<std::string &> &selectedString)
 {
   ImGui::PushItemWidth (-1);
   ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::TextUnformatted ("Join Channel");
-  ImGui::InputText ("##JoinChannel", &chatData.channelToJoin);
+  ImGui::InputText ("##JoinChannel", &chatData.channelToJoin, selectedString, drawEv.isTouch);
   chatData.joinChannelClicked = ImGui::Button ("Join Channel", ImVec2 (-1, 0));
   ImGui::PopDisabled (shouldLockScreen);
   auto channelNames = chatData.channelNames ();
@@ -482,14 +249,14 @@ chatScreen (ChatData &chatData, bool shouldLockScreen, std::chrono::milliseconds
   ImGui::EndChild ();
   ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::TextUnformatted ("Send to Channel");
-  ImGui::InputText ("##SendToChannel", &chatData.messageToSendToChannel);
+  ImGui::InputText ("##SendToChannel", &chatData.messageToSendToChannel, selectedString, drawEv.isTouch);
   chatData.sendMessageClicked = ImGui::Button ("Send to Channel", ImVec2 (-1, 0));
   ImGui::PopDisabled (shouldLockScreen);
   ImGui::PopItemWidth ();
 }
 
 void
-createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData)
+createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForServer> &waitForServer, std::string accountName, ChatData &chatData, draw const &drawEv, boost::optional<std::string &> &selectedString)
 {
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
@@ -498,7 +265,7 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
     {
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
-  chatScreen (chatData, shouldLockScreen, time);
+  chatScreen (chatData, shouldLockScreen, time, drawEv, selectedString);
   if (not createGameLobby.accountNamesInGameLobby.empty () && accountName == createGameLobby.accountNamesInGameLobby.at (0))
     {
       ImGui::TextUnformatted ("set max user count: ");
@@ -557,7 +324,7 @@ createGameLobbyScreen (CreateGameLobby &createGameLobby, std::optional<WaitForSe
 }
 
 void
-messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont)
+messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, draw const &)
 {
   ImGui::PushItemWidth (-1);
   auto time = std::chrono::milliseconds{};
@@ -565,25 +332,8 @@ messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForSe
     {
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
-  ImGui::Dummy (ImVec2 (0.0f, (windowHeight - ((ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-  ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::Dummy (ImVec2 ((windowWidth - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-  ImGui::PushFont (&biggerFont);
-  ImGui::PopFont ();
-  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-  ImGui::SameLine ();
-  ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 40), true, window_flags);
-  ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-  ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-  ImGui::SameLine ();
-  ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
-  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-  ImGui::PopStyleVar ();
   ImGui::TextUnformatted (messageBoxPopup.message.c_str ());
-  ImGui::EndChild ();
-  ImGui::EndChild ();
-  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
   for (auto &button : messageBoxPopup.buttons)
     {
       ImGui::SameLine ();
@@ -595,10 +345,21 @@ messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForSe
   ImGui::PopItemWidth ();
 }
 
+bool
+BeginCentered (const char *name)
+{
+  ImGuiIO &io = ImGui::GetIO ();
+  ImVec2 pos (io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.8f);
+  ImGui::SetNextWindowPos (pos, ImGuiCond_Always, ImVec2 (0.5f, 0.5f));
+  ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
+  return ImGui::Begin (name, nullptr, flags);
+}
+
 void
-loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont)
+loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, draw const &drawEv, boost::optional<std::string &> &selectedString)
 {
   ImGui::PushItemWidth (-1);
+  // ImGui::Text ("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO ().Framerate, ImGui::GetIO ().Framerate);
   auto const shouldLockScreen = waitForServer.has_value ();
   auto time = std::chrono::milliseconds{};
   if (waitForServer)
@@ -606,27 +367,11 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
   ImGui::PushDisabled (shouldLockScreen, time);
-  ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-  ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Sign in to Modern Durak").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-  ImGui::SameLine ();
-  ImGui::PushFont (&biggerFont);
   ImGui::TextUnformatted ("Sign in to Modern Durak");
-  ImGui::PopFont ();
-  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-  ImGui::SameLine ();
-  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
-  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
-  ImGui::PopStyleVar ();
-  ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-  ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-  ImGui::SameLine ();
-  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 30), false, window_flags);
-  ImGui::PushItemWidth (-1.0f);
   ImGui::TextUnformatted ("Username");
-  ImGui::InputText ("##username", &data.accountName);
+  ImGui::InputText ("##Username", &data.accountName, selectedString, drawEv.isTouch);
   ImGui::TextUnformatted ("Password");
-  ImGui::InputText ("##password", &data.password, ImGuiInputTextFlags_Password);
+  ImGui::InputText ("##password", &data.password, selectedString, drawEv.isTouch, ImGuiInputTextFlags_Password);
   ImGui::PopDisabled (shouldLockScreen);
   if (shouldLockScreen)
     {
@@ -648,44 +393,15 @@ loginScreen (Login &data, std::optional<WaitForServer> &waitForServer, float win
       data.loginClicked = ImGui::Button ("Sign in", ImVec2 (-1, 0));
     }
   ImGui::PushDisabled (shouldLockScreen, time);
-  ImGui::PopItemWidth ();
-  ImGui::EndChild ();
-  ImGui::EndChild ();
-  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-  ImGui::SameLine ();
-  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::BeginChild ("ChildR123", ImVec2 (windowWidth / 2, (1 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 20), true, window_flags);
-  ImGui::Dummy (ImVec2 (((windowWidth / 2) - (ImGui::CalcTextSize ("New to MD?").x + ImGui::CalcTextSize ("create an account").x + (ImGui::GetStyle ().ItemSpacing.x * 6))) / 2, 0.0f));
-  ImGui::SameLine ();
   ImGui::TextUnformatted ("New to MD?");
   ImGui::SameLine ();
   data.createAccountClicked = ImGui::SmallButton ("Create an Account");
   ImGui::PopDisabled (shouldLockScreen);
-  ImGui::PopStyleVar ();
-  ImGui::EndChild ();
   ImGui::PopItemWidth ();
-  // static std::string test3 = " ";
-  // ImGui::KeypadEditString ("Test3", &test3);
-
-  // static std::string test4 = " ";
-  // if (ImGui::KeypadEditString ("Test4", &test4) == 1)
-  //   {
-  //     // enter / apply pressed
-  //   }
-
-  // static std::string test5 = " ";
-  // if (ImGui::KeypadEditString ("Test5", &test5) == -1)
-  //   {
-  //     // Cancel / Undo
-  //   }
-
-  // // .....
-
-  // ImGui::PopupKeypad ();
 }
 
 void
-createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForServer, float windowWidth, float windowHeight, ImFont &biggerFont)
+createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForServer, draw const &drawEv, boost::optional<std::string &> &selectedString)
 {
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
@@ -695,28 +411,12 @@ createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForS
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
   ImGui::PushDisabled (shouldLockScreen, time);
-  ImGui::Dummy (ImVec2 (0.0f, (windowHeight - (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2))) / 3));
-  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
-  ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::Dummy (ImVec2 ((windowWidth - ImGui::CalcTextSize ("Create your Account").x - (8 * ImGui::GetStyle ().ItemSpacing.x)) / 2, 0.0f));
-  ImGui::SameLine ();
-  ImGui::PushFont (&biggerFont);
   ImGui::TextUnformatted ("Create your Account");
-  ImGui::PopFont ();
-  ImGui::Dummy (ImVec2 (windowWidth / 4, 0.0f));
-  ImGui::SameLine ();
-  ImGui::BeginChild ("ChildR", ImVec2 (windowWidth / 2, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 50), true, window_flags);
-  ImGui::Dummy (ImVec2 (0.0f, 10.0f));
-  ImGui::Dummy (ImVec2 (10.0f, 0.0f));
-  ImGui::SameLine ();
-  ImGui::PushStyleVar (ImGuiStyleVar_ChildBorderSize, 0);
-  ImGui::BeginChild ("ChildR_sub", ImVec2 ((windowWidth / 2) - 50, (5 * (ImGui::GetFontSize () + ImGui::GetStyle ().ItemSpacing.y * 2)) + 10), true, window_flags);
-  ImGui::PopStyleVar ();
   ImGui::PushItemWidth (-1.0f);
   ImGui::TextUnformatted ("Username");
-  ImGui::InputText ("##account-username", &data.accountName);
+  ImGui::InputText ("##account-username", &data.accountName, selectedString, drawEv.isTouch);
   ImGui::TextUnformatted ("Password");
-  ImGui::InputText ("##account-password", &data.password, ImGuiInputTextFlags_Password);
+  ImGui::InputText ("##account-password", &data.password, selectedString, drawEv.isTouch, ImGuiInputTextFlags_Password);
   data.backToLoginClicked = ImGui::Button ("Back");
   ImGui::PopDisabled (shouldLockScreen);
   ImGui::SameLine ();
@@ -733,13 +433,10 @@ createAccountScreen (CreateAccount &data, std::optional<WaitForServer> &waitForS
       ImGui::PopDisabled (shouldLockScreen);
     }
   ImGui::PopItemWidth ();
-  ImGui::EndChild ();
-  ImGui::EndChild ();
-  ImGui::PopStyleVar ();
 }
 
 void
-lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData &chatData)
+lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData &chatData, draw const &drawEv, boost::optional<std::string &> &selectedString)
 {
   ImGui::PushItemWidth (-1);
   auto const shouldLockScreen = waitForServer.has_value ();
@@ -748,19 +445,19 @@ lobbyScreen (Lobby &data, std::optional<WaitForServer> &waitForServer, ChatData 
     {
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
-  chatScreen (chatData, shouldLockScreen, time);
+  chatScreen (chatData, shouldLockScreen, time, drawEv, selectedString);
   ImGui::PushDisabled (shouldLockScreen, time);
   ImGui::TextUnformatted ("Create Game Lobby");
   ImGui::TextUnformatted ("Game Lobby Name");
-  ImGui::InputText ("##CreateGameLobbyName", &data.createGameLobbyName);
+  ImGui::InputText ("##CreateGameLobbyName", &data.createGameLobbyName, selectedString, drawEv.isTouch);
   ImGui::TextUnformatted ("Game Lobby Password");
-  ImGui::InputText ("##CreateGameLobbyPassword", &data.createGameLobbyPassword);
+  ImGui::InputText ("##CreateGameLobbyPassword", &data.createGameLobbyPassword, selectedString, drawEv.isTouch);
   data.createCreateGameLobbyClicked = ImGui::Button ("Create Game Lobby", ImVec2 (-1, 0));
   ImGui::TextUnformatted ("Join Game Lobby");
   ImGui::TextUnformatted ("Game Lobby Name");
-  ImGui::InputText ("##JoinGameLobbyName", &data.joinGameLobbyName);
+  ImGui::InputText ("##JoinGameLobbyName", &data.joinGameLobbyName, selectedString, drawEv.isTouch);
   ImGui::TextUnformatted ("Game Lobby Password");
-  ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword);
+  ImGui::InputText ("##JoinGameLobbyPassword", &data.joinGameLobbyPassword, selectedString, drawEv.isTouch);
   data.createJoinGameLobbyClicked = ImGui::Button ("Join Game Lobby", ImVec2 (-1, 0));
   data.logoutButtonClicked = ImGui::Button ("Logout", ImVec2 (-1, 0));
   ImGui::PopDisabled (shouldLockScreen);
@@ -799,7 +496,7 @@ notAllowedMove (std::vector<durak::Move> allowedMoves, durak::Move moveToCheck)
 }
 
 void
-gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData)
+gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string const &accountName, ChatData &chatData, draw const &drawEv, boost::optional<std::string &> &selectedString)
 {
   ImGui::TextUnformatted (std::string{ "Round: " + std::to_string (game.gameData.round) }.c_str ());
   ImGui::PushItemWidth (-1);
@@ -809,7 +506,7 @@ gameScreen (Game &game, std::optional<WaitForServer> &waitForServer, std::string
     {
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
-  chatScreen (chatData, shouldLockScreen, time);
+  chatScreen (chatData, shouldLockScreen, time, drawEv, selectedString);
   ImGui::TextUnformatted ("Table");
   if (game.gameData.table.empty ())
     {

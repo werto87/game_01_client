@@ -8,11 +8,12 @@
 #include <boost/sml.hpp>
 #include <queue>
 
-const auto reset = [] (Lobby &lobby, Login &login, CreateAccount &createAccount, Game &game) {
+const auto reset = [] (Lobby &lobby, Login &login, CreateAccount &createAccount, Game &game, boost::optional<std::string &> &textInputString) {
   lobby = Lobby{};
   login = Login{};
   createAccount = CreateAccount{};
   game = Game{};
+  textInputString = {};
 };
 const auto resetGameMachineData = [] (MakeGameMachineData &makeGameMachineData) { makeGameMachineData = MakeGameMachineData{}; };
 struct WrapperMachine

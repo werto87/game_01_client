@@ -19,11 +19,19 @@
 #include <Magnum/Platform/Sdl2Application.h>
 #endif
 
+enum struct SoftKeyboardState
+{
+  smallChars,
+  bigChars,
+  specialChars1,
+  specialChars2
+};
+
 class ImGuiExample : public Magnum::Platform::Application
 {
 
 public:
-  ImGuiExample (const Arguments &arguments);
+  ImGuiExample (const Arguments &arguments, bool _isTouch);
   void drawEvent () override;
   void viewportEvent (ViewportEvent &event) override;
   void keyPressEvent (KeyEvent &event) override;
@@ -38,15 +46,19 @@ public:
   Magnum::ImGuiIntegration::Context _imgui{ Magnum::NoCreate };
 
 private:
-  ImFont *font2{};
+  ImFont *smallFont{};
+  ImFont *bigFont{};
   my_logger logger{};
   StateMachine _stateMachine;
   boost::asio::io_context ioContext{};
   Webservice webservice;
   MessagesToSendToServer _messagesToSendToServer{};
+  bool isTouch = false;
+  boost::optional<std::string &> textInputString{};
 
+  SoftKeyboardState softKeyboardState{};
   // debug--------------------------------------------
-  void debug (bool &shouldChangeFontSize);
+  void debug ();
   void createAccountErrorPopup ();
 
   bool _showDemoWindow = false;

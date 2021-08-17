@@ -11,20 +11,25 @@
 #include <vector>
 namespace sml = boost::sml;
 
-auto const setLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, boost::optional<std::string &> &textInputString) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
   waitForServer->clock_wait = timer::now ();
+  textInputString = {};
 };
 
-auto const resetCreateGameLobby = [] (CreateGameLobby &createGameLobby) { createGameLobby = {}; };
+auto const resetCreateGameLobby = [] (CreateGameLobby &createGameLobby, boost::optional<std::string &> &textInputString) {
+  createGameLobby = {};
+  textInputString = {};
+};
 
-auto const setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setCreateGameLobbyWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, boost::optional<std::string &> &textInputString) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
   waitForServer->clock_wait = timer::now ();
+  textInputString = {};
 };
 
 auto const setTimerOption = [] (shared_class::SetTimerOption const &setTimerOptionEv, CreateGameLobby &createGameLobby) { createGameLobby.timerOption = setTimerOptionEv; };

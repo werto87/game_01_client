@@ -145,6 +145,14 @@
       return (index > -1);
     }
 
+    function pointingDevice() { //maybe check if keyboard?
+      if (window.matchMedia("(any-hover: none)").matches) {
+        return "touch";
+      } else {
+        return "mouse"
+      }
+    }
+
     var statusElement = document.getElementById('status');
     var progressElement = document.getElementById('progress');
     var spinnerElement = document.getElementById('spinner');
@@ -152,8 +160,12 @@
     var canvasElement = document.getElementById("canvas");
     var emscriptenBorderElement = document.getElementById("emscripten_border");
 
+
+
     var Module = {
-      arguments: [],
+      arguments: [
+        pointingDevice()
+      ],
       preRun: [],
       postRun: [],
       canvas: (function () {

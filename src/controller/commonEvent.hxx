@@ -11,6 +11,7 @@ struct draw
   float windowSizeX{};
   float windowSizeY{};
   ImFont *biggerFont{};
+  bool isTouch{};
 };
 
 auto const setErrorEvent = [] (auto const &error, MessageBoxPopup &messageBoxPopup) {
@@ -25,16 +26,18 @@ auto const setRelogToError = [] (shared_class::RelogToError const &relogToLobby,
   messageBoxPopup.buttons = { { .name = "Lobby", .pressed = false } };
 };
 
-auto const resetPopupAndWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const resetPopupAndWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, boost::optional<std::string &> &textInputString) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = std::optional<WaitForServer>{};
+  textInputString = {};
 };
 
-auto const setMessageBoxPopupAndSetWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setMessageBoxPopupAndSetWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, boost::optional<std::string &> &textInputString) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
   waitForServer->clock_wait = timer::now ();
+  textInputString = {};
 };
 
 #endif /* C5C45508_B6C7_4102_BF47_8EE62A24216E */

@@ -1,4 +1,5 @@
 #include "src/webservice/webservice.hxx"
+#include <boost/numeric/conversion/cast.hpp>
 
 EM_BOOL
 onopen (int /*eventType*/, const EmscriptenWebSocketOpenEvent *websocketEvent, void *userData)
@@ -9,10 +10,8 @@ onopen (int /*eventType*/, const EmscriptenWebSocketOpenEvent *websocketEvent, v
   return 42;
 }
 EM_BOOL
-onerror (int eventType, const EmscriptenWebSocketErrorEvent *websocketEvent, void *userData)
+onerror (int /*eventType*/, const EmscriptenWebSocketErrorEvent * /*websocketEvent*/, void * /*userData*/)
 {
-  printf ("error(eventType=%d, userData=%d)\n", eventType, (int)userData);
-  std::cout << "'" << websocketEvent << "'" << std::endl;
   std::cout << "on_error" << std::endl;
   return 42;
 }

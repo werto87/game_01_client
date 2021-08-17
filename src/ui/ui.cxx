@@ -13,6 +13,7 @@
 #include <Magnum/Primitives/Cube.h>
 #include <Magnum/Trade/MeshData.h>
 #include <algorithm>
+#include <boost/math/special_functions/round.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
@@ -26,7 +27,7 @@
 
 using namespace Magnum;
 
-ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{} } }, webservice{ _stateMachine }
+ImGuiExample::ImGuiExample (const Arguments &arguments, bool _isTouch) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{}, textInputString } }, webservice{ _stateMachine }, isTouch (_isTouch)
 {
   ImGui::CreateContext ();
   co_spawn (
@@ -52,8 +53,9 @@ ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Appl
   builder.BuildRanges (&ranges);
   auto const fontFile = std::filesystem::path{ "bin/asset/DejaVuSans.ttf" };
   if (std::filesystem::exists (fontFile)) std::cout << "file exists" << std::endl;
-  io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 50.0f * _fontScale, nullptr, ranges.Data);
-  io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 75.0f * _fontScale, nullptr, ranges.Data);
+  auto const fontSize = 100.0f;
+  smallFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), fontSize * _fontScale, nullptr, ranges.Data);
+  bigFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), fontSize * _fontScale * 1.2f, nullptr, ranges.Data);
   io.Fonts->Build ();
   _imgui = Magnum::ImGuiIntegration::Context (*ImGui::GetCurrentContext (), windowSize ());
   Magnum::GL::Renderer::setBlendEquation (GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
@@ -65,7 +67,7 @@ ImGuiExample::ImGuiExample (const Arguments &arguments) : Magnum::Platform::Appl
 }
 
 void
-ImGuiExample::debug (bool &shouldChangeFontSize)
+ImGuiExample::debug ()
 {
   ImGui::Dummy (ImVec2 (0.0f, static_cast<float> (windowSize ().y ()) / 4));
   ImGui::Text ("Message to Send");
@@ -79,7 +81,7 @@ ImGuiExample::debug (bool &shouldChangeFontSize)
         }
     }
   ImGui::SliderFloat ("Scale Font", &_fontScale, 0.1f, 1.0f);
-  shouldChangeFontSize = ImGui::IsItemDeactivatedAfterEdit ();
+  // shouldUpdateFontSize = ImGui::IsItemDeactivatedAfterEdit () ;
   if (ImGui::Button ("Test Window")) _showDemoWindow ^= true;
 
   if (_showDemoWindow)
@@ -90,8 +92,126 @@ ImGuiExample::debug (bool &shouldChangeFontSize)
 }
 
 void
+extraCharsButtons (boost::optional<std::string &> &textInputString, float buttonWidth, float buttonHeight, SoftKeyboardState &softKeyboardState)
+{
+  ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+  if (ImGui::Button ((softKeyboardState == SoftKeyboardState::specialChars1 || softKeyboardState == SoftKeyboardState::specialChars2) ? "abc" : "?123", ImVec2 (buttonWidth, buttonHeight)))
+    {
+      softKeyboardState = (softKeyboardState == SoftKeyboardState::specialChars1) ? SoftKeyboardState::smallChars : SoftKeyboardState::specialChars1;
+    }
+  ImGui::SameLine ();
+  if (ImGui::Button (",", ImVec2 (buttonWidth, buttonHeight)))
+    {
+      textInputString->push_back (',');
+    }
+  ImGui::SameLine ();
+  if (ImGui::Button (" ", ImVec2 (buttonWidth * 6, buttonHeight)))
+    {
+      textInputString->push_back (' ');
+    }
+  ImGui::SameLine ();
+  if (ImGui::Button (".", ImVec2 (buttonWidth, buttonHeight)))
+    {
+      textInputString->push_back ('.');
+    }
+  ImGui::SameLine ();
+  if (ImGui::Button ("ENTER", ImVec2 (buttonWidth, buttonHeight)))
+    {
+      textInputString = {};
+    }
+  ImGui::PopStyleVar ();
+}
+
+void
+drawCharsButtons (boost::optional<std::string &> &textInputString, float buttonWidth, float buttonHeight, SoftKeyboardState &softKeyboardState)
+{
+  ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+  auto const &chars = (softKeyboardState == SoftKeyboardState::smallChars) ? smallChars : bigChars;
+  for (auto i = 0ul; i < chars.size (); i++)
+    {
+      auto someChar = chars.at (i);
+      if (ImGui::Button (std::string{ someChar }.c_str (), ImVec2 (buttonWidth, buttonHeight)))
+        {
+          textInputString->push_back (someChar);
+        }
+      if (i != 9 && i != 18 && i != 25)
+        {
+          ImGui::SameLine ();
+        }
+      else if (i == 9)
+        {
+          ImGui::Dummy (ImVec2{ buttonWidth / 2, 0 });
+          ImGui::SameLine ();
+        }
+      else if (i == 18)
+        {
+          if (ImGui::Button (std::string{ (softKeyboardState == SoftKeyboardState::smallChars) ? "CAPS" : "caps" }.c_str (), ImVec2 (buttonWidth + buttonWidth / 2.f, buttonHeight)))
+            {
+              softKeyboardState = (softKeyboardState == SoftKeyboardState::smallChars) ? SoftKeyboardState::bigChars : SoftKeyboardState::smallChars;
+            }
+          ImGui::SameLine ();
+        }
+      else if (i == 25)
+        {
+          ImGui::SameLine ();
+          if (ImGui::Button (std::string{ "DEL" }.c_str (), ImVec2 (buttonWidth + buttonWidth / 2.f, buttonHeight)))
+            {
+              if (not textInputString->empty ()) textInputString->pop_back ();
+            }
+        }
+    }
+  ImGui::PopStyleVar ();
+  extraCharsButtons (textInputString, buttonWidth, buttonHeight, softKeyboardState);
+}
+void
+drawSpecialCharsButtons (boost::optional<std::string &> &textInputString, float buttonWidth, float buttonHeight, SoftKeyboardState &softKeyboardState)
+{
+  ImGui::PushStyleVar (ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+  auto const &chars = (softKeyboardState == SoftKeyboardState::specialChars1) ? specialChars1 : specialChars2;
+  for (auto i = 0ul; i < chars.size (); i++)
+    {
+      auto someChar = chars.at (i);
+      if (ImGui::Button (std::string{ someChar }.c_str (), ImVec2 (buttonWidth, buttonHeight)))
+        {
+          textInputString->push_back (someChar);
+        }
+      if (i != 9 && i != 18 && i != 20)
+        {
+          ImGui::SameLine ();
+        }
+      else if (i == 9)
+        {
+          ImGui::Dummy (ImVec2{ buttonWidth / 2, 0 });
+          ImGui::SameLine ();
+        }
+      else if (i == 18)
+        {
+          if (ImGui::Button (std::string{ (softKeyboardState == SoftKeyboardState::specialChars1) ? "!#$" : "?123" }.c_str (), ImVec2 (buttonWidth + buttonWidth / 2.f, buttonHeight)))
+            {
+              softKeyboardState = (softKeyboardState == SoftKeyboardState::specialChars1) ? SoftKeyboardState::specialChars2 : SoftKeyboardState::specialChars1;
+            }
+          ImGui::SameLine ();
+        }
+      else if (i == 20)
+        {
+          ImGui::SameLine ();
+          ImGui::Dummy (ImVec2{ 5 * buttonWidth, 0 });
+          ImGui::SameLine ();
+          if (ImGui::Button (std::string{ "DEL" }.c_str (), ImVec2 (buttonWidth + buttonWidth / 2.f, buttonHeight)))
+            {
+              textInputString->pop_back ();
+            }
+        }
+    }
+  ImGui::PopStyleVar ();
+  extraCharsButtons (textInputString, buttonWidth, buttonHeight, softKeyboardState);
+}
+
+void
 ImGuiExample::drawEvent ()
 {
+  auto const screenWidht = boost::numeric_cast<float> (windowSize ().x ());
+  auto const screenHeight = boost::numeric_cast<float> (windowSize ().y ());
   GL::defaultFramebuffer.clear (GL::FramebufferClear::Color);
   _imgui.newFrame ();
   /* Enable text input, if needed  */
@@ -99,14 +219,58 @@ ImGuiExample::drawEvent ()
   else if (!ImGui::GetIO ().WantTextInput && isTextInputActive ())
     stopTextInput ();
 
+  auto const isPortraitOrientation = screenWidht < screenHeight;
   ImGui::SetNextWindowPos (ImVec2 (0, 0));
-  ImGui::SetNextWindowSize (ImVec2 (windowSize ().x (), windowSize ().y ()));
+  ImGui::SetNextWindowSize (ImVec2 (screenWidht, textInputString ? screenHeight / (isPortraitOrientation ? (3.f / 2.f) : 2.f) : screenHeight));
   ImGui::PushStyleVar (ImGuiStyleVar_WindowBorderSize, 0.0f);
-  ImGui::Begin ("main window", nullptr, ImGuiWindowFlags_NoDecoration);
-  _stateMachine.process_event (draw{ .windowSizeX = boost::numeric_cast<float> (windowSize ().x ()), .windowSizeY = boost::numeric_cast<float> (windowSize ().y ()), .biggerFont = font2 });
-  // auto shouldUpdateFontSize = false;
-  // debug (shouldUpdateFontSize);
+  ImGui::PushFont ((screenWidht < 1000) ? bigFont : smallFont); // use big fonts for smaller window width so text is readable on mobile
+  ImGui::Begin ("main window", nullptr, isTouch ? (ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse) : ImGuiWindowFlags_NoDecoration);
+  _stateMachine.process_event (draw{ .windowSizeX = screenWidht, .windowSizeY = screenHeight, .biggerFont = bigFont, .isTouch = isTouch });
+
   ImGui::End ();
+  if (textInputString)
+    {
+      // TODO navigate in text is missing. It should be possible to insert letters in the middel
+      // TODO text intput opens and hides inputs on the lower side. window should scroll so the input is on top of the screen and not hidden by the keyboard
+      //-----------------------------------------------------------------------------------------------
+
+      if (isPortraitOrientation)
+        {
+          auto const softKeyboardHeight = screenHeight / 3.f;
+          ImGui::SetNextWindowPos (ImVec2 (0, screenHeight - softKeyboardHeight));
+          ImGui::SetNextWindowSize (ImVec2 (screenWidht, screenHeight));
+          ImGui::Begin ("New Window", nullptr, ImGuiWindowFlags_NoDecoration);
+          float const buttonWidth = (screenWidht - 2.f * ImGui::GetStyle ().WindowPadding.x) / 10.f;
+          if (softKeyboardState == SoftKeyboardState::bigChars || softKeyboardState == SoftKeyboardState::smallChars)
+            {
+              drawCharsButtons (textInputString, buttonWidth, buttonWidth, softKeyboardState);
+            }
+          else
+            {
+              drawSpecialCharsButtons (textInputString, buttonWidth, buttonWidth, softKeyboardState);
+            }
+        }
+      else
+        {
+          ImGui::SetNextWindowPos (ImVec2 (0, screenHeight / 2.f));
+          ImGui::SetNextWindowSize (ImVec2 (screenWidht, screenHeight / 2.f));
+          ImGui::Begin ("New Window", nullptr, ImGuiWindowFlags_NoDecoration);
+          float const buttonWidth = (screenWidht - 2.f * ImGui::GetStyle ().WindowPadding.x) / 10.f;
+          float const buttonHeight = (screenHeight / 2.f - 2 * ImGui::GetStyle ().WindowPadding.y - ImGui::GetStyle ().ItemSpacing.y) / 4.f;
+          if (softKeyboardState == SoftKeyboardState::bigChars || softKeyboardState == SoftKeyboardState::smallChars)
+            {
+              drawCharsButtons (textInputString, buttonWidth, buttonHeight, softKeyboardState);
+            }
+          else
+            {
+              drawSpecialCharsButtons (textInputString, buttonWidth, buttonHeight, softKeyboardState);
+            }
+        }
+
+      ImGui::End ();
+    }
+  ImGui::PopStyleVar ();
+  ImGui::PopFont ();
   /* Update application cursor */
   _imgui.updateApplicationCursor (*this);
   /* Set appropriate states. If you only draw ImGui, it is sufficient to
@@ -123,7 +287,6 @@ ImGuiExample::drawEvent ()
   GL::Renderer::disable (GL::Renderer::Feature::ScissorTest);
   GL::Renderer::disable (GL::Renderer::Feature::Blending);
   swapBuffers ();
-  // if (shouldUpdateFontSize) updateFontSize ();
   ioContext.poll_one ();
   redraw ();
 }
@@ -131,6 +294,7 @@ ImGuiExample::drawEvent ()
 void
 ImGuiExample::viewportEvent (ViewportEvent &event)
 {
+  std::cout << "event.windowSize () " << event.windowSize ().x () << ", " << event.windowSize ().y () << " event.dpiScaling () " << event.dpiScaling ().x () << ", " << event.dpiScaling ().y () << " event.framebufferSize () " << event.framebufferSize ().x () << ", " << event.framebufferSize ().y () << std::endl;
   GL::defaultFramebuffer.setViewport ({ {}, event.framebufferSize () });
   _imgui.relayout (Vector2{ event.windowSize () } / event.dpiScaling (), event.windowSize (), event.framebufferSize ());
 }
@@ -185,12 +349,13 @@ ImGuiExample::textInputEvent (TextInputEvent &event)
 void
 ImGuiExample::updateFontSize ()
 {
-  ImGuiIO &io = ImGui::GetIO ();
-  io.Fonts->Clear ();
-  auto const fontFile = std::filesystem::path{ "bin/asset/DejaVuSans.ttf" };
-  auto currentFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 50 * _fontScale);
-  font2 = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), 75 * _fontScale);
-  //_imgui.relayout (Vector2{ _windowSize } / dpiScaling (), windowSizeInt, framebufferSize ());
-  _imgui.relayout (Vector2{ windowSize () } / dpiScaling (), windowSize (), framebufferSize ());
-  ImGui::SetCurrentFont (currentFont);
+  // ImGuiIO &io = ImGui::GetIO ();
+  // io.Fonts->Clear ();
+  // auto const fontFile = std::filesystem::path{ "bin/asset/DejaVuSans.ttf" };
+  // auto const fontSize = (windowSize ().x () < 1000) ? 125.f : 100.f;
+  // auto currentFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), fontSize * _fontScale);
+  // font2 = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), fontSize * _fontScale);
+  // _imgui.relayout (Vector2{ windowSize () } / dpiScaling (), windowSize (), framebufferSize ());
+  // ImGui::SetCurrentFont (currentFont);
+  // shouldUpdateFontSize = false;
 }

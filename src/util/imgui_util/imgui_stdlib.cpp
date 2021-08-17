@@ -79,3 +79,14 @@ ImGui::InputTextWithHint (const char *label, const char *hint, std::string *str,
   cb_user_data.ChainCallbackUserData = user_data;
   return InputTextWithHint (label, hint, const_cast<char *> (str->c_str ()), str->capacity () + 1, flags, InputTextCallback, &cb_user_data);
 }
+
+bool
+ImGui::InputText (std::string const &label, std::string *value, boost::optional<std::string &> &selectedString, bool enableTouch, ImGuiInputTextFlags flags)
+{
+  auto result = ImGui::InputText (label.c_str (), value, flags);
+  if (ImGui::IsItemActivated () && enableTouch)
+    {
+      selectedString = *value;
+    }
+  return result;
+}

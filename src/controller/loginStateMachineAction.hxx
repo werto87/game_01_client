@@ -111,19 +111,21 @@ auto const evalCreateAccountWaitForServer = [] (std::optional<WaitForServer> &wa
 
 auto const setAccountName = [] (auto const &loginSuccessEv, MakeGameMachineData &makeGameMachineData) { makeGameMachineData.accountName = loginSuccessEv.accountName; };
 
-auto const setLoginWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setLoginWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, boost::optional<std::string &> &textInputString) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
   waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Sign in", .pressed = false, .disabled = false } };
   waitForServer->clock_wait = timer::now ();
+  textInputString = {};
 };
-auto const setCreateAccountWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer) {
+auto const setCreateAccountWaitForServer = [] (MessageBoxPopup &messageBoxPopup, std::optional<WaitForServer> &waitForServer, boost::optional<std::string &> &textInputString) {
   messageBoxPopup = MessageBoxPopup{};
   waitForServer = WaitForServer{};
   using timer = std::chrono::system_clock;
   waitForServer->buttons = std::vector<Button>{ { .name = "Cancel Create Account", .pressed = false, .disabled = false } };
   waitForServer->clock_wait = timer::now ();
+  textInputString = {};
 };
 
 #endif /* BD7A907D_9917_4122_9B87_77B2D778F12D */
