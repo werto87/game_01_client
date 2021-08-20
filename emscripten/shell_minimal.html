@@ -139,17 +139,11 @@
       document.getElementById("canvas").requestFullscreen();
     }
 
-
-    function isMobile() {
-      var index = navigator.appVersion.indexOf("Mobile");
-      return (index > -1);
-    }
-
     function pointingDevice() { //maybe check if keyboard?
       if (window.matchMedia("(any-hover: none)").matches) {
-        return "touch";
+        return "--touch";
       } else {
-        return "mouse"
+        return ""
       }
     }
 

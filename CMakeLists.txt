@@ -97,6 +97,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
   CONAN_PKG::confu_json
   CONAN_PKG::magnum-integration
   CONAN_PKG::boost
+  CONAN_PKG::argparse
 )
 
 

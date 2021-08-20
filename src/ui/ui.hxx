@@ -31,7 +31,7 @@ class ImGuiExample : public Magnum::Platform::Application
 {
 
 public:
-  ImGuiExample (const Arguments &arguments, bool _isTouch);
+  ImGuiExample (const Arguments &arguments, bool _isTouch, std::string const &websocketAddress);
   void drawEvent () override;
   void viewportEvent (ViewportEvent &event) override;
   void keyPressEvent (KeyEvent &event) override;

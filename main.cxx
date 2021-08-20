@@ -1,6 +1,7 @@
 #include "src/ui/ui.hxx"
 #include <boost/json/src.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/program_options/cmdline.hpp>
 #ifdef CORRADE_TARGET_ANDROID
 #include <Magnum/Platform/AndroidApplication.h>
 #elif defined(CORRADE_TARGET_EMSCRIPTEN)
@@ -8,6 +9,8 @@
 #else
 #include <Magnum/Platform/Sdl2Application.h>
 #endif
+#include <argparse/argparse.hpp>
+#include <iostream>
 
 namespace
 {
@@ -16,18 +19,23 @@ Corrade::Containers::Pointer<ImGuiExample> emscriptenApplicationInstance;
 int
 main (int argc, char **argv)
 {
-#ifdef DEBUG
-  std::cout << "DEBUG" << std::endl;
-#else
-  std::cout << "NO DEBUG" << std::endl;
-#endif
-  std::cout << argc << std::endl;
-  std::cout << argv[1] << std::endl;
-  // TODO uncom men  t  if da tabase i  s needed
-  // i f  w e react i v a te th is   ca r e :  re l ease  wi ll try to  use the  same database which does not work (start the program 2 times and see what happens)
-  // debug  will  c r  e   a    t  e   a   n e  w  d atabase  and keeps the o ld which is a w orkaround for starting the program multiple times in parallel
-  // createE mptyD atab a se  ();
-  // createTables ( );
-  emscriptenApplicationInstance.reset (new ImGuiExample{ { argc, argv }, (argv[1] == std::string{ "touch" }) });
+  std::cout << "argc: " << argc << std::endl;
+  std::cout << "argv[0]: " << argv[0] << std::endl;
+  std::cout << "argv[1]: " << argv[1] << std::endl;
+  argparse::ArgumentParser program ("program name");
+  program.add_argument ("").default_value (false).implicit_value (true); // work around to ignore empty strings
+  program.add_argument ("--websocket-url").help (R"(url to websocket ## example usage: --websocket-url "wss://www.example.com/socketserver" ## default value: "wss://localhost:55555")").default_value (std::string ("wss://localhost:55555"));
+  program.add_argument ("--touch").help ("change input mode from keyboard to touch").default_value (false).implicit_value (true);
+  try
+    {
+      program.parse_args (argc, argv);
+    }
+  catch (const std::runtime_error &err)
+    {
+      std::cout << err.what () << std::endl;
+      std::cout << program;
+      exit (0);
+    }
+  emscriptenApplicationInstance.reset (new ImGuiExample{ { argc, argv }, program.get<bool> ("--touch"), program.get<std::string> ("--websocket-url") });
   emscriptenApplicationInstance->redraw ();
 }

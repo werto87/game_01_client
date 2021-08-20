@@ -27,16 +27,12 @@
 
 using namespace Magnum;
 
-ImGuiExample::ImGuiExample (const Arguments &arguments, bool _isTouch) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{}, textInputString } }, webservice{ _stateMachine }, isTouch (_isTouch)
+ImGuiExample::ImGuiExample (const Arguments &arguments, bool _isTouch, std::string const &websocketAddress) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{}, textInputString } }, webservice{ _stateMachine }, isTouch (_isTouch)
 {
   ImGui::CreateContext ();
   co_spawn (
       ioContext, [&] () mutable { return webservice.writeToServer (_messagesToSendToServer.messagesToSendToServer); }, boost::asio::detached);
-#ifdef DEBUG
-  auto websocketAddress = std::string{ "wss://localhost:55555" };
-#else
-  auto websocketAddress = std::string{ "wss://modern-durak.com/wss/" };
-#endif
+
   EmscriptenWebSocketCreateAttributes ws_attrs = { websocketAddress.c_str (), NULL, EM_TRUE };
   std::cout << "websocketAddress: " << websocketAddress << std::endl;
   EMSCRIPTEN_WEBSOCKET_T ws = emscripten_websocket_new (&ws_attrs);
