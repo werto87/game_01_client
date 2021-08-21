@@ -147,10 +147,7 @@
       }
     }
 
-    function websocketUrl() {
-      
-      return "wss://localhost:55555"
-    }
+
 
 
 
@@ -165,7 +162,7 @@
 
     var Module = {
       arguments: [
-        touchDevice(), "--websocket-url", websocketUrl()
+        touchDevice(), "--websocket-url", "{{WEBSOCKET-URL}}"
       ],
       preRun: [],
       postRun: [],
