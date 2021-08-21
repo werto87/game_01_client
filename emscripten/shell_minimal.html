@@ -139,13 +139,20 @@
       document.getElementById("canvas").requestFullscreen();
     }
 
-    function pointingDevice() { //maybe check if keyboard?
+    function touchDevice() { //maybe check if keyboard?
       if (window.matchMedia("(any-hover: none)").matches) {
-        return "--touch";
+        return "--touch"
       } else {
         return ""
       }
     }
+
+    function websocketUrl() {
+      
+      return "wss://localhost:55555"
+    }
+
+
 
     var statusElement = document.getElementById('status');
     var progressElement = document.getElementById('progress');
@@ -158,7 +165,7 @@
 
     var Module = {
       arguments: [
-        pointingDevice()
+        touchDevice(), "--websocket-url", websocketUrl()
       ],
       preRun: [],
       postRun: [],

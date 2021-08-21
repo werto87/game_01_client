@@ -9,33 +9,41 @@
 #else
 #include <Magnum/Platform/Sdl2Application.h>
 #endif
-#include <argparse/argparse.hpp>
+#include <cxxopts.hpp>
 #include <iostream>
 
 namespace
 {
 Corrade::Containers::Pointer<ImGuiExample> emscriptenApplicationInstance;
 }
+
 int
 main (int argc, char **argv)
 {
   std::cout << "argc: " << argc << std::endl;
-  std::cout << "argv[0]: " << argv[0] << std::endl;
-  std::cout << "argv[1]: " << argv[1] << std::endl;
-  argparse::ArgumentParser program ("program name");
-  program.add_argument ("").default_value (false).implicit_value (true); // work around to ignore empty strings
-  program.add_argument ("--websocket-url").help (R"(url to websocket ## example usage: --websocket-url "wss://www.example.com/socketserver" ## default value: "wss://localhost:55555")").default_value (std::string ("wss://localhost:55555"));
-  program.add_argument ("--touch").help ("change input mode from keyboard to touch").default_value (false).implicit_value (true);
-  try
+  std::copy (argv + 1, argv + argc, std::ostream_iterator<const char *> (std::cout, "\n"));
+  cxxopts::Options options ("modern-durak-client", "A brief description");
+  // clang-format off
+      options.add_options()
+        ("w,websocket-url", "url to websocket --websocket-url wss://www.example.com/socketserver", cxxopts::value<std::string>()->default_value("wss://localhost:55555"))
+        ("t,touch", "set this option if input type is touch and not keyboard")
+        ("h,help", "Print usage")
+    ;
+  // clang-format on
+  auto result = options.parse (argc, argv);
+  if (result.count ("help"))
     {
-      program.parse_args (argc, argv);
-    }
-  catch (const std::runtime_error &err)
-    {
-      std::cout << err.what () << std::endl;
-      std::cout << program;
+      std::cout << options.help () << std::endl;
       exit (0);
     }
-  emscriptenApplicationInstance.reset (new ImGuiExample{ { argc, argv }, program.get<bool> ("--touch"), program.get<std::string> ("--websocket-url") });
+  std::cout << "after cxxopts" << std::endl;
+  std::cout << "argc: " << argc << std::endl;
+  std::copy (argv + 1, argv + argc, std::ostream_iterator<const char *> (std::cout, "\n"));
+  int tmpArgc = 1; /**< @brief Argument count */
+
+  char *tmpArgv[1];     // work around to ignore commandline input for magnum imgui
+  tmpArgv[0] = argv[0]; // work around to ignore commandline input for magnum imgui
+
+  emscriptenApplicationInstance.reset (new ImGuiExample{ { tmpArgc, tmpArgv }, result["touch"].as<bool> (), result["websocket-url"].as<std::string> () });
   emscriptenApplicationInstance->redraw ();
 }

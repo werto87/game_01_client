@@ -10,7 +10,7 @@ durak/0.0.3@werto87/stable
 confu_json/0.0.6@werto87/stable
 magnum-integration/2020.06@werto87/stable
 boost/1.76.0
-argparse/2.1
+cxxopts/2.2.1
 [generators]
 cmake
 [options]
