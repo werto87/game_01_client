@@ -333,7 +333,7 @@ messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForSe
       time = std::chrono::duration_cast<std::chrono::milliseconds> (waitForServer->elapsedTime ());
     }
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
-  ImGui::TextUnformatted (messageBoxPopup.message.c_str ());
+  ImGui::TextWrapped ("%s", messageBoxPopup.message.c_str ());
   for (auto i = 0ul; i < messageBoxPopup.buttons.size (); i++)
     {
       if (i != 0) ImGui::SameLine ();
