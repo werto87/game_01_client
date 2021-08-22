@@ -334,9 +334,10 @@ messageBoxPopupScreen (MessageBoxPopup &messageBoxPopup, std::optional<WaitForSe
     }
   ImGui::PushStyleVar (ImGuiStyleVar_ChildRounding, 5.0f);
   ImGui::TextUnformatted (messageBoxPopup.message.c_str ());
-  for (auto &button : messageBoxPopup.buttons)
+  for (auto i = 0ul; i < messageBoxPopup.buttons.size (); i++)
     {
-      ImGui::SameLine ();
+      if (i != 0) ImGui::SameLine ();
+      auto &button = messageBoxPopup.buttons.at (i);
       ImGui::PushDisabled (button.disabled, time);
       button.pressed = ImGui::Button (button.name.c_str ());
       ImGui::PopDisabled (button.disabled);
