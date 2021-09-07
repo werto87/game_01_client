@@ -118,7 +118,6 @@ auto const evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameM
     {
       process_event (createGameLobbyWaitForServer{});
       auto setMaxUserSizeInCreateGameLobby = shared_class::SetMaxUserSizeInCreateGameLobby{};
-      setMaxUserSizeInCreateGameLobby.createGameLobbyName = createGameLobby.gameLobbyName;
       setMaxUserSizeInCreateGameLobby.maxUserSize = static_cast<size_t> (createGameLobby.maxUserInGameLobby);
       sendObject (messagesToSendToServer.messagesToSendToServer, setMaxUserSizeInCreateGameLobby);
     }
@@ -126,7 +125,6 @@ auto const evalCreateGameLobby = [] (CreateGameLobby &createGameLobby, MakeGameM
     {
       process_event (createGameLobbyWaitForServer{});
       auto setMaxCardValueInCreateGameLobby = shared_class::SetMaxCardValueInCreateGameLobby{};
-      setMaxCardValueInCreateGameLobby.createGameLobbyName = createGameLobby.gameLobbyName;
       setMaxCardValueInCreateGameLobby.maxCardValue = static_cast<u_int16_t> (createGameLobby.maxCardValue);
       sendObject (messagesToSendToServer.messagesToSendToServer, setMaxCardValueInCreateGameLobby);
     }
