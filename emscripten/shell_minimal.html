@@ -147,7 +147,28 @@
       }
     }
 
+    const calcArgs = () => {
+      let result = [];
+      result.push("--websocket-url");
+      result.push("{{WEBSOCKET-URL}}");
+      if (window.matchMedia("(any-hover: none)").matches) {
+        result.push("--touch");
+      }
+      const args = decodeURIComponent(window.location.search.substr(1)).trim().split('&');
+      if (!(args.length == 1 && args[0] == "")) {
+        for (let i = 0; i != args.length; ++i) {
+          let j = args[i].indexOf('=');
+          /* Key + value */
+          if (j != -1) {
+            result.push('--' + args[i].substring(0, j));
+            result.push(args[i].substring(j + 1));
 
+            /* Just key */
+          } else result.push('--' + args[i]);
+        }
+      }
+      return result;
+    }
 
 
 
@@ -161,9 +182,7 @@
 
 
     var Module = {
-      arguments: [
-        touchDevice(), "--websocket-url", "{{WEBSOCKET-URL}}"
-      ],
+      arguments: calcArgs(),
       preRun: [],
       postRun: [],
       canvas: (function () {

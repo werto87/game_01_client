@@ -29,10 +29,9 @@ using namespace Magnum;
 
 ImGuiExample::ImGuiExample (const Arguments &arguments, bool _isTouch, std::string const &websocketAddress) : Magnum::Platform::Application{ arguments, Configuration{}.setTitle ("Magnum ImGui Example").setWindowFlags (Configuration::WindowFlag::Resizable) }, _stateMachine{ StateMachine{ MakeGameMachineData{}, _messagesToSendToServer, logger, MessageBoxPopup{}, std::optional<WaitForServer>{}, textInputString } }, webservice{ _stateMachine }, isTouch (_isTouch)
 {
-  ImGui::CreateContext ();
+  _imgui = ImGuiIntegration::Context (Vector2{ windowSize () } / dpiScaling (), windowSize (), framebufferSize ());
   co_spawn (
       ioContext, [&] () mutable { return webservice.writeToServer (_messagesToSendToServer.messagesToSendToServer); }, boost::asio::detached);
-
   EmscriptenWebSocketCreateAttributes ws_attrs = { websocketAddress.c_str (), NULL, EM_TRUE };
   std::cout << "websocketAddress: " << websocketAddress << std::endl;
   EMSCRIPTEN_WEBSOCKET_T ws = emscripten_websocket_new (&ws_attrs);
@@ -53,7 +52,6 @@ ImGuiExample::ImGuiExample (const Arguments &arguments, bool _isTouch, std::stri
   smallFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), fontSize * _fontScale, nullptr, ranges.Data);
   bigFont = io.Fonts->AddFontFromFileTTF (fontFile.c_str (), fontSize * _fontScale * 1.2f, nullptr, ranges.Data);
   io.Fonts->Build ();
-  _imgui = Magnum::ImGuiIntegration::Context (*ImGui::GetCurrentContext (), windowSize ());
   Magnum::GL::Renderer::setBlendEquation (GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
   Magnum::GL::Renderer::setBlendFunction (GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
   ImGuiStyle &style = ImGui::GetStyle ();
