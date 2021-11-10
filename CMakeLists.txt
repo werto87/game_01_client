@@ -58,7 +58,7 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
 
-set(TARGET_NAME project)
+set(TARGET_NAME index)
 add_executable(${TARGET_NAME})
 
 
