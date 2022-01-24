@@ -5,7 +5,7 @@ pipes/1.0.0
 range-v3/0.11.0
 fmt/7.1.3
 magic_enum/0.7.2
-game_01_shared_class/0.0.1@werto87/stable
+game_01_shared_class/0.0.2@werto87/stable
 durak/0.0.3@werto87/stable 
 confu_json/0.0.6@werto87/stable
 magnum-integration/2020.06@werto87/stable
